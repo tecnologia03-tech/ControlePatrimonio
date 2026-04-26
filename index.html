@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sistema de Controle Patrimonial - Salesianos</title>
+
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" />
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+  <!-- ========== TELA DE LOGIN ========== -->
+  <div id="telaLogin">
+    <div class="login-esquerda">
+      <div class="login-card">
+        <div class="login-logo mb-4 text-center">
+          <img src="Logo.jpeg" alt="Logo Salesianos">
+          <h4>Sistema de Controle Patrimonial</h4>
+          <p>Acesse com suas credenciais</p>
+        </div>
+        <form id="formLogin" onsubmit="fazerLogin(event)">
+          <div class="mb-3">
+            <label for="usuario" class="form-label">Usuário</label>
+            <input type="text" class="form-control" id="usuario" placeholder="Digite seu usuário" required>
+          </div>
+          <div class="mb-3">
+            <label for="senha" class="form-label">Senha</label>
+            <div class="input-group">
+              <input type="password" class="form-control" id="senha" placeholder="Digite sua senha" required>
+              <button type="button" class="btn btn-outline-secondary" id="btnVerSenha" tabindex="-1">
+                <i class="bi bi-eye" id="iconeSenha"></i>
+              </button>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-login">Entrar</button><!-- Mensagem de erro -->
+          <p id="msgErroLogin" style="color: #c8102e; font-size: 0.88rem; margin-top: 10px; text-align: center;"></p>
+        </form>
+        <div class="login-footer">
+          © 2026 — Colégio Salesiano Santo Antônio
+        </div>
+      </div>
+    </div>
+    <div class="login-direita">
+      <img src="Logo.jpeg" alt="Fachada Colégio Salesiano">
+    </div>
+  </div>
+
+  <!-- ========== DASHBOARD PRINCIPAL ========== -->
+  <div id="telaDashboard" style="display: none;">
+    <div class="wrapper">
+      <!-- ========== SIDEBAR ========== -->
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+          <img src="Logo.jpeg" alt="Logo Salesianos">
+          <span>Patrimônio</span>
+        </div>
+        <ul class="sidebar-menu">
+          <li class="ativo" id="menu-dashboard">
+            <a href="#" onclick="mostrarConteudo('dashboard', this); event.preventDefault();">
+              <i class="bi bi-speedometer2"></i> <span>Dashboard</span>
+            </a>
+          </li>
+          <li id="menu-patrimonio">
+            <a href="#" onclick="mostrarConteudo('patrimonio', this); event.preventDefault();">
+              <i class="bi bi-archive-fill"></i> <span>Patrimônios</span>
+            </a>
+          </li>
+          <li id="menu-manutencao">
+            <a href="#" onclick="mostrarConteudo('manutencao', this); event.preventDefault();">
+              <i class="bi bi-tools"></i> <span>Manutenção</span>
+            </a>
+          </li>
+          <li id="menu-movimentacao">
+            <a href="#" onclick="mostrarConteudo('movimentacao', this); event.preventDefault();">
+              <i class="bi bi-arrow-left-right"></i> <span>Movimentações</span>
+            </a>
+          </li>
+          <li id="menu-responsavel">
+            <a href="#" onclick="mostrarConteudo('responsavel', this); event.preventDefault();">
+              <i class="bi bi-person-badge-fill"></i> <span>Responsáveis</span>
+            </a>
+          </li>
+          <li id="menu-setor">
+            <a href="#" onclick="mostrarConteudo('setor', this); event.preventDefault();">
+              <i class="bi bi-building"></i> <span>Setores</span>
+            </a>
+          </li>
+          <li id="menu-categoria">
+            <a href="#" onclick="mostrarConteudo('categoria', this); event.preventDefault();">
+              <i class="bi bi-tags-fill"></i> <span>Categorias</span>
+            </a>
+          </li>
+          <li id="menu-usuarios">
+            <a href="#" onclick="mostrarConteudo('usuarios', this); event.preventDefault();">
+              <i class="bi bi-people-fill"></i> <span>Usuários</span>
+            </a>
+          </li>
+          <li id="menu-relatorios">
+            <a href="#" onclick="mostrarConteudo('relatorios', this); event.preventDefault();">
+              <i class="bi bi-file-earmark-bar-graph-fill"></i> <span>Relatórios</span>
+            </a>
+          </li>
+        </ul>
+        <div class="sidebar-sair">
+          <a href="#" onclick="fazerLogout()">
+            <i class="bi bi-box-arrow-left"></i> <span>Sair</span>
+          </a>
+        </div>
+      </aside>
+
+      <!-- ========== CONTEÚDO ========== -->
+      <div class="content">
+        <!-- ========== TOPBAR ========== -->
+        <header class="topbar">
+          <button class="btn-menu-toggle" onclick="toggleMenu()">
+            <i class="bi bi-list"></i>
+          </button>
+          <h1 class="topbar-titulo">Dashboard</h1>
+          <div class="topbar-usuario">
+            <div class="avatar">LM</div>
+            <span>Luís Miguel</span>
+          </div>
+        </header>
+
+        <!-- ========== CONTEÚDO PRINCIPAL ========== -->
+        <main class="main-content">
+
+          <!-- Seção Dashboard -->
+          <section id="dashboard-content" class="conteudo-secao ativo">
+            <p class="section-titulo">Visão Geral</p>
+            <div class="row g-3 mb-4">
+              <div class="col-xl-3 col-md-6">
+                <div class="card-indicador">
+                  <div class="card-icone" style="background:#0058b7;">
+                    <i class="bi bi-currency-dollar"></i>
+                  </div>
+                  <div class="card-info">
+                    <div class="valor">R$ 120.000</div>
+                    <div class="label">Valor Total Patrimonial</div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-xl-3 col-md-6">
+                <div class="card-indicador">
+                  <div class="card-icone" style="background:#28a745;">
+                    <i class="bi bi-check-circle"></i>
+                  </div>
+                  <div class="card-info">
+                    <div class="valor">45 itens</div>
+                    <div class="label">Patrimônios Ativos</div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-xl-3 col-md-6">
+                <div class="card-indicador">
+                  <div class="card-icone" style="background:#fd7e14;">
+                    <i class="bi bi-tools"></i>
+                  </div>
+                  <div class="card-info">
+                    <div class="valor">8 itens</div>
+                    <div class="label">Em Manutenção</div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-xl-3 col-md-6">
+                <div class="card-indicador">
+                  <div class="card-icone" style="background:#c8102e;">
+                    <i class="bi bi-exclamation-triangle"></i>
+                  </div>
+                  <div class="card-info">
+                    <div class="valor">7 itens</div>
+                    <div class="label">Baixados / Extraviados</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row g-3 mb-4">
+              <div class="col-lg-5">
+                <div class="box h-100">
+                  <div class="box-titulo">
+                    <i class="bi bi-bar-chart-fill me-2"></i>Categorias mais valiosas
+                  </div>
+                  <canvas id="graficoCategoria"></canvas>
+                </div>
+              </div>
+              <div class="col-lg-7">
+                <div class="box h-100">
+                  <div class="box-titulo">
+                    <i class="bi bi-clock-history me-2"></i>Últimos patrimônios cadastrados
+                  </div>
+                  <div class="table-responsive">
+                    <table class="table table-hover tabela-patrimonios mb-0">
+                      <thead>
+                        <tr>
+                          <th>Código do Selo</th>
+                          <th>Descrição</th>
+                          <th>Setor</th>
+                          <th>Situação</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td><strong>0001</strong></td>
+                          <td>Notebook Dell Inspiron</td>
+                          <td>T.I.</td>
+                          <td><span class="badge-ativo">Ativo</span></td>
+                        </tr>
+                        <tr>
+                          <td><strong>0002</strong></td>
+                          <td>Impressora HP LaserJet</td>
+                          <td>Financeiro</td>
+                          <td><span class="badge-manut">Em Manutenção</span></td>
+                        </tr>
+                        <tr>
+                          <td><strong>0003</strong></td>
+                          <td>Monitor LG 24"</td>
+                          <td>RH</td>
+                          <td><span class="badge-ativo">Ativo</span></td>
+                        </tr>
+                        <tr>
+                          <td><strong>0004</strong></td>
+                          <td>Cadeira Ergonômica</td>
+                          <td>Diretoria</td>
+                          <td><span class="badge-ativo">Ativo</span></td>
+                        </tr>
+                        <tr>
+                          <td><strong>0005</strong></td>
+                          <td>Projetor Epson</td>
+                          <td>Sala de Reunião</td>
+                          <td><span class="badge-extravio">Extraviado</span></td>
+                        </tr>
+                        <tr>
+                          <td><strong>0006</strong></td>
+                          <td>Notebook Lenovo</td>
+                          <td>Coordenação</td>
+                          <td><span class="badge-ativo">Ativo</span></td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Seção Patrimônios -->
+          <section id="patrimonio-content" class="conteudo-secao">
+            <p class="section-titulo">Gestão de Patrimônios</p>
+            <!-- Conteúdo da seção de patrimônios aqui -->
+          </section>
+
+          <!-- Seção Cadastro de Usuário -->
+          <section id="usuarios-content" class="conteudo-secao">
+            <div class="d-flex justify-content-end mb-3">
+              <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNovoUsuario">
+                <i class="bi bi-person-plus-fill me-2"></i>Incluir Usuário
+              </button>
+            </div>
+            <div class="card">
+              <div class="card-header bg-secondary text-white">
+                <h5><i class="bi bi-people-fill"></i> Usuários Cadastrados</h5>
+              </div>
+              <div class="card-body">
+                <div class="table-responsive">
+                  <table class="table table-striped table-hover align-middle">
+                    <thead class="table-dark">
+                      <tr>
+                        <th>Nome</th>
+                        <th>Matrícula</th>
+                        <th>Perfil</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><strong>Luís Miguel</strong></td>
+                        <td>12345</td>
+                        <td><span class="badge bg-danger">Administrador</span></td>
+                        <td><span class="badge bg-success">Ativo</span></td>
+                        <td>
+                          <button class="btn btn-sm btn-warning" data-bs-toggle="modal"
+                            data-bs-target="#modalEditarUsuario" title="Editar">
+                            <i class="bi bi-pencil-square"></i>
+                          </button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Seção Manutenção -->
+          <section id="manutencao-content" class="conteudo-secao">
+            <p class="section-titulo">Histórico de Manutenção</p>
+            <div class="d-flex justify-content-end mb-3">
+              <button class="btn btn-primary"><i class="bi bi-plus-circle me-2"></i>Registrar Manutenção</button>
+            </div>
+            <div class="box">
+              <div class="table-responsive">
+                <table class="table table-hover tabela-patrimonios mb-0">
+                  <thead>
+                    <tr>
+                      <th>Cód. Selo</th>
+                      <th>Descrição do Serviço</th>
+                      <th>Data</th>
+                      <th>Fornecedor/Técnico</th>
+                      <th>Valor Gasto</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><strong>0002</strong></td>
+                      <td>Substituição do cartucho de toner</td>
+                      <td>10/03/2026</td>
+                      <td>TechService Ltda</td>
+                      <td>R$ 180,00</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <!-- Seção Movimentações -->
+          <section id="movimentacao-content" class="conteudo-secao">
+            <p class="section-titulo">Histórico de Movimentações</p>
+            <div class="box">
+              <div class="table-responsive">
+                <table class="table table-hover tabela-patrimonios mb-0">
+                  <thead>
+                    <tr>
+                      <th>Cód. Selo</th>
+                      <th>Bem</th>
+                      <th>Setor Origem</th>
+                      <th>Setor Destino</th>
+                      <th>Responsável</th>
+                      <th>Data</th>
+                      <th>Observação</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><strong>0001</strong></td>
+                      <td>Notebook Dell Inspiron</td>
+                      <td>Financeiro</td>
+                      <td>T.I.</td>
+                      <td>Luís Miguel</td>
+                      <td>15/01/2026</td>
+                      <td>Transferência solicitada pelo gestor</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <!-- Seção Responsáveis -->
+          <section id="responsavel-content" class="conteudo-secao">
+            <p class="section-titulo">Gestão de Responsáveis</p>
+            <div class="d-flex justify-content-end mb-3">
+              <button class="btn btn-primary"><i class="bi bi-person-plus-fill me-2"></i>Novo Responsável</button>
+            </div>
+            <div class="box">
+              <div class="table-responsive">
+                <table class="table table-hover tabela-patrimonios mb-0">
+                  <thead>
+                    <tr>
+                      <th>Nome Completo</th>
+                      <th>Matrícula</th>
+                      <th>Cargo</th>
+                      <th>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Luís Miguel Gonçalves</td>
+                      <td>12345</td>
+                      <td>Técnico de T.I.</td>
+                      <td><button class="btn btn-sm btn-warning"><i class="bi bi-pencil-square"></i></button></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <!-- Seção Setores -->
+          <section id="setor-content" class="conteudo-secao">
+            <p class="section-titulo">Gestão de Setores</p>
+            <div class="d-flex justify-content-end mb-3">
+              <button class="btn btn-primary"><i class="bi bi-plus-circle me-2"></i>Novo Setor</button>
+            </div>
+            <div class="box">
+              <div class="table-responsive">
+                <table class="table table-hover tabela-patrimonios mb-0">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Nome do Setor</th>
+                      <th>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>1</td>
+                      <td>T.I.</td>
+                      <td><button class="btn btn-sm btn-warning"><i class="bi bi-pencil-square"></i></button></td>
+                    </tr>
+                    <tr>
+                      <td>2</td>
+                      <td>Financeiro</td>
+                      <td><button class="btn btn-sm btn-warning"><i class="bi bi-pencil-square"></i></button></td>
+                    </tr>
+                    <tr>
+                      <td>3</td>
+                      <td>RH</td>
+                      <td><button class="btn btn-sm btn-warning"><i class="bi bi-pencil-square"></i></button></td>
+                    </tr>
+                    <tr>
+                      <td>4</td>
+                      <td>Diretoria</td>
+                      <td><button class="btn btn-sm btn-warning"><i class="bi bi-pencil-square"></i></button></td>
+                    </tr>
+                    <tr>
+                      <td>5</td>
+                      <td>Sala de Reunião</td>
+                      <td><button class="btn btn-sm btn-warning"><i class="bi bi-pencil-square"></i></button></td>
+                    </tr>
+                    <tr>
+                      <td>6</td>
+                      <td>Coordenação</td>
+                      <td><button class="btn btn-sm btn-warning"><i class="bi bi-pencil-square"></i></button></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <!-- Seção Categorias -->
+          <section id="categoria-content" class="conteudo-secao">
+            <p class="section-titulo">Gestão de Categorias</p>
+            <div class="d-flex justify-content-end mb-3">
+              <button class="btn btn-primary"><i class="bi bi-plus-circle me-2"></i>Nova Categoria</button>
+            </div>
+            <div class="box">
+              <div class="table-responsive">
+                <table class="table table-hover tabela-patrimonios mb-0">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Nome da Categoria</th>
+                      <th>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>1</td>
+                      <td>Computador / Notebook</td>
+                      <td><button class="btn btn-sm btn-warning"><i class="bi bi-pencil-square"></i></button></td>
+                    </tr>
+                    <tr>
+                      <td>2</td>
+                      <td>Impressora</td>
+                      <td><button class="btn btn-sm btn-warning"><i class="bi bi-pencil-square"></i></button></td>
+                    </tr>
+                    <tr>
+                      <td>3</td>
+                      <td>Monitor</td>
+                      <td><button class="btn btn-sm btn-warning"><i class="bi bi-pencil-square"></i></button></td>
+                    </tr>
+                    <tr>
+                      <td>4</td>
+                      <td>Mobiliário</td>
+                      <td><button class="btn btn-sm btn-warning"><i class="bi bi-pencil-square"></i></button></td>
+                    </tr>
+                    <tr>
+                      <td>5</td>
+                      <td>Projetor</td>
+                      <td><button class="btn btn-sm btn-warning"><i class="bi bi-pencil-square"></i></button></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <!-- Seção Relatórios -->
+          <section id="relatorios-content" class="conteudo-secao">
+            <p class="section-titulo">Relatórios Gerenciais</p>
+            <!-- Conteúdo da seção de relatórios aqui -->
+          </section>
+
+        </main>
+
+        <!-- ========== RODAPÉ ========== -->
+        <footer class="rodape">
+          © 2026 Sistema de Controle Patrimonial — Colégio Salesiano Santo Antônio
+        </footer>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== MODAL NOVO USUÁRIO ========== -->
+  <div class="modal fade" id="modalNovoUsuario" tabindex="-1" aria-labelledby="modalNovoUsuarioLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalNovoUsuarioLabel">Incluir Novo Usuário</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="formNovoUsuario">
+            <div class="row">
+              <div class="col-md-12 mb-3">
+                <label class="form-label">Nome Completo</label>
+                <input type="text" class="form-control" placeholder="Digite o nome completo" required>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Matrícula</label>
+                <input type="text" class="form-control" placeholder="12345" required>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Senha Inicial</label>
+                <input type="password" class="form-control" placeholder="Senha temporária" required>
+              </div>
+              <div class="col-md-12 mb-3">
+                <label class="form-label">Perfil</label>
+                <select class="form-select" required>
+                  <option value="">Selecione...</option>
+                  <option value="admin">Administrador</option>
+                  <option value="operador">Operador</option>
+                  <option value="visualizador">Visualizador</option>
+                </select>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" form="formNovoUsuario" class="btn btn-primary">Salvar Usuário</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== MODAL EDITAR USUÁRIO ========== -->
+  <div class="modal fade" id="modalEditarUsuario" tabindex="-1" aria-labelledby="modalEditarUsuarioLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalEditarUsuarioLabel">Editar Usuário</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="formEditarUsuario">
+            <div class="row">
+              <div class="col-md-12 mb-3">
+                <label class="form-label">Nome Completo</label>
+                <input type="text" class="form-control" value="Luís Miguel" required>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Matrícula</label>
+                <input type="text" class="form-control" value="12345" required>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Nova Senha (Opcional)</label>
+                <input type="password" class="form-control" placeholder="Deixe em branco para não alterar">
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Perfil</label>
+                <select class="form-select" required>
+                  <option value="admin" selected>Administrador</option>
+                  <option value="operador">Operador</option>
+                  <option value="visualizador">Visualizador</option>
+                </select>
+              </div>
+              <div class="col-md-6 mb-3 d-flex align-items-end">
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" role="switch" id="switchStatusUsuario" checked>
+                  <label class="form-check-label" for="switchStatusUsuario">Usuário Ativo</label>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" form="formEditarUsuario" class="btn btn-primary">Salvar Alterações</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script src="script.js"></script>
+
+
+</body>
+
+</html>
