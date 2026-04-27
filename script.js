@@ -28,25 +28,27 @@ document.getElementById('btnVerSenha').addEventListener('click', function () {
     
 
     try {
-        const resposta = await fetch('http://127.0.0.1:5000/api/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ matricula, senha })
-        });
+    const resposta = await fetch('https://controlepatrimonio.onrender.com/api/login', {
+        method: 'POST',
+        headers: { 
+            'Content-Type': 'application/json' 
+        },
+        body: JSON.stringify({ matricula, senha })
+    });
 
-        const dados = await resposta.json();
+    const dados = await resposta.json();
 
-        if (dados.sucesso) {
-            document.getElementById('telaLogin').classList.add('oculto');
-            document.getElementById('telaDashboard').style.display = 'block';
-            renderizarGrafico();
-        } else {
-            msgErro.textContent = dados.mensagem;
-        }
-
-    } catch (erro) {
-        msgErro.textContent = 'Erro ao conectar com o servidor.';
+    if (dados.sucesso) {
+        document.getElementById('telaLogin').classList.add('oculto');
+        document.getElementById('telaDashboard').style.display = 'block';
+        renderizarGrafico();
+    } else {
+        msgErro.textContent = dados.mensagem;
     }
+
+} catch (erro) {
+    msgErro.textContent = 'Erro ao conectar com o servidor.';
+}
 }
 
   // Logout simulado
