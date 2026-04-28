@@ -14,7 +14,7 @@ document.getElementById('btnVerSenha').addEventListener('click', function () {
     }
 });
 
-// Login simulado
+// Captura os dados digitados pelo usuário nos campos de login
  async function fazerLogin(e) {
     e.preventDefault();
 
@@ -24,9 +24,7 @@ document.getElementById('btnVerSenha').addEventListener('click', function () {
 
     msgErro.textContent = '';
 
-    // Ícone de verificar senha
-    
-
+// Envia matrícula e senha para a API no formato JSON
     try {
     const resposta = await fetch('https://controlepatrimonio.onrender.com/api/login', {
         method: 'POST',
@@ -38,14 +36,16 @@ document.getElementById('btnVerSenha').addEventListener('click', function () {
 
     const dados = await resposta.json();
 
+// Se o login for válido, oculta a tela inicial e libera o dashboard
     if (dados.sucesso) {
         document.getElementById('telaLogin').classList.add('oculto');
         document.getElementById('telaDashboard').style.display = 'block';
         renderizarGrafico();
+// Se os dados estiverem incorretos, exibe a mensagem retornada pelo servidor
     } else {
         msgErro.textContent = dados.mensagem;
     }
-
+// Se houver falha de comunicação com a API, mostra erro de conexão
 } catch (erro) {
     msgErro.textContent = 'Erro ao conectar com o servidor.';
 }
