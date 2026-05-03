@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
+     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Usuários</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="style.css">
 </head>
-teste
+
 <body>
 <section id="usuarios-content" class="conteudo-secao">
             <div class="d-flex justify-content-end mb-3">
@@ -48,5 +50,99 @@ teste
               </div>
             </div>
           </section>
+
+          <!-- ========== MODAL NOVO USUÁRIO ========== -->
+  <div class="modal fade" id="modalNovoUsuario" tabindex="-1" aria-labelledby="modalNovoUsuarioLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalNovoUsuarioLabel">Incluir Novo Usuário</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="formNovoUsuario">
+            <div class="row">
+              <div class="col-md-12 mb-3">
+                <label class="form-label">Nome Completo</label>
+                <input type="text" class="form-control" placeholder="Digite o nome completo" required>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Matrícula</label>
+                <input type="text" class="form-control" placeholder="12345" required>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Senha Inicial</label>
+                <input type="password" class="form-control" placeholder="Senha temporária" required>
+              </div>
+              <div class="col-md-12 mb-3">
+                <label class="form-label">Perfil</label>
+                <select class="form-select" required>
+                  <option value="">Selecione...</option>
+                  <option value="admin">Administrador</option>
+                  <option value="operador">Operador</option>
+                  <option value="visualizador">Visualizador</option>
+                </select>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" form="formNovoUsuario" class="btn btn-primary">Salvar Usuário</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== MODAL EDITAR USUÁRIO ========== -->
+  <div class="modal fade" id="modalEditarUsuario" tabindex="-1" aria-labelledby="modalEditarUsuarioLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalEditarUsuarioLabel">Editar Usuário</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="formEditarUsuario">
+            <div class="row">
+              <div class="col-md-12 mb-3">
+                <label class="form-label">Nome Completo</label>
+                <input type="text" class="form-control" value="Luís Miguel" required>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Matrícula</label>
+                <input type="text" class="form-control" value="12345" required>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Nova Senha (Opcional)</label>
+                <input type="password" class="form-control" placeholder="Deixe em branco para não alterar">
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Perfil</label>
+                <select class="form-select" required>
+                  <option value="admin" selected>Administrador</option>
+                  <option value="operador">Operador</option>
+                  <option value="visualizador">Visualizador</option>
+                </select>
+              </div>
+              <div class="col-md-6 mb-3 d-flex align-items-end">
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" role="switch" id="switchStatusUsuario" checked>
+                  <label class="form-check-label" for="switchStatusUsuario">Usuário Ativo</label>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" form="formEditarUsuario" class="btn btn-primary">Salvar Alterações</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>
