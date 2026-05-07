@@ -128,3 +128,53 @@ document.getElementById('btnVerSenha').addEventListener('click', function () {
       }
     });
   }
+
+  // ===================== USUÁRIOS - INCLUIR =====================
+ async function salvarUsuario() {
+    const nome       = document.getElementById('novoNome').value.trim();
+    const matricula  = document.getElementById('novaMatricula').value.trim();
+    const senha      = document.getElementById('novaSenha').value.trim();
+    const perfil     = document.getElementById('novoPerfil').value;
+    const msgErro    = document.getElementById('msgErroUsuario');
+    const msgSucesso = document.getElementById('msgSucessoUsuario');
+
+    // Limpa mensagens anteriores
+    msgErro.classList.add('d-none');
+    msgErro.textContent = '';
+    msgSucesso.classList.add('d-none');
+    msgSucesso.textContent = '';
+
+    if (!nome || !matricula || !senha || !perfil) {
+        msgErro.textContent = 'Preencha todos os campos obrigatórios.';
+        msgErro.classList.remove('d-none'); // ← Exibe o alerta vermelho
+        return;
+    }
+
+    try {
+        const resposta = await fetch('https://controlepatrimonio.onrender.com/api/usuarios', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nome, matricula, senha, perfil })
+        });
+
+        const dados = await resposta.json();
+
+        if (dados.sucesso) {
+            msgSucesso.textContent = dados.mensagem;
+            msgSucesso.classList.remove('d-none'); // ← Exibe o alerta verde
+            document.getElementById('formNovoUsuario').reset();
+            setTimeout(() => {
+                const modal = bootstrap.Modal.getInstance(document.getElementById('modalIncluirUsuario'));
+                if (modal) modal.hide();
+                msgSucesso.classList.add('d-none');
+            }, 1500);
+        } else {
+            msgErro.textContent = dados.mensagem;
+            msgErro.classList.remove('d-none'); // ← Exibe o alerta vermelho
+        }
+
+    } catch (erro) {
+        msgErro.textContent = 'Erro ao conectar com o servidor.';
+        msgErro.classList.remove('d-none');
+    }
+}
