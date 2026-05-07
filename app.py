@@ -5,12 +5,14 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 # Importa a biblioteca de conexão com o PostgreSQL
 import psycopg
+from psycopg_pool import ConnectionPool
 # Importa a URL de conexão do banco vinda do arquivo de configuração
 from config import DB_URL
 # Cria a aplicação principal Flask
 app = Flask(__name__)
 # Habilita CORS para permitir chamadas da interface web para a API
 CORS(app)
+# Reduz a necessidade de criar novas conexões a cada requisição, usando um pool de conexões
 
 
 # Rota criada para testar se a aplicação consegue acessar o banco de dados
@@ -33,7 +35,8 @@ def login():
 
 # Consulta a tabela usuario para verificar se existe um usuário ativo com essas credenciais
     try:
-        with psycopg.connect(DB_URL) as conn:
+        pool = ConnectionPool(conninfo=DB_URL, min_size=1, max_size=5, timeout=10)
+        with pool.connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute(
                     "SELECT nome, tp_usuario FROM usuario WHERE login_matricula = %s AND senha = %s AND ativo = 'S';",
