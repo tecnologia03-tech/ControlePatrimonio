@@ -1,18 +1,21 @@
 // Ícone de verificar senha
-document.getElementById('btnVerSenha').addEventListener('click', function () {
-    const inputSenha = document.getElementById('senha');
-    const icone = document.getElementById('iconeSenha');
-
-    if (inputSenha.type === 'password') {
-        inputSenha.type = 'text';
-        icone.classList.remove('bi-eye');
-        icone.classList.add('bi-eye-slash');
-    } else {
-        inputSenha.type = 'password';
-        icone.classList.remove('bi-eye-slash');
-        icone.classList.add('bi-eye');
-    }
-});
+// Por isso:
+const btnVerSenha = document.getElementById('btnVerSenha');
+if (btnVerSenha) {
+    btnVerSenha.addEventListener('click', function () {
+        const inputSenha = document.getElementById('senha');
+        const icone = document.getElementById('iconeSenha');
+        if (inputSenha.type === 'password') {
+            inputSenha.type = 'text';
+            icone.classList.remove('bi-eye');
+            icone.classList.add('bi-eye-slash');
+        } else {
+            inputSenha.type = 'password';
+            icone.classList.remove('bi-eye-slash');
+            icone.classList.add('bi-eye');
+        }
+    });
+}
 
 // Captura os dados digitados pelo usuário nos campos de login
  async function fazerLogin(e) {
@@ -164,7 +167,7 @@ document.getElementById('btnVerSenha').addEventListener('click', function () {
             msgSucesso.classList.remove('d-none'); // ← Exibe o alerta verde
             document.getElementById('formNovoUsuario').reset();
             setTimeout(() => {
-                const modal = bootstrap.Modal.getInstance(document.getElementById('modalIncluirUsuario'));
+                const modal = bootstrap.Modal.getInstance(document.getElementById('modalNovoUsuario'));
                 if (modal) modal.hide();
                 msgSucesso.classList.add('d-none');
             }, 1500);
