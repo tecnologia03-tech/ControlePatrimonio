@@ -13,13 +13,14 @@ app = Flask(__name__)
 # Habilita CORS para permitir chamadas da interface web para a API
 CORS(app)
 # Reduz a necessidade de criar novas conexões a cada requisição, usando um pool de conexões
-
+# ← 2° crie o pool aqui, depois do app e antes das rotas
+pool = ConnectionPool(DB_URL, min_size=1, max_size=5)
 
 # Rota criada para testar se a aplicação consegue acessar o banco de dados
 @app.route('/api/status')
 def status_banco():
     try:
-        with psycopg.connect(DB_URL) as conn:
+        with pool.connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("SELECT 1;")
         return jsonify({"status": "conectado", "banco": "neondb"}), 200

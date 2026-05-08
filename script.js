@@ -1,22 +1,3 @@
-// Ícone de verificar senha
-// Por isso:
-const btnVerSenha = document.getElementById('btnVerSenha');
-if (btnVerSenha) {
-    btnVerSenha.addEventListener('click', function () {
-        const inputSenha = document.getElementById('senha');
-        const icone = document.getElementById('iconeSenha');
-        if (inputSenha.type === 'password') {
-            inputSenha.type = 'text';
-            icone.classList.remove('bi-eye');
-            icone.classList.add('bi-eye-slash');
-        } else {
-            inputSenha.type = 'password';
-            icone.classList.remove('bi-eye-slash');
-            icone.classList.add('bi-eye');
-        }
-    });
-}
-
 // Captura os dados digitados pelo usuário nos campos de login
  async function fazerLogin(e) {
     e.preventDefault();
