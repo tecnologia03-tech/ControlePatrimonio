@@ -59,9 +59,9 @@ def listar_usuarios():
         with pool.connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("""
-                    SELECT id, nome, login_matricula, tp_usuario, ativo
-                    FROM usuario
-                    ORDER BY nome ASC;
+                    SELECT Id_Usuario, Nome, Login_Matricula, Tp_Usuario, Ativo
+                    FROM Usuario
+                    ORDER BY Nome ASC;
                 """)
                 rows = cursor.fetchall()
                 usuarios = [
@@ -87,32 +87,28 @@ def incluir_usuario():
     senha = dados.get('senha', '').strip()
     perfil = dados.get('perfil', '').strip()
 
-    # Validação básica dos campos obrigatórios
+ # Validação básica dos campos obrigatórios
     if not nome or not matricula or not senha or not perfil:
         return jsonify({"sucesso": False, "mensagem": "Todos os campos são obrigatórios."}), 400
 
     try:
-       with pool.connection() as conn:
+        with pool.connection() as conn:
             with conn.cursor() as cursor:
-                # Verifica se a matrícula já existe
                 cursor.execute(
-                    "SELECT 1 FROM usuario WHERE login_matricula = %s;",
-                    (matricula,)
+                    "SELECT 1 FROM Usuario WHERE Login_Matricula = %s;", (matricula,)
                 )
                 if cursor.fetchone():
-                    return jsonify({"sucesso": False, "mensagem": "Matrícula já cadastrada no sistema."}), 409
+                    return jsonify({"sucesso": False, "mensagem": "Matrícula já cadastrada."}), 409
 
-                # Insere o novo usuário com status ativo
                 cursor.execute(
-                    """INSERT INTO usuario (nome, login_matricula, senha, tp_usuario, ativo)
+                    """INSERT INTO Usuario (Nome, Login_Matricula, Senha, Tp_Usuario, Ativo)
                        VALUES (%s, %s, %s, %s, 'S');""",
                     (nome, matricula, senha, perfil)
                 )
                 conn.commit()
                 return jsonify({"sucesso": True, "mensagem": "Usuário cadastrado com sucesso!"}), 201
-
     except Exception as e:
         return jsonify({"sucesso": False, "mensagem": str(e)}), 500
-
+    
 if __name__ == '__main__':
     app.run(debug=True)
