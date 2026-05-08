@@ -36,7 +36,6 @@ def login():
 
 # Consulta a tabela usuario para verificar se existe um usuário ativo com essas credenciais
     try:
-        pool = ConnectionPool(conninfo=DB_URL, min_size=1, max_size=5, timeout=10)
         with pool.connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute(
@@ -50,6 +49,32 @@ def login():
         else:
             return jsonify({"sucesso": False, "mensagem": "Matrícula ou senha inválida."}), 401
 
+    except Exception as e:
+        return jsonify({"sucesso": False, "mensagem": str(e)}), 500
+    
+# Rota para listar todos os usuários ativos do sistema
+@app.route('/api/usuarios', methods=['GET'])
+def listar_usuarios():
+    try:
+        with pool.connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    SELECT id, nome, login_matricula, tp_usuario, ativo
+                    FROM usuario
+                    ORDER BY nome ASC;
+                """)
+                rows = cursor.fetchall()
+                usuarios = [
+                    {
+                        "id": r[0],
+                        "nome": r[1],
+                        "matricula": r[2],
+                        "perfil": r[3],
+                        "ativo": r[4]
+                    }
+                    for r in rows
+                ]
+                return jsonify({"sucesso": True, "usuarios": usuarios}), 200
     except Exception as e:
         return jsonify({"sucesso": False, "mensagem": str(e)}), 500
     
@@ -67,7 +92,7 @@ def incluir_usuario():
         return jsonify({"sucesso": False, "mensagem": "Todos os campos são obrigatórios."}), 400
 
     try:
-        with psycopg.connect(DB_URL) as conn:
+       with pool.connection() as conn:
             with conn.cursor() as cursor:
                 # Verifica se a matrícula já existe
                 cursor.execute(
