@@ -111,101 +111,104 @@ function renderizarGrafico() {
   });
 }
 
-// ===================== USUÁRIOS — VARIÁVEL GLOBAL =====================
-// Armazena os usuários carregados da API.
+// ===================== USUARIOS - VARIAVEL GLOBAL =====================
+// Guarda a lista carregada da API para uso nos modais de edicao e inativacao.
 let listaUsuarios = [];
+let listaUsuariosFiltrada = [];
 
-// ===================== USUÁRIOS — CARREGAR DA API =====================
-// Busca os usuários cadastrados no backend e monta a tabela.
+// ===================== USUARIOS - CARREGAR DA API =====================
+// Busca os usuarios cadastrados no backend e monta a tabela dinamicamente.
 async function carregarUsuarios() {
   const tbody = document.getElementById('tabelaUsuarios');
   if (!tbody) return;
 
-  tbody.innerHTML = `
-    <tr>
-      <td colspan="5" class="text-center text-muted py-4">Carregando usuários...</td>
-    </tr>
-  `;
+  tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">Carregando usuários...</td></tr>';
 
   try {
     const resposta = await fetch('https://controlepatrimonio.onrender.com/api/usuarios');
     const dados = await resposta.json();
 
     if (!dados.sucesso) {
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="5" class="text-center text-danger py-4">${dados.mensagem}</td>
-        </tr>
-      `;
+      tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger py-4">' + dados.mensagem + '</td></tr>';
       return;
     }
 
     listaUsuarios = dados.usuarios;
-
-    if (listaUsuarios.length === 0) {
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="5" class="text-center text-muted py-4">Nenhum usuário cadastrado.</td>
-        </tr>
-      `;
-      return;
-    }
-
-    const mapPerfil = {
-      'A': 'Administrador',
-      'O': 'Operador',
-      'V': 'Visualizador'
-    };
-
-    tbody.innerHTML = listaUsuarios.map(usuario => `
-      <tr>
-        <td>${usuario.nome}</td>
-        <td>${usuario.matricula}</td>
-        <td>${mapPerfil[usuario.perfil] || usuario.perfil}</td>
-        <td>
-          <span class="${usuario.ativo === 'S' ? 'badge-ativo' : 'badge-inativo'}">
-            ${usuario.ativo === 'S' ? 'Ativo' : 'Inativo'}
-          </span>
-        </td>
-        <td>
-          <div class="d-flex gap-2 flex-wrap">
-            <button class="btn btn-sm btn-outline-primary" onclick="abrirModalEditarUsuario(${usuario.id})">
-              Editar
-            </button>
-            ${usuario.ativo === 'S' ? `
-              <button class="btn btn-sm btn-outline-danger" onclick="inativarUsuario(${usuario.id})">
-                Inativar
-              </button>
-            ` : ''}
-          </div>
-        </td>
-      </tr>
-    `).join('');
-
+    listaUsuariosFiltrada = [...listaUsuarios];
+    renderizarUsuarios(listaUsuariosFiltrada);
   } catch (erro) {
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="5" class="text-center text-danger py-4">Erro ao conectar com o servidor.</td>
-      </tr>
-    `;
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger py-4">Erro ao conectar com o servidor.</td></tr>';
   }
 }
 
-// ===================== USUÁRIOS — MODAL INCLUIR =====================
-// Abre o modal de inclusão e limpa os campos.
+// ===================== USUARIOS - RENDERIZAR LISTA =====================
+// Monta as linhas da tabela com os dados recebidos da API.
+function renderizarUsuarios(lista) {
+  const tbody = document.getElementById('tabelaUsuarios');
+  if (!tbody) return;
+
+  if (!lista || lista.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">Nenhum usuário cadastrado.</td></tr>';
+    return;
+  }
+
+  const mapPerfil = { 'A': 'Administrador', 'O': 'Operador', 'V': 'Visualizador' };
+
+  tbody.innerHTML = lista.map(usuario => {
+    const perfil = mapPerfil[usuario.perfil] || usuario.perfil;
+    const status = usuario.ativo === 'S'
+      ? '<span class="badge-ativo">Ativo</span>'
+      : '<span class="badge-inativo">Inativo</span>';
+
+    return `
+      <tr>
+        <td>${usuario.nome}</td>
+        <td>${usuario.matricula}</td>
+        <td>${perfil}</td>
+        <td>${status}</td>
+        <td>
+          <button class="btn btn-sm btn-outline-primary" onclick="abrirModalEditarUsuario(${usuario.id})">Editar</button>
+          ${usuario.ativo === 'S' ? '<button class="btn btn-sm btn-outline-danger ms-1" onclick="inativarUsuario(' + usuario.id + ')">Inativar</button>' : ''}
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+// ===================== USUARIOS - FILTRAR =====================
+// Filtra usuarios por nome ou matricula.
+function filtrarUsuarios() {
+  const termo = document.getElementById('buscaUsuario').value.trim().toLowerCase();
+
+  if (!termo) {
+    listaUsuariosFiltrada = [...listaUsuarios];
+    renderizarUsuarios(listaUsuariosFiltrada);
+    return;
+  }
+
+  listaUsuariosFiltrada = listaUsuarios.filter(u =>
+    (u.nome && u.nome.toLowerCase().includes(termo)) ||
+    (u.matricula && String(u.matricula).toLowerCase().includes(termo))
+  );
+
+  renderizarUsuarios(listaUsuariosFiltrada);
+}
+
+// ===================== USUARIOS - MODAL INCLUIR =====================
+// Abre o modal de inclusao e limpa os campos anteriores.
 function abrirModalIncluirUsuario() {
   document.getElementById('formIncluirUsuario').reset();
   document.getElementById('msgIncluirUsuario').textContent = '';
   document.getElementById('modalIncluirUsuario').style.display = 'flex';
 }
 
-// Fecha o modal de inclusão.
+// Fecha o modal de inclusao.
 function fecharModalIncluirUsuario() {
   document.getElementById('modalIncluirUsuario').style.display = 'none';
 }
 
-// ===================== USUÁRIOS — CADASTRAR =====================
-// Envia os dados do novo usuário para a API.
+// ===================== USUARIOS - CADASTRAR =====================
+// Valida os campos e envia os dados do novo usuario para a API.
 async function salvarUsuario() {
   const nome = document.getElementById('nomeUsuario').value.trim();
   const matricula = document.getElementById('matriculaUsuario').value.trim();
@@ -240,8 +243,8 @@ async function salvarUsuario() {
   }
 }
 
-// ===================== USUÁRIOS — MODAL EDITAR =====================
-// Abre o modal de edição preenchendo os campos com os dados existentes.
+// ===================== USUARIOS - MODAL EDITAR =====================
+// Abre o modal de edicao preenchendo os campos com os dados do usuario selecionado.
 function abrirModalEditarUsuario(id) {
   const usuario = listaUsuarios.find(u => u.id === id);
   if (!usuario) return;
@@ -257,13 +260,13 @@ function abrirModalEditarUsuario(id) {
   document.getElementById('modalEditarUsuario').style.display = 'flex';
 }
 
-// Fecha o modal de edição.
+// Fecha o modal de edicao.
 function fecharModalEditarUsuario() {
   document.getElementById('modalEditarUsuario').style.display = 'none';
 }
 
-// ===================== USUÁRIOS — EDITAR =====================
-// Envia a atualização do usuário para a API.
+// ===================== USUARIOS - EDITAR =====================
+// Valida os campos e envia a atualizacao do usuario para a API.
 async function salvarEdicaoUsuario() {
   const id = document.getElementById('editUsuarioId').value;
   const nome = document.getElementById('editNomeUsuario').value.trim();
@@ -281,7 +284,7 @@ async function salvarEdicaoUsuario() {
   }
 
   try {
-    const resposta = await fetch(`https://controlepatrimonio.onrender.com/api/usuarios/${id}`, {
+    const resposta = await fetch('https://controlepatrimonio.onrender.com/api/usuarios/' + id, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ nome, matricula, senha, perfil, ativo })
@@ -300,14 +303,14 @@ async function salvarEdicaoUsuario() {
   }
 }
 
-// ===================== USUÁRIOS — INATIVAR =====================
-// Inativa o usuário sem removê-lo fisicamente do banco.
+// ===================== USUARIOS - INATIVAR =====================
+// Inativa o usuario sem remove-lo fisicamente do banco de dados.
 async function inativarUsuario(id) {
   const confirmar = confirm('Deseja realmente inativar este usuário?');
   if (!confirmar) return;
 
   try {
-    const resposta = await fetch(`https://controlepatrimonio.onrender.com/api/usuarios/${id}`, {
+    const resposta = await fetch('https://controlepatrimonio.onrender.com/api/usuarios/' + id, {
       method: 'DELETE'
     });
 

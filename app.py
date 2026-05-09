@@ -90,7 +90,6 @@ def login():
         # Retorna erro interno caso ocorra falha no processo de login
         return jsonify({"sucesso": False, "mensagem": str(e)}), 500
 
-
 # Rota para listar todos os usuários cadastrados no sistema
 @app.route('/api/usuarios', methods=['GET'])
 def listar_usuarios():
@@ -107,20 +106,20 @@ def listar_usuarios():
                 # Recupera todas as linhas retornadas pela consulta
                 rows = cursor.fetchall()
 
-        # Converte o resultado da consulta em uma lista de dicionários
-        usuarios = [
-            {
-                "id": r[0],
-                "nome": r[1],
-                "matricula": r[2],
-                "perfil": r[3],
-                "ativo": r[4]
-            }
-            for r in rows
-        ]
+                # Converte o resultado da consulta em uma lista de dicionários
+                usuarios = [
+                    {
+                        "id": r[0],
+                        "nome": r[1],
+                        "matricula": r[2],
+                        "perfil": r[3],
+                        "ativo": r[4]
+                    }
+                    for r in rows
+                ]
 
-        # Retorna a lista de usuários em formato JSON
-        return jsonify({"sucesso": True, "usuarios": usuarios}), 200
+                # Retorna a lista de usuários em formato JSON
+                return jsonify({"sucesso": True, "usuarios": usuarios}), 200
 
     except Exception as e:
         # Retorna erro se houver falha ao consultar os usuários
@@ -206,15 +205,12 @@ def editar_usuario(id):
         with pool.connection() as conn:
             with conn.cursor() as cursor:
                 # Verifica se a matrícula informada já pertence a outro usuário
-                cursor.execute(
-                    """
+                cursor.execute("""
                     SELECT 1
                     FROM Usuario
                     WHERE Login_Matricula = %s
-                      AND Id_Usuario != %s;
-                    """,
-                    (matricula, id)
-                )
+                    AND Id_Usuario != %s;
+                """, (matricula, id))
 
                 # Se encontrar, bloqueia a atualização duplicada
                 if cursor.fetchone():

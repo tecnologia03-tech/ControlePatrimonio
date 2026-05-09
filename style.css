@@ -335,3 +335,135 @@
       border-top: 1px solid #e0e0e0;
       background: var(--branco);
     }
+
+    /* ===================== MODAL DE USUARIO ===================== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.modal-box {
+  width: 100%;
+  max-width: 540px;
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+}
+
+.modal-header-custom {
+  background: #fff;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid #e0e0e0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-header-custom h5 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #101827;
+}
+
+.btn-fechar-modal {
+  background: transparent;
+  border: none;
+  font-size: 1.4rem;
+  color: #666;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.modal-body-custom {
+  padding: 20px 24px;
+}
+
+.modal-footer-custom {
+  padding: 14px 24px;
+  border-top: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  background: #fff;
+}
+
+/* ===================== TABELA DE USUARIOS ===================== */
+.tabela-usuarios th {
+  background: #343a40;
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 12px 14px;
+}
+
+.tabela-usuarios td {
+  font-size: 0.88rem;
+  vertical-align: middle;
+  padding: 10px 14px;
+}
+
+.tabela-usuarios tbody tr:hover {
+  background: #f8f9fa;
+}
+
+/* ===================== BADGE INATIVO ===================== */
+.badge-inativo {
+  background: #6c757d;
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  display: inline-block;
+}
+
+/* ===================== BARRA DE PESQUISA DE USUARIOS ===================== */
+.input-busca-usuario {
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  padding: 6px 12px 6px 34px;
+  font-size: 0.9rem;
+  width: 280px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23999' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398l3.85 3.85a1 1 0 0 0 1.415-1.415l-3.868-3.833zm-5.242 1.156a5.5 5.5 0 1 1 0-11 5.5 5.5 0 0 1 0 11z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: 10px center;
+  outline: none;
+}
+
+.input-busca-usuario:focus {
+  border-color: var(--azul);
+  box-shadow: 0 0 0 0.15rem rgba(0,88,183,0.15);
+}
+
+/* ===================== CABECALHO DA SECAO DE USUARIOS ===================== */
+.usuarios-header-box {
+  background: #fff;
+  border-radius: 8px 8px 0 0;
+  border: 1px solid #dee2e6;
+  border-bottom: none;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.usuarios-titulo-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #101827;
+}
+
+.tabela-usuarios-box {
+  border: 1px solid #dee2e6;
+  border-radius: 0 0 8px 8px;
+  overflow: hidden;
+}
