@@ -153,6 +153,47 @@ def incluir_usuario():
     except Exception as e:
         # Retorna erro se houver falha na inclusão
         return jsonify({"sucesso": False, "mensagem": str(e)}), 500
+    
+# Rota para listar todos os usuários cadastrados no sistema
+@app.route('/api/usuarios', methods=['GET'])
+def listar_usuarios():
+    try:
+        with pool.connection() as conn:
+            with conn.cursor() as cursor:
+                # Consulta os dados dos usuários para exibição na tabela
+                cursor.execute("""
+                    SELECT Id_Usuario, Nome, Login_Matricula, Tp_Usuario, Ativo
+                    FROM Usuario
+                    ORDER BY Nome ASC;
+                """)
+
+                # Lê todas as linhas retornadas pela consulta
+                rows = cursor.fetchall()
+
+                # Converte o resultado em uma lista de dicionários
+                usuarios = [
+                    {
+                        "id": r[0],
+                        "nome": r[1],
+                        "matricula": r[2],
+                        "perfil": r[3],
+                        "ativo": r[4]
+                    }
+                    for r in rows
+                ]
+
+                # Retorna os usuários em JSON
+                return jsonify({
+                    "sucesso": True,
+                    "usuarios": usuarios
+                }), 200
+
+    except Exception as e:
+        # Retorna erro se ocorrer falha na consulta
+        return jsonify({
+            "sucesso": False,
+            "mensagem": str(e)
+        }), 500
 
 
 # Rota para editar um usuário existente
