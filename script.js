@@ -109,8 +109,14 @@ async function carregarUsuarios() {
         const resposta = await fetch('https://controlepatrimonio.onrender.com/api/usuarios');
         const dados = await resposta.json();
         if (dados.sucesso) {
-            listaUsuarios = dados.usuarios;
-            renderizarTabela(listaUsuarios);
+            // Ativos primeiro, depois por nome
+            listaUsuarios = dados.usuarios.sort((a, b) => {
+                if (a.ativo === b.ativo) return a.nome.localeCompare(b.nome);
+                return a.ativo === 'S' ? -1 : 1;
+            });
+            listaFiltrada = [...listaUsuarios]; // ← NOVO
+            paginaAtual = 1;                    // ← NOVO
+            renderizarTabela();                 // ← sem parâmetro
         } else {
             tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger py-3">${dados.mensagem}</td></tr>`;
         }
@@ -120,18 +126,29 @@ async function carregarUsuarios() {
 }
 
 // ===================== USUÁRIOS — RENDERIZAR TABELA =====================
-function renderizarTabela(usuarios) {
-    const tbody = document.getElementById('tabelaUsuarios');
+function renderizarTabela() {
+    const tbody     = document.getElementById('tabelaUsuarios');
     const msgNenhum = document.getElementById('msgNenhumResultado');
-    if (usuarios.length === 0) {
+
+    if (listaFiltrada.length === 0) {
         tbody.innerHTML = '';
-        msgNenhum.classList.remove('d-none');
+        if (msgNenhum) msgNenhum.classList.remove('d-none');
+        renderizarPaginacao(0);
         return;
     }
-    msgNenhum.classList.add('d-none');
+
+    if (msgNenhum) msgNenhum.classList.add('d-none');
+
+    const totalPaginas = Math.ceil(listaFiltrada.length / itensPorPagina);
+    if (paginaAtual > totalPaginas) paginaAtual = totalPaginas;
+
+    const inicio = (paginaAtual - 1) * itensPorPagina;
+    const itensPagina = listaFiltrada.slice(inicio, inicio + itensPorPagina);
+
     const perfilNome  = { 'A': 'Administrador', 'O': 'Operador', 'V': 'Visualizador' };
     const perfilBadge = { 'A': 'bg-danger', 'O': 'bg-primary', 'V': 'bg-secondary' };
-    tbody.innerHTML = usuarios.map(u => `
+
+    tbody.innerHTML = itensPagina.map(u => `
         <tr>
             <td><strong>${u.nome}</strong></td>
             <td>${u.matricula}</td>
@@ -153,6 +170,8 @@ function renderizarTabela(usuarios) {
             </td>
         </tr>
     `).join('');
+
+    renderizarPaginacao(totalPaginas);
 }
 
 // ===================== USUÁRIOS — PESQUISA =====================
