@@ -46,15 +46,22 @@ def status_banco():
 # Recebe os dados enviados pelo front-end no formato JSON para autenticar o usuário
 @app.route('/api/login', methods=['POST'])
 def login():
-    # Captura o JSON enviado pelo front-end
-    dados = request.get_json()
-
-    # Extrai os campos de login informados na tela
-    matricula = dados.get('matricula')
-    senha = dados.get('senha')
-
-    # Consulta a tabela Usuario para verificar se existe um usuário ativo com essas credenciais
     try:
+        # Captura o JSON enviado pelo front-end; se vier vazio, usa um dicionário vazio
+        dados = request.get_json(silent=True) or {}
+
+        # Extrai os campos de login informados na tela
+        matricula = (dados.get('matricula') or '').strip()
+        senha = (dados.get('senha') or '').strip()
+
+        # Validação básica antes de consultar o banco
+        if not matricula or not senha:
+            return jsonify({
+                "sucesso": False,
+                "mensagem": "Informe matrícula e senha."
+            }), 400
+
+        # Consulta a tabela Usuario para verificar se existe um usuário ativo com essas credenciais
         with pool.connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute(
@@ -62,8 +69,8 @@ def login():
                     SELECT Nome, Tp_Usuario
                     FROM Usuario
                     WHERE Login_Matricula = %s
-                      AND Senha = %s
-                      AND Ativo = 'S';
+                    AND Senha = %s
+                    AND Ativo = 'S';
                     """,
                     (matricula, senha)
                 )
@@ -71,59 +78,26 @@ def login():
                 # Busca o primeiro usuário encontrado
                 usuario = cursor.fetchone()
 
-        # Retorna sucesso se encontrar o usuário
-        if usuario:
-            return jsonify({
-                "sucesso": True,
-                "nome": usuario[0],
-                "perfil": usuario[1]
-            }), 200
+                # Retorna sucesso se encontrar o usuário
+                if usuario:
+                    return jsonify({
+                        "sucesso": True,
+                        "nome": usuario[0],
+                        "perfil": usuario[1]
+                    }), 200
 
         # Retorna erro de autenticação se não encontrar o usuário
-        else:
-            return jsonify({
-                "sucesso": False,
-                "mensagem": "Matrícula ou senha inválida."
-            }), 401
+        return jsonify({
+            "sucesso": False,
+            "mensagem": "Matrícula ou senha inválida."
+        }), 401
 
     except Exception as e:
         # Retorna erro interno caso ocorra falha no processo de login
-        return jsonify({"sucesso": False, "mensagem": str(e)}), 500
-
-# Rota para listar todos os usuários cadastrados no sistema
-@app.route('/api/usuarios', methods=['GET'])
-def listar_usuarios():
-    try:
-        with pool.connection() as conn:
-            with conn.cursor() as cursor:
-                # Consulta os principais dados dos usuários para exibição em tabela
-                cursor.execute("""
-                    SELECT Id_Usuario, Nome, Login_Matricula, Tp_Usuario, Ativo
-                    FROM Usuario
-                    ORDER BY Nome ASC;
-                """)
-
-                # Recupera todas as linhas retornadas pela consulta
-                rows = cursor.fetchall()
-
-                # Converte o resultado da consulta em uma lista de dicionários
-                usuarios = [
-                    {
-                        "id": r[0],
-                        "nome": r[1],
-                        "matricula": r[2],
-                        "perfil": r[3],
-                        "ativo": r[4]
-                    }
-                    for r in rows
-                ]
-
-                # Retorna a lista de usuários em formato JSON
-                return jsonify({"sucesso": True, "usuarios": usuarios}), 200
-
-    except Exception as e:
-        # Retorna erro se houver falha ao consultar os usuários
-        return jsonify({"sucesso": False, "mensagem": str(e)}), 500
+        return jsonify({
+            "sucesso": False,
+            "mensagem": str(e)
+        }), 500
 
 
 # Inclui um novo usuário no sistema
