@@ -121,56 +121,51 @@ function renderizarGrafico() {
 }
 
 // ===================== USUARIOS - VARIAVEL GLOBAL =====================
-// Guarda a lista carregada da API para uso nos modais de edicao e inativacao.
 let listaUsuarios = [];
 let listaUsuariosFiltrada = [];
 
 // ===================== USUARIOS - CARREGAR DA API =====================
-// Busca os usuarios cadastrados no backend e monta a tabela dinamicamente.
 async function carregarUsuarios() {
   const tbody = document.getElementById('tabelaUsuarios');
-  if (!tbody) return;
+  if (!tbody) {
+    console.error('tbody tabelaUsuarios nao encontrado');
+    return;
+  }
 
   tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">Carregando usuários...</td></tr>';
 
   try {
     const resposta = await fetch('https://controlepatrimonio.onrender.com/api/usuarios');
+
+    if (!resposta.ok) {
+      throw new Error('Falha na requisição: ' + resposta.status);
+    }
+
     const dados = await resposta.json();
+    console.log('dados usuarios:', dados);
 
     if (!dados.sucesso) {
       tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger py-4">' + dados.mensagem + '</td></tr>';
       return;
     }
 
-    const mapPerfil = { A: 'Administrador', O: 'Operador', V: 'Visualizador' };
+    listaUsuarios = dados.usuarios || [];
+    listaUsuariosFiltrada = [...listaUsuarios];
+    renderizarUsuarios(listaUsuariosFiltrada);
 
-    tbody.innerHTML = dados.usuarios.map(usuario => `
-      <tr>
-        <td>${usuario.nome}</td>
-        <td>${usuario.matricula}</td>
-        <td>${mapPerfil[usuario.perfil] || usuario.perfil}</td>
-        <td>
-          ${usuario.ativo === 'S'
-            ? '<span class="badge-ativo">Ativo</span>'
-            : '<span class="badge-inativo">Inativo</span>'}
-        </td>
-        <td>
-          <button class="btn btn-sm btn-outline-primary" onclick="abrirModalEditarUsuario(${usuario.id})">Editar</button>
-          ${usuario.ativo === 'S' ? '<button class="btn btn-sm btn-outline-danger ms-1" onclick="inativarUsuario(' + usuario.id + ')">Inativar</button>' : ''}
-        </td>
-      </tr>
-    `).join('');
   } catch (erro) {
-    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger py-4">Erro ao carregar usuários.</td></tr>';
-    console.error(erro);
+    console.error('Erro ao carregar usuários:', erro);
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger py-4">Erro ao conectar com o servidor.</td></tr>';
   }
 }
 
 // ===================== USUARIOS - RENDERIZAR LISTA =====================
-// Monta as linhas da tabela com os dados recebidos da API.
 function renderizarUsuarios(lista) {
   const tbody = document.getElementById('tabelaUsuarios');
-  if (!tbody) return;
+  if (!tbody) {
+    console.error('tbody tabelaUsuarios nao encontrado');
+    return;
+  }
 
   if (!lista || lista.length === 0) {
     tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">Nenhum usuário cadastrado.</td></tr>';
