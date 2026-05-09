@@ -222,3 +222,31 @@ function abrirEdicaoUsuario(id, nome, matricula, perfil, ativo) {
     document.getElementById('editarSenha').value = '';
     bootstrap.Modal.getOrCreateInstance(document.getElementById('modalEditarUsuario')).show();
 }
+
+// ===================== USUÁRIOS — SALVAR EDIÇÃO =====================
+async function salvarEdicaoUsuario() {
+    const id        = document.getElementById('editarId').value;
+    const nome      = document.getElementById('editarNome').value.trim();
+    const matricula = document.getElementById('editarMatricula').value.trim();
+    const senha     = document.getElementById('editarSenha').value.trim();
+    const perfil    = document.getElementById('editarPerfil').value;
+    const ativo     = document.getElementById('editarAtivo').checked ? 'S' : 'N';
+
+    try {
+        const resposta = await fetch(`https://controlepatrimonio.onrender.com/api/usuarios/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nome, matricula, senha, perfil, ativo })
+        });
+        const dados = await resposta.json();
+
+        if (dados.sucesso) {
+            bootstrap.Modal.getInstance(document.getElementById('modalEditarUsuario')).hide();
+            carregarUsuarios();
+        } else {
+            alert(dados.mensagem);
+        }
+    } catch (erro) {
+        alert('Erro ao conectar com o servidor.');
+    }
+}

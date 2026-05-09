@@ -110,5 +110,48 @@ def incluir_usuario():
     except Exception as e:
         return jsonify({"sucesso": False, "mensagem": str(e)}), 500
     
+# Rota para editar um usuário existente
+@app.route('/api/usuarios/<int:id>', methods=['PUT'])
+def editar_usuario(id):
+    dados = request.get_json()
+    nome      = dados.get('nome', '').strip()
+    matricula = dados.get('matricula', '').strip()
+    senha     = dados.get('senha', '').strip()
+    perfil    = dados.get('perfil', '').strip()
+    ativo     = dados.get('ativo', 'S')
+
+    if not nome or not matricula or not perfil:
+        return jsonify({"sucesso": False, "mensagem": "Preencha todos os campos obrigatórios."}), 400
+
+    try:
+        with pool.connection() as conn:
+            with conn.cursor() as cursor:
+                # Verifica se a matrícula já pertence a outro usuário
+                cursor.execute(
+                    "SELECT 1 FROM Usuario WHERE Login_Matricula = %s AND Id_Usuario != %s;",
+                    (matricula, id)
+                )
+                if cursor.fetchone():
+                    return jsonify({"sucesso": False, "mensagem": "Matrícula já cadastrada para outro usuário."}), 409
+
+                # Se senha foi informada, atualiza também. Senão, mantém a atual.
+                if senha:
+                    cursor.execute("""
+                        UPDATE Usuario
+                        SET Nome = %s, Login_Matricula = %s, Senha = %s, Tp_Usuario = %s, Ativo = %s
+                        WHERE Id_Usuario = %s;
+                    """, (nome, matricula, senha, perfil, ativo, id))
+                else:
+                    cursor.execute("""
+                        UPDATE Usuario
+                        SET Nome = %s, Login_Matricula = %s, Tp_Usuario = %s, Ativo = %s
+                        WHERE Id_Usuario = %s;
+                    """, (nome, matricula, perfil, ativo, id))
+
+                conn.commit()
+                return jsonify({"sucesso": True, "mensagem": "Usuário atualizado com sucesso!"}), 200
+    except Exception as e:
+        return jsonify({"sucesso": False, "mensagem": str(e)}), 500
+    
 if __name__ == '__main__':
     app.run(debug=True)
