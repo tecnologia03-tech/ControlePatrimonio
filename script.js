@@ -41,8 +41,8 @@ function toggleMenu() {
   document.getElementById('sidebar').classList.toggle('fechado');
 }
 
-// ===================== NAVEGAÇÃO =====================
-// Responsável por alternar as telas internas do sistema.
+// ===================== NAVEGACAO =====================
+// Responsavel por alternar entre as secoes do sistema.
 function mostrarConteudo(idConteudo, elementoMenu) {
   document.querySelectorAll('.conteudo-secao').forEach(secao => {
     secao.classList.remove('ativo');
@@ -57,9 +57,9 @@ function mostrarConteudo(idConteudo, elementoMenu) {
 
   const titulos = {
     'dashboard': 'Dashboard',
-    'patrimonio': 'Gestão de Patrimônios',
-    'usuarios': 'Cadastro de Usuários',
-    'relatorios': 'Relatórios Gerenciais'
+    'patrimonio': 'Gestao de Patrimonios',
+    'usuarios': 'Cadastro de Usuarios',
+    'relatorios': 'Relatorios Gerenciais'
   };
 
   document.querySelector('.topbar-titulo').textContent = titulos[idConteudo] || 'Dashboard';
@@ -126,6 +126,11 @@ async function carregarUsuarios() {
 
   try {
     const resposta = await fetch('https://controlepatrimonio.onrender.com/api/usuarios');
+
+    if (!resposta.ok) {
+      throw new Error('Falha ao buscar usuarios: ' + resposta.status);
+    }
+
     const dados = await resposta.json();
 
     if (!dados.sucesso) {
@@ -138,6 +143,7 @@ async function carregarUsuarios() {
     renderizarUsuarios(listaUsuariosFiltrada);
   } catch (erro) {
     tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger py-4">Erro ao conectar com o servidor.</td></tr>';
+    console.error(erro);
   }
 }
 
