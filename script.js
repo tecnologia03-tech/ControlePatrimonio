@@ -52,17 +52,26 @@ function mostrarConteudo(idConteudo, elementoMenu) {
     item.classList.remove('ativo');
   });
 
-  document.getElementById(idConteudo + '-content').classList.add('ativo');
-  elementoMenu.parentElement.classList.add('ativo');
+  const secao = document.getElementById(idConteudo + '-content');
+  if (secao) {
+    secao.classList.add('ativo');
+  }
+
+  if (elementoMenu && elementoMenu.parentElement) {
+    elementoMenu.parentElement.classList.add('ativo');
+  }
 
   const titulos = {
-    'dashboard': 'Dashboard',
-    'patrimonio': 'Gestao de Patrimonios',
-    'usuarios': 'Cadastro de Usuarios',
-    'relatorios': 'Relatorios Gerenciais'
+    dashboard: 'Dashboard',
+    patrimonio: 'Gestão de Patrimônios',
+    usuarios: 'Cadastro de Usuários',
+    relatorios: 'Relatórios Gerenciais'
   };
 
-  document.querySelector('.topbar-titulo').textContent = titulos[idConteudo] || 'Dashboard';
+  const topbar = document.querySelector('.topbar-titulo');
+  if (topbar) {
+    topbar.textContent = titulos[idConteudo] || 'Dashboard';
+  }
 
   if (idConteudo === 'usuarios') {
     carregarUsuarios();
@@ -126,11 +135,6 @@ async function carregarUsuarios() {
 
   try {
     const resposta = await fetch('https://controlepatrimonio.onrender.com/api/usuarios');
-
-    if (!resposta.ok) {
-      throw new Error('Falha ao buscar usuarios: ' + resposta.status);
-    }
-
     const dados = await resposta.json();
 
     if (!dados.sucesso) {
@@ -138,11 +142,26 @@ async function carregarUsuarios() {
       return;
     }
 
-    listaUsuarios = dados.usuarios;
-    listaUsuariosFiltrada = [...listaUsuarios];
-    renderizarUsuarios(listaUsuariosFiltrada);
+    const mapPerfil = { A: 'Administrador', O: 'Operador', V: 'Visualizador' };
+
+    tbody.innerHTML = dados.usuarios.map(usuario => `
+      <tr>
+        <td>${usuario.nome}</td>
+        <td>${usuario.matricula}</td>
+        <td>${mapPerfil[usuario.perfil] || usuario.perfil}</td>
+        <td>
+          ${usuario.ativo === 'S'
+            ? '<span class="badge-ativo">Ativo</span>'
+            : '<span class="badge-inativo">Inativo</span>'}
+        </td>
+        <td>
+          <button class="btn btn-sm btn-outline-primary" onclick="abrirModalEditarUsuario(${usuario.id})">Editar</button>
+          ${usuario.ativo === 'S' ? '<button class="btn btn-sm btn-outline-danger ms-1" onclick="inativarUsuario(' + usuario.id + ')">Inativar</button>' : ''}
+        </td>
+      </tr>
+    `).join('');
   } catch (erro) {
-    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger py-4">Erro ao conectar com o servidor.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger py-4">Erro ao carregar usuários.</td></tr>';
     console.error(erro);
   }
 }
