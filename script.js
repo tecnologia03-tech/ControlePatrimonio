@@ -323,11 +323,24 @@ async function salvarEdicaoUsuario() {
 }
 
 // ===== CONFIRMAR INATIVACAO =====
+let deveInativarUsuario = false;
+
 function confirmarInativacaoCheckbox(checkbox) {
   if (!checkbox.checked) {
-    const confirmou = confirm('Deseja realmente inativar este usuário?');
-    if (!confirmou) {
-      checkbox.checked = true;
-    }
+    checkbox.checked = true;
+    document.getElementById('modalConfirmarInativacao').style.display = 'flex';
   }
+}
+
+function cancelarInativacao() {
+  document.getElementById('modalConfirmarInativacao').style.display = 'none';
+  deveInativarUsuario = false;
+}
+
+async function confirmarInativacaoDefinitivo() {
+  document.getElementById('modalConfirmarInativacao').style.display = 'none';
+  deveInativarUsuario = true;
+  
+  const checkbox = document.querySelector('#editAtivoUsuario');
+  checkbox.checked = false;
 }

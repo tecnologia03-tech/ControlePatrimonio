@@ -151,6 +151,24 @@
       </form>
     </div>
 
+    <!-- Modal de Confirmação de Inativação -->
+<div id="modalConfirmarInativacao" class="modal-overlay-confirmacao" style="display: none;">
+  <div class="modal-confirmacao-container">
+    <div class="modal-icone-alerta">
+      ⚠️
+    </div>
+    <h3 class="modal-titulo-confirmacao">Confirmar Inativação</h3>
+    <p class="modal-texto-confirmacao">
+      <strong>Deseja realmente inativar este usuário?</strong>
+    </p>
+    
+    <div class="modal-botoes-confirmacao">
+      <button onclick="cancelarInativacao()" class="btn-cancelar-confirmacao">Cancelar</button>
+      <button onclick="confirmarInativacaoDefinitivo()" class="btn-inativar-confirmacao">Inativar Usuário</button>
+    </div>
+  </div>
+</div>
+
     <div class="modal-footer-custom">
       <button type="button" class="btn btn-secondary" onclick="fecharModalEditarUsuario()">Cancelar</button>
       <button type="button" class="btn btn-primary" onclick="salvarEdicaoUsuario()">Salvar Alterações</button>

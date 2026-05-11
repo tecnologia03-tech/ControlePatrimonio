@@ -394,6 +394,93 @@
   background: #fff;
 }
 
+/* Modal de Confirmação de Inativação */
+.modal-overlay-confirmacao {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1001;
+}
+
+.modal-confirmacao-container {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 420px;
+  width: 90%;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+  text-align: center;
+}
+
+.modal-icone-alerta {
+  width: 64px;
+  height: 64px;
+  background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+  border-radius: 50%;
+  margin: 0 auto 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: white;
+}
+
+.modal-titulo-confirmacao {
+  color: #333;
+  margin: 0 0 8px;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.modal-texto-confirmacao {
+  color: #666;
+  margin: 0 0 24px;
+  line-height: 1.5;
+}
+
+.modal-botoes-confirmacao {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.btn-cancelar-confirmacao,
+.btn-inativar-confirmacao {
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.btn-cancelar-confirmacao {
+  border: 1px solid #ddd;
+  background: white;
+  color: #666;
+}
+
+.btn-cancelar-confirmacao:hover {
+  background: #f8f9fa;
+}
+
+.btn-inativar-confirmacao {
+  background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+  color: white;
+}
+
+.btn-inativar-confirmacao:hover {
+  background: linear-gradient(135deg, #ff5252, #e53935);
+  transform: translateY(-1px);
+}
+
 /* ===================== TABELA DE USUARIOS ===================== */
 .tabela-usuarios th {
   background: #343a40;
