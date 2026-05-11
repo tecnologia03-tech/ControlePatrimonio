@@ -472,12 +472,12 @@
 }
 
 .btn-inativar-confirmacao {
-  background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+  background: linear-gradient(135deg, #0B5ED7, #0B5ED7);
   color: white;
 }
 
 .btn-inativar-confirmacao:hover {
-  background: linear-gradient(135deg, #ff5252, #e53935);
+  background: linear-gradient(135deg, #0B5ED7, #0B5ED7);
   transform: translateY(-1px);
 }
 
