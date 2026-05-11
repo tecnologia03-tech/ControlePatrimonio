@@ -322,25 +322,12 @@ async function salvarEdicaoUsuario() {
   }
 }
 
-// ===================== USUARIOS - INATIVAR =====================
-// Inativa o usuario sem remove-lo fisicamente do banco de dados.
-async function inativarUsuario(id) {
-  const confirmar = confirm('Deseja realmente inativar este usuário?');
-  if (!confirmar) return;
-
-  try {
-    const resposta = await fetch('https://controlepatrimonio.onrender.com/api/usuarios/' + id, {
-      method: 'DELETE'
-    });
-
-    const dados = await resposta.json();
-
-    if (dados.sucesso) {
-      carregarUsuarios();
-    } else {
-      alert(dados.mensagem);
+// ===== CONFIRMAR INATIVACAO =====
+function confirmarInativacaoCheckbox(checkbox) {
+  if (!checkbox.checked) {
+    const confirmou = confirm('Deseja realmente inativar este usuário?');
+    if (!confirmou) {
+      checkbox.checked = true;
     }
-  } catch (erro) {
-    alert('Erro ao inativar usuário.');
   }
 }
