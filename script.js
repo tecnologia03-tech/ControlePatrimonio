@@ -188,7 +188,6 @@ function renderizarUsuarios(lista) {
         <td>${status}</td>
         <td>
           <button class="btn btn-sm btn-outline-primary" onclick="abrirModalEditarUsuario(${usuario.id})">Editar</button>
-          ${usuario.ativo === 'S' ? '<button class="btn btn-sm btn-outline-danger ms-1" onclick="inativarUsuario(' + usuario.id + ')">Inativar</button>' : ''}
         </td>
       </tr>
     `;
