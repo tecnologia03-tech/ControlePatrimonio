@@ -350,9 +350,9 @@ async function confirmarInativacaoDefinitivo() {
   checkbox.checked = false;
 }
 
-// ==== CHECAGEM DE LOGIN E PROTEÇÃO DE ROTAS ==== 
 document.addEventListener('DOMContentLoaded', () => {
-  const paginaAtual = window.location.pathname.split('/').pop() || 'index.html';
+  const caminho = window.location.pathname;
+  const paginaAtual = caminho.substring(caminho.lastIndexOf('/') + 1) || 'index.html';
   const usuarioLogado = sessionStorage.getItem('usuarioLogado');
 
   const paginasProtegidas = [
@@ -367,20 +367,24 @@ document.addEventListener('DOMContentLoaded', () => {
     'relatorio.html'
   ];
 
+  // Se está em página protegida sem sessão → manda para login
   if (paginasProtegidas.includes(paginaAtual) && usuarioLogado !== 'true') {
     window.location.href = 'index.html';
     return;
   }
 
+  // Se está no login com sessão ativa → manda para dashboard
   if (paginaAtual === 'index.html' && usuarioLogado === 'true') {
     window.location.href = 'dashboard.html';
     return;
   }
 
+  // Inicializa gráfico se estiver no dashboard
   if (document.getElementById('graficoCategoria')) {
     renderizarGrafico();
   }
 
+  // Inicializa tabela de usuários se estiver na página de usuários
   if (document.getElementById('tabelaUsuarios')) {
     carregarUsuarios();
   }
