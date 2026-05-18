@@ -104,11 +104,6 @@
       font-size: 0.82rem;
     }
 
-    /* ===================== DASHBOARD ===================== */
-    #telaDashboard { display: none; }
-
-    .wrapper { display: flex; min-height: 100vh; }
-
     /* SIDEBAR */
     .sidebar {
       width: 260px;

@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sistema de Controle Patrimonial - Salesianos</title>
+
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" />
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+ <!-- ========== DASHBOARD PRINCIPAL ========== -->
+  <div id="telaDashboard" style="display: none;">
+    <div class="wrapper">
+      <!-- ========== SIDEBAR ========== -->
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+          <img src="Logo.jpeg" alt="Logo Salesianos">
+          <span>Controle de Patrimônio</span>
+        </div>
+        
+        <ul class="sidebar-menu">
+          <li class="ativo">
+            <a href="index.html">
+              <i class="bi bi-speedometer2"></i> 
+              <span>Dashboard</span>
+            </a>
+          </li>
+
+          <li id="menu-patrimonios">
+            <a href="patrimonio.html">
+              <i class="bi bi-archive-fill"></i> 
+              <span>Patrimônios</span>
+            </a>
+          </li>
+
+          <li id="menu-manutencao">
+            <a href="manutencao.html">
+              <i class="bi bi-tools"></i> 
+              <span>Manutenção</span>
+            </a>
+          </li>
+
+          <li id="menu-movimentacoes">
+            <a href="movimentacao.html">
+              <i class="bi bi-arrow-left-right"></i> 
+              <span>Movimentações</span>
+            </a>
+          </li>
+
+          <li id="menu-responsaveis">
+            <a href="responsavel.html">
+              <i class="bi bi-person-badge-fill"></i> 
+              <span>Responsáveis</span>
+            </a>
+          </li>
+
+          <li id="menu-setores">
+            <a href="setor.html">
+              <i class="bi bi-building"></i> 
+              <span>Setores</span>
+            </a>
+          </li>
+
+          <li id="menu-categorias">
+            <a href="categoria.html">
+              <i class="bi bi-tags-fill"></i> 
+              <span>Categorias</span>
+            </a>
+          </li>
+          <li id="menu-usuarios">
+            <a href="usuario.html" >
+               <i class="bi bi-people-fill"></i> 
+              <span>Usuários</span>
+            </a>
+          </li>
+          <li id="menu-relatorios">
+            <a href="relatorio.html">
+              <i class="bi bi-file-earmark-bar-graph-fill"></i> 
+              <span>Relatórios</span>
+            </a>
+          </li>
+        </ul>
+        <div class="sidebar-sair">
+          <a href="#" onclick="fazerLogout()">
+            <i class="bi bi-box-arrow-left"></i> <span>Sair</span>
+          </a>
+        </div>
+      </aside>
+
+      <!-- ========== CONTEÚDO ========== -->
+      <div class="content">
+        <!-- ========== TOPBAR ========== -->
+        <header class="topbar">
+          <button class="btn-menu-toggle" onclick="toggleMenu()">
+            <i class="bi bi-list"></i>
+          </button>
+          <h1 class="topbar-titulo">Dashboard</h1>
+          <div class="topbar-usuario">
+            <div class="avatar">LM</div>
+            <span>Luís Miguel</span>
+          </div>
+        </header>
+
+        <!-- ========== CONTEÚDO PRINCIPAL ========== -->
+        <main class="main-content">
+
+          <!-- Seção Dashboard -->
+          <section id="dashboard-content" class="conteudo-secao ativo">
+            <p class="section-titulo">Visão Geral</p>
+            <div class="row g-3 mb-4">
+              <div class="col-xl-3 col-md-6">
+                <div class="card-indicador">
+                  <div class="card-icone" style="background:#0058b7;">
+                    <i class="bi bi-currency-dollar"></i>
+                  </div>
+                  <div class="card-info">
+                    <div class="valor">R$ 120.000</div>
+                    <div class="label">Valor Total Patrimonial</div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-xl-3 col-md-6">
+                <div class="card-indicador">
+                  <div class="card-icone" style="background:#28a745;">
+                    <i class="bi bi-check-circle"></i>
+                  </div>
+                  <div class="card-info">
+                    <div class="valor">45 itens</div>
+                    <div class="label">Patrimônios Ativos</div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-xl-3 col-md-6">
+                <div class="card-indicador">
+                  <div class="card-icone" style="background:#fd7e14;">
+                    <i class="bi bi-tools"></i>
+                  </div>
+                  <div class="card-info">
+                    <div class="valor">8 itens</div>
+                    <div class="label">Em Manutenção</div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-xl-3 col-md-6">
+                <div class="card-indicador">
+                  <div class="card-icone" style="background:#c8102e;">
+                    <i class="bi bi-exclamation-triangle"></i>
+                  </div>
+                  <div class="card-info">
+                    <div class="valor">7 itens</div>
+                    <div class="label">Baixados / Extraviados</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row g-3 mb-4">
+              <div class="col-lg-5">
+                <div class="box h-100">
+                  <div class="box-titulo">
+                    <i class="bi bi-bar-chart-fill me-2"></i>Categorias mais valiosas
+                  </div>
+                  <canvas id="graficoCategoria"></canvas>
+                </div>
+              </div>
+              <div class="col-lg-7">
+                <div class="box h-100">
+                  <div class="box-titulo">
+                    <i class="bi bi-clock-history me-2"></i>Últimos patrimônios cadastrados
+                  </div>
+                  <div class="table-responsive">
+                    <table class="table table-hover tabela-patrimonios mb-0">
+                      <thead>
+                        <tr>
+                          <th>Código do Selo</th>
+                          <th>Descrição</th>
+                          <th>Setor</th>
+                          <th>Situação</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td><strong>0001</strong></td>
+                          <td>Notebook Dell Inspiron</td>
+                          <td>T.I.</td>
+                          <td><span class="badge-ativo">Ativo</span></td>
+                        </tr>
+                        <tr>
+                          <td><strong>0002</strong></td>
+                          <td>Impressora HP LaserJet</td>
+                          <td>Financeiro</td>
+                          <td><span class="badge-manut">Em Manutenção</span></td>
+                        </tr>
+                        <tr>
+                          <td><strong>0003</strong></td>
+                          <td>Monitor LG 24"</td>
+                          <td>RH</td>
+                          <td><span class="badge-ativo">Ativo</span></td>
+                        </tr>
+                        <tr>
+                          <td><strong>0004</strong></td>
+                          <td>Cadeira Ergonômica</td>
+                          <td>Diretoria</td>
+                          <td><span class="badge-ativo">Ativo</span></td>
+                        </tr>
+                        <tr>
+                          <td><strong>0005</strong></td>
+                          <td>Projetor Epson</td>
+                          <td>Sala de Reunião</td>
+                          <td><span class="badge-extravio">Extraviado</span></td>
+                        </tr>
+                        <tr>
+                          <td><strong>0006</strong></td>
+                          <td>Notebook Lenovo</td>
+                          <td>Coordenação</td>
+                          <td><span class="badge-ativo">Ativo</span></td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Seção Patrimônios -->
+      
+
+          <!-- Seção Cadastro de Usuário -->
+          
+
+          <!-- Seção Manutenção -->
+          
+
+          <!-- Seção Movimentações -->
+          
+
+          <!-- Seção Responsáveis -->
+          
+
+          <!-- Seção Setores -->
+         
+
+          <!-- Seção Categorias -->
+          
+
+          <!-- Seção Relatórios -->
+         
+
+        </main>
+
+        <!-- ========== RODAPÉ ========== -->
+        <footer class="rodape">
+          © 2026 Sistema de Controle Patrimonial — Colégio Salesiano Santo Antônio
+        </footer>
+      </div>
+    </div>
+  </div>
+
+  
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script src="script.js"></script>
+
+</body>
+</html>

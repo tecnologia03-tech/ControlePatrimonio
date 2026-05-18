@@ -17,9 +17,11 @@ async function fazerLogin(e) {
     const dados = await resposta.json();
 
     if (dados.sucesso) {
-      document.getElementById('telaLogin').classList.add('oculto');
-      document.getElementById('telaDashboard').style.display = 'block';
-      renderizarGrafico();
+  sessionStorage.setItem('usuarioLogado', 'true');
+  sessionStorage.setItem('nomeUsuario', dados.nome || '');
+  sessionStorage.setItem('perfilUsuario', dados.perfil || '');
+
+  window.location.href = 'dashboard.html';
     } else {
       msgErro.textContent = dados.mensagem;
     }
@@ -31,8 +33,11 @@ async function fazerLogin(e) {
 // ===================== LOGOUT =====================
 // Responsável por voltar para a tela de login.
 function fazerLogout() {
-  document.getElementById('telaDashboard').style.display = 'none';
-  document.getElementById('telaLogin').classList.remove('oculto');
+  sessionStorage.removeItem('usuarioLogado');
+  sessionStorage.removeItem('nomeUsuario');
+  sessionStorage.removeItem('perfilUsuario');
+
+  window.location.href = 'index.html';
 }
 
 // ===================== TOGGLE SIDEBAR =====================
@@ -344,3 +349,39 @@ async function confirmarInativacaoDefinitivo() {
   const checkbox = document.querySelector('#editAtivoUsuario');
   checkbox.checked = false;
 }
+
+// ==== CHECAGEM DE LOGIN E PROTEÇÃO DE ROTAS ==== 
+document.addEventListener('DOMContentLoaded', () => {
+  const paginaAtual = window.location.pathname.split('/').pop() || 'index.html';
+  const usuarioLogado = sessionStorage.getItem('usuarioLogado');
+
+  const paginasProtegidas = [
+    'dashboard.html',
+    'usuario.html',
+    'categoria.html',
+    'setor.html',
+    'responsavel.html',
+    'patrimonio.html',
+    'movimentacao.html',
+    'manutencao.html',
+    'relatorio.html'
+  ];
+
+  if (paginasProtegidas.includes(paginaAtual) && usuarioLogado !== 'true') {
+    window.location.href = 'index.html';
+    return;
+  }
+
+  if (paginaAtual === 'index.html' && usuarioLogado === 'true') {
+    window.location.href = 'dashboard.html';
+    return;
+  }
+
+  if (document.getElementById('graficoCategoria')) {
+    renderizarGrafico();
+  }
+
+  if (document.getElementById('tabelaUsuarios')) {
+    carregarUsuarios();
+  }
+});
