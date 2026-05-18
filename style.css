@@ -104,6 +104,17 @@
       font-size: 0.82rem;
     }
 
+    /* WRAPPER */
+.wrapper {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: 260px;
+}
+
     /* SIDEBAR */
     .sidebar {
       width: 260px;
