@@ -105,15 +105,10 @@
     }
 
     /* WRAPPER */
-.wrapper {
-  display: flex;
-  min-height: 100vh;
-}
-
-/* SIDEBAR */
-.sidebar {
-  width: 260px;
-}
+      .wrapper {
+        display: flex;
+        min-height: 100vh;
+      }
 
     /* SIDEBAR */
     .sidebar {
@@ -252,8 +247,8 @@
     /* MAIN CONTENT */
     .main-content { padding: 28px 24px; flex: 1; }
     
-    .conteudo-secao { display: none; }
-    .conteudo-secao.ativo { display: block; }
+    section.conteudo-secao { display: none !important; }
+    section.conteudo-secao.ativo { display: block !important; }
 
     .section-titulo {
       font-size: 1rem;
