@@ -9,6 +9,99 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
+  <div class="wrapper">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <img src="Logo.jpg" alt="Logo Salesianos">
+        <span>Controle de Patrimônios</span>
+      </div>
+
+      <ul class="sidebar-menu">
+        <li>
+          <a href="dashboard.html">
+            <i class="bi bi-speedometer2"></i>
+            <span>Dashboard</span>
+          </a>
+        </li>
+
+        <li id="menu-patrimonios">
+          <a href="patrimonio.html">
+            <i class="bi bi-archive-fill"></i>
+            <span>Patrimônios</span>
+          </a>
+        </li>
+
+        <li id="menu-manutencao">
+          <a href="manutencao.html">
+            <i class="bi bi-tools"></i>
+            <span>Manutenções</span>
+          </a>
+        </li>
+
+        <li id="menu-movimentacoes">
+          <a href="movimentacao.html">
+            <i class="bi bi-arrow-left-right"></i>
+            <span>Movimentações</span>
+          </a>
+        </li>
+
+        <li id="menu-responsaveis">
+          <a href="responsavel.html">
+            <i class="bi bi-person-badge-fill"></i>
+            <span>Responsáveis</span>
+          </a>
+        </li>
+
+        <li id="menu-setores">
+          <a href="setor.html">
+            <i class="bi bi-building"></i>
+            <span>Setores</span>
+          </a>
+        </li>
+
+        <li id="menu-categorias">
+          <a href="categoria.html">
+            <i class="bi bi-tags-fill"></i>
+            <span>Categorias</span>
+          </a>
+        </li>
+
+        <li id="menu-usuarios" class="ativo">
+          <a href="usuario.html">
+            <i class="bi bi-people-fill"></i>
+            <span>Usuários</span>
+          </a>
+        </li>
+
+        <li id="menu-relatorios">
+          <a href="relatorio.html">
+            <i class="bi bi-file-earmark-bar-graph-fill"></i>
+            <span>Relatórios</span>
+          </a>
+        </li>
+      </ul>
+
+      <div class="sidebar-sair">
+        <a href="#" onclick="fazerLogout(); return false;">
+          <i class="bi bi-box-arrow-left"></i>
+          <span>Sair</span>
+        </a>
+      </div>
+    </aside>
+
+    <!-- CONTEÚDO -->
+    <div class="content">
+      <!-- TOPBAR -->
+      <header class="topbar">
+        <button class="btn-menu-toggle" type="button" onclick="toggleMenu()">
+          <i class="bi bi-list"></i>
+        </button>
+
+        <span class="topbar-titulo">Cadastro de Usuários</span>
+
+
 <section id="usuarios-content" class="conteudo-secao ativo container mt-4">
 
     <!-- ===================== CABECALHO DA LISTAGEM ===================== -->
