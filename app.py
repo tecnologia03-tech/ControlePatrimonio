@@ -19,9 +19,29 @@ app = Flask(__name__)
 # Habilita CORS para permitir chamadas da interface web para a API
 CORS(app)
 
-# Reduz a necessidade de criar novas conexões a cada requisição, usando um pool de conexões
-# ← crie o pool aqui, depois do app e antes das rotas
-pool = ConnectionPool(DB_URL, min_size=1, max_size=5)
+# ← ALTERADO: Configuração robusta do pool para banco Neon (serverless)
+# open=False   → não tenta conectar na inicialização (evita erro se .env ainda não foi carregado)
+# min_size=0   → não mantém conexão ociosa aberta (Neon encerra conexões ociosas, isso evita conexões "podres")
+# max_size=5   → no máximo 5 conexões simultâneas (suficiente para uso local/acadêmico)
+# max_idle=300 → fecha conexão que ficou ociosa por mais de 5 minutos (antes do Neon matar)
+# reconnect_timeout=10 → tenta reconectar por até 10 segundos antes de lançar erro
+# kwargs       → connect_timeout=10 garante que uma tentativa de conexão falha rápido em vez de travar
+pool = ConnectionPool(
+    DB_URL,
+    open=False,
+    min_size=0,
+    max_size=5,
+    max_idle=300,
+    reconnect_timeout=10,
+    kwargs={"connect_timeout": 10}
+)
+
+# Abre o pool explicitamente após criar o app, e verifica as conexões existentes
+# pool.open()  → cria o pool de forma controlada
+# pool.check() → descarta conexões inválidas/ociosas e substitui por conexões novas e saudáveis
+with app.app_context():
+    pool.open()
+    pool.check()
 
 
 # Rota criada para testar se a aplicação consegue acessar o banco de dados
