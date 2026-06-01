@@ -1,136 +1,297 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Categorias</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="style.css">    
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Categorias — Controle de Patrimônio</title>
+
+  <!-- Bootstrap -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  />
+  <!-- Bootstrap Icons -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+    rel="stylesheet"
+  />
+  <!-- CSS do sistema -->
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-   <!-- ========== SIDEBAR ========== -->
+  <!-- ===================== WRAPPER PRINCIPAL ===================== -->
+  <div class="wrapper">
+
+    <!-- ===================== SIDEBAR ===================== -->
+    <aside class="sidebar" id="sidebar">
+
       <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
           <img src="Logo.jpeg" alt="Logo Salesianos">
           <span>Controle de Patrimônio</span>
         </div>
-        
-        <ul class="sidebar-menu">
-          <li class="ativo">
-            <a href="index.html">
-              <i class="bi bi-speedometer2"></i> 
-              <span>Dashboard</span>
-            </a>
-          </li>
 
-          <li id="menu-patrimonios">
-            <a href="patrimonio.html">
-              <i class="bi bi-archive-fill"></i> 
-              <span>Patrimônios</span>
-            </a>
-          </li>
-
-          <li id="menu-manutencao">
-            <a href="manutencao.html">
-              <i class="bi bi-tools"></i> 
-              <span>Manutenção</span>
-            </a>
-          </li>
-
-          <li id="menu-movimentacoes">
-            <a href="movimentacao.html">
-              <i class="bi bi-arrow-left-right"></i> 
-              <span>Movimentações</span>
-            </a>
-          </li>
-
-          <li id="menu-responsaveis">
-            <a href="responsavel.html">
-              <i class="bi bi-person-badge-fill"></i> 
-              <span>Responsáveis</span>
-            </a>
-          </li>
-
-          <li id="menu-setores">
-            <a href="setor.html">
-              <i class="bi bi-building"></i> 
-              <span>Setores</span>
-            </a>
-          </li>
-
-          <li id="menu-categorias">
-            <a href="categoria.html">
-              <i class="bi bi-tags-fill"></i> 
-              <span>Categorias</span>
-            </a>
-          </li>
-          <li id="menu-usuarios">
-            <a href="usuario.html" >
-               <i class="bi bi-people-fill"></i> 
-              <span>Usuários</span>
-            </a>
-          </li>
-          <li id="menu-relatorios">
-            <a href="relatorio.html">
-              <i class="bi bi-file-earmark-bar-graph-fill"></i> 
-              <span>Relatórios</span>
-            </a>
-          </li>
-        </ul>
-        <div class="sidebar-sair">
-          <a href="#" onclick="fazerLogout()">
-            <i class="bi bi-box-arrow-left"></i> <span>Sair</span>
+      <ul class="sidebar-menu">
+        <li>
+          <a href="dashboard.html">
+            <i class="bi bi-speedometer2"></i> Dashboard
           </a>
-        </div>
-      </aside>
+        </li>
+        <li>
+          <a href="usuario.html">
+            <i class="bi bi-people"></i> Usuários
+          </a>
+        </li>
+        <li>
+          <a href="setor.html">
+            <i class="bi bi-diagram-3"></i> Setores
+          </a>
+        </li>
+        <li class="ativo">
+          <a href="categoria.html">
+            <i class="bi bi-tags"></i> Categorias
+          </a>
+        </li>
+        <li>
+          <a href="responsavel.html">
+            <i class="bi bi-person-badge"></i> Responsáveis
+          </a>
+        </li>
+        <li>
+          <a href="patrimonio.html">
+            <i class="bi bi-box-seam"></i> Patrimônios
+          </a>
+        </li>
+        <li>
+          <a href="manutencao.html">
+            <i class="bi bi-tools"></i> Manutenção
+          </a>
+        </li>
+        <li>
+          <a href="movimentacao.html">
+            <i class="bi bi-arrow-left-right"></i> Movimentação
+          </a>
+        </li>
+        <li>
+          <a href="relatorio.html">
+            <i class="bi bi-file-earmark-bar-graph"></i> Relatórios
+          </a>
+        </li>
+      </ul>
 
-    
-     <section id="categoria-content" class="conteudo-secao ativo">
-            <p class="section-titulo">Gestão de Categorias</p>
-            <div class="d-flex justify-content-end mb-3">
-              <button class="btn btn-primary"><i class="bi bi-plus-circle me-2"></i>Nova Categoria</button>
-            </div>
-            <div class="box">
-              <div class="table-responsive">
-                <table class="table table-hover tabela-patrimonios mb-0">
-                  <thead>
-                    <tr>
-                      <th>#</th>
-                      <th>Nome da Categoria</th>
-                      <th>Ações</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>1</td>
-                      <td>Computador / Notebook</td>
-                      <td><button class="btn btn-sm btn-warning"><i class="bi bi-pencil-square"></i></button></td>
-                    </tr>
-                    <tr>
-                      <td>2</td>
-                      <td>Impressora</td>
-                      <td><button class="btn btn-sm btn-warning"><i class="bi bi-pencil-square"></i></button></td>
-                    </tr>
-                    <tr>
-                      <td>3</td>
-                      <td>Monitor</td>
-                      <td><button class="btn btn-sm btn-warning"><i class="bi bi-pencil-square"></i></button></td>
-                    </tr>
-                    <tr>
-                      <td>4</td>
-                      <td>Mobiliário</td>
-                      <td><button class="btn btn-sm btn-warning"><i class="bi bi-pencil-square"></i></button></td>
-                    </tr>
-                    <tr>
-                      <td>5</td>
-                      <td>Projetor</td>
-                      <td><button class="btn btn-sm btn-warning"><i class="bi bi-pencil-square"></i></button></td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </section>
-</body>
-</html>
+      <div class="sidebar-sair">
+        <a href="#" onclick="fazerLogout()">
+          <i class="bi bi-box-arrow-left"></i> Sair
+        </a>
+      </div>
+
+    </aside>
+    <!-- ===================== FIM SIDEBAR ===================== -->
+
+    <!-- ===================== CONTEÚDO ===================== -->
+    <div class="content">
+
+      <!-- TOPBAR -->
+      <div class="topbar">
+        <button class="btn-menu-toggle" onclick="toggleMenu()" title="Abrir/fechar menu">
+          <i class="bi bi-list"></i>
+        </button>
+
+        <span class="topbar-titulo">Gestão de Categorias</span>
+
+        <div class="topbar-usuario">
+          <div class="avatar"><i class="bi bi-person-fill"></i></div>
+          <span id="nomeUsuarioTopbar">Usuário</span>
+        </div>
+      </div>
+      <!-- FIM TOPBAR -->
+
+      <!-- MAIN CONTENT -->
+      <div class="main-content">
+
+        <div class="usuarios-header-box">
+          <div class="usuarios-titulo-box">
+            <i class="bi bi-tags"></i>
+            Categorias Cadastradas
+          </div>
+
+          <div class="d-flex align-items-center gap-2">
+            <input
+              type="text"
+              id="buscaCategoria"
+              class="input-busca-usuario"
+              placeholder="Buscar categoria..."
+              oninput="filtrarCategorias()"
+            />
+            <button class="btn btn-primary btn-sm" onclick="abrirModalNovaCategoria()">
+              <i class="bi bi-plus-lg"></i> Nova Categoria
+            </button>
+          </div>
+        </div>
+
+        <div class="tabela-usuarios-box">
+          <table class="table table-hover mb-0 tabela-usuarios">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Nome da Categoria</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tabelaCategorias">
+              <tr>
+                <td>1</td>
+                <td>Computador / Notebook</td>
+                <td>
+                  <button class="btn btn-sm btn-outline-primary me-1" onclick="abrirModalEditarCategoria(1)">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button class="btn btn-sm btn-outline-danger" onclick="abrirModalExcluirCategoria(1)">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td>2</td>
+                <td>Impressora</td>
+                <td>
+                  <button class="btn btn-sm btn-outline-primary me-1" onclick="abrirModalEditarCategoria(2)">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button class="btn btn-sm btn-outline-danger" onclick="abrirModalExcluirCategoria(2)">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td>3</td>
+                <td>Monitor</td>
+                <td>
+                  <button class="btn btn-sm btn-outline-primary me-1" onclick="abrirModalEditarCategoria(3)">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button class="btn btn-sm btn-outline-danger" onclick="abrirModalExcluirCategoria(3)">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td>4</td>
+                <td>Mobiliário</td>
+                <td>
+                  <button class="btn btn-sm btn-outline-primary me-1" onclick="abrirModalEditarCategoria(4)">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button class="btn btn-sm btn-outline-danger" onclick="abrirModalExcluirCategoria(4)">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td>5</td>
+                <td>Projetor</td>
+                <td>
+                  <button class="btn btn-sm btn-outline-primary me-1" onclick="abrirModalEditarCategoria(5)">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button class="btn btn-sm btn-outline-danger" onclick="abrirModalExcluirCategoria(5)">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+      <!-- FIM MAIN CONTENT -->
+
+      <div class="rodape">
+        Sistema de Controle de Patrimônio &copy; 2025
+      </div>
+    </div>
+    <!-- ===================== FIM CONTEÚDO ===================== -->
+
+  </div>
+  <!-- ===================== FIM WRAPPER ===================== -->
+
+
+  <!-- ===================== MODAL NOVA CATEGORIA ===================== -->
+  <div class="modal-overlay" id="modalNovaCategoria" style="display: none;">
+    <div class="modal-box">
+      <div class="modal-header-custom">
+        <h5>Nova Categoria</h5>
+        <button class="btn-fechar-modal" onclick="fecharModalNovaCategoria()">&times;</button>
+      </div>
+
+      <div class="modal-body-custom">
+        <div class="mb-3">
+          <label class="form-label">Nome da Categoria</label>
+          <input
+            type="text"
+            id="novaCategoriaNome"
+            class="form-control"
+            placeholder="Digite o nome da categoria"
+          />
+        </div>
+      </div>
+
+      <div class="modal-footer-custom">
+        <button class="btn btn-secondary btn-sm" onclick="fecharModalNovaCategoria()">Cancelar</button>
+        <button class="btn btn-primary btn-sm" onclick="fecharModalNovaCategoria()">
+          <i class="bi bi-check-lg"></i> Salvar Categoria
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== MODAL EDITAR CATEGORIA ===================== -->
+  <div class="modal-overlay" id="modalEditarCategoria" style="display: none;">
+    <div class="modal-box">
+      <div class="modal-header-custom">
+        <h5>Editar Categoria</h5>
+        <button class="btn-fechar-modal" onclick="fecharModalEditarCategoria()">&times;</button>
+      </div>
+
+      <div class="modal-body-custom">
+        <input type="hidden" id="editarCategoriaId" />
+        <div class="mb-3">
+          <label class="form-label">Nome da Categoria</label>
+          <input
+            type="text"
+            id="editarCategoriaNome"
+            class="form-control"
+            placeholder="Nome da categoria"
+          />
+        </div>
+      </div>
+
+      <div class="modal-footer-custom">
+        <button class="btn btn-secondary btn-sm" onclick="fecharModalEditarCategoria()">Cancelar</button>
+        <button class="btn btn-primary btn-sm" onclick="fecharModalEditarCategoria()">
+          Salvar Alterações
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== MODAL CONFIRMAR EXCLUSÃO ===================== -->
+  <div class="modal-overlay-confirmacao" id="modalExcluirCategoria" style="display: none;">
+    <div class="modal-confirmacao-container">
+      <div class="modal-icone-alerta">&#9888;</div>
+      <h4 class="modal-titulo-confirmacao">Confirmar Exclusão</h4>
+      <p class="modal-texto-confirmacao">
+        Deseja realmente excluir esta categoria?
+      </p>
+      <div class="modal-botoes-confirmacao">
+        <button class="btn-cancelar-confirmacao" onclick="fecharModalExcluirCategoria()">Cancelar</button>
+        <button class="btn-inativar-confirmacao" onclick="fecharModalExcluirCategoria()">Excluir Categoria</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- JS global do sistema -->
+  <script src="script.js"></script>
