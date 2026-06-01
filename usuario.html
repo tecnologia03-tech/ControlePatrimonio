@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Usuários - Controle de Patrimônio</title>
+
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -55,28 +56,29 @@
 
       <div class="main-content">
 
+        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+          <input
+            type="text"
+            id="buscaUsuario"
+            class="input-busca-usuario"
+            placeholder="Pesquisar por nome ou matrícula..."
+            oninput="filtrarUsuarios()"
+          >
+
+          <button class="btn btn-primary btn-sm" onclick="abrirModalIncluir()">
+            <i class="bi bi-person-plus-fill"></i> Incluir Usuário
+          </button>
+        </div>
+
         <div class="usuarios-header-box">
           <div class="usuarios-titulo-box">
-            <i class="bi bi-person-plus-fill"></i>
-            Incluir Usuário
-          </div>
-
-          <div class="d-flex align-items-center gap-2">
-            <input
-              type="text"
-              id="buscaUsuario"
-              class="input-busca-usuario"
-              placeholder="Buscar usuário..."
-              oninput="filtrarUsuarios()"
-            >
-            <button class="btn btn-primary btn-sm" onclick="abrirModalIncluir()">
-              <i class="bi bi-plus-lg"></i> Incluir Usuário
-            </button>
+            <i class="bi bi-people-fill"></i>
+            Usuários Cadastrados
           </div>
         </div>
 
         <div class="tabela-usuarios-box bg-white">
-          <table class="table table-hover tabela-usuarios mb-0">
+          <table class="table tabela-usuarios mb-0">
             <thead>
               <tr>
                 <th>Nome</th>
@@ -88,7 +90,9 @@
             </thead>
             <tbody id="tabelaUsuarios">
               <tr>
-                <td colspan="5" class="text-center py-3 text-muted">Carregando usuários...</td>
+                <td colspan="5" class="text-center py-3 text-muted">
+                  Carregando usuários...
+                </td>
               </tr>
             </tbody>
           </table>
@@ -99,6 +103,7 @@
       <div class="rodape">
         Sistema de Controle de Patrimônio © 2025
       </div>
+
     </div>
   </div>
 
@@ -112,17 +117,17 @@
       <div class="modal-body-custom">
         <div class="mb-3">
           <label class="form-label">Nome Completo</label>
-          <input type="text" id="incluirNome" class="form-control" placeholder="Digite o nome completo">
+          <input type="text" id="incluirNome" class="form-control" placeholder="Nome completo">
         </div>
 
         <div class="mb-3">
           <label class="form-label">Matrícula</label>
-          <input type="text" id="incluirMatricula" class="form-control" placeholder="Digite a matrícula">
+          <input type="text" id="incluirMatricula" class="form-control" placeholder="Matrícula">
         </div>
 
         <div class="mb-3">
           <label class="form-label">Senha</label>
-          <input type="password" id="incluirSenha" class="form-control" placeholder="Digite a senha">
+          <input type="password" id="incluirSenha" class="form-control" placeholder="Senha">
         </div>
 
         <div class="mb-3">
@@ -157,17 +162,17 @@
 
         <div class="mb-3">
           <label class="form-label">Nome Completo</label>
-          <input type="text" id="editarNome" class="form-control" placeholder="Digite o nome completo">
+          <input type="text" id="editarNome" class="form-control">
         </div>
 
         <div class="mb-3">
           <label class="form-label">Matrícula</label>
-          <input type="text" id="editarMatricula" class="form-control" placeholder="Digite a matrícula">
+          <input type="text" id="editarMatricula" class="form-control">
         </div>
 
         <div class="mb-3">
           <label class="form-label">Nova Senha (Opcional)</label>
-          <input type="password" id="editarSenha" class="form-control" placeholder="Digite uma nova senha">
+          <input type="password" id="editarSenha" class="form-control">
         </div>
 
         <div class="mb-3">
