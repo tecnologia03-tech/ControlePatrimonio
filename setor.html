@@ -1,156 +1,129 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Setores - Controle de Patrimônio</title>
-
-  <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Setores</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
+  <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
 
-  <div class="wrapper">
+<div class="wrapper">
 
-    <aside class="sidebar" id="sidebar">
-      <div class="sidebar-header">
-        <span><i class="bi bi-building"></i> Patrimônio</span>
-      </div>
-
-      <ul class="sidebar-menu">
-        <li><a href="dashboard.html"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
-        <li><a href="usuario.html"><i class="bi bi-people"></i> Usuários</a></li>
-        <li class="ativo"><a href="setor.html"><i class="bi bi-diagram-3"></i> Setores</a></li>
-        <li><a href="categoria.html"><i class="bi bi-tags"></i> Categorias</a></li>
-        <li><a href="responsavel.html"><i class="bi bi-person-badge"></i> Responsáveis</a></li>
-        <li><a href="patrimonio.html"><i class="bi bi-box-seam"></i> Patrimônios</a></li>
-        <li><a href="manutencao.html"><i class="bi bi-tools"></i> Manutenção</a></li>
-        <li><a href="movimentacao.html"><i class="bi bi-arrow-left-right"></i> Movimentação</a></li>
-        <li><a href="relatorio.html"><i class="bi bi-file-earmark-bar-graph"></i> Relatórios</a></li>
-      </ul>
-
-      <div class="sidebar-sair">
-        <a href="#" onclick="fazerLogout()">
-          <i class="bi bi-box-arrow-left"></i> Sair
+  <!-- SIDEBAR -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <img src="Logo.jpg" alt="Logo Salesiano"/>
+      <span>Salesiano</span>
+    </div>
+    <ul class="sidebar-menu">
+      <li>
+        <a href="dashboard.html">
+          <i class="bi bi-grid-1x2-fill"></i> Dashboard
         </a>
+      </li>
+      <li>
+        <a href="patrimonio.html">
+          <i class="bi bi-box-seam"></i> Patrimônios
+        </a>
+      </li>
+      <li>
+        <a href="usuario.html">
+          <i class="bi bi-people-fill"></i> Usuários
+        </a>
+      </li>
+      <li>
+        <a href="categoria.html">
+          <i class="bi bi-tag-fill"></i> Categorias
+        </a>
+      </li>
+      <li class="ativo">
+        <a href="setor.html">
+          <i class="bi bi-building"></i> Setores
+        </a>
+      </li>
+      <li>
+        <a href="responsavel.html">
+          <i class="bi bi-person-badge-fill"></i> Responsáveis
+        </a>
+      </li>
+      <li>
+        <a href="manutencao.html">
+          <i class="bi bi-tools"></i> Manutenção
+        </a>
+      </li>
+      <li>
+        <a href="movimentacao.html">
+          <i class="bi bi-arrow-left-right"></i> Movimentações
+        </a>
+      </li>
+      <li>
+        <a href="relatorio.html">
+          <i class="bi bi-file-earmark-bar-graph-fill"></i> Relatórios
+        </a>
+      </li>
+    </ul>
+    <div class="sidebar-sair">
+      <a href="#" onclick="fazerLogout()">
+        <i class="bi bi-box-arrow-left"></i> Sair
+      </a>
+    </div>
+  </nav>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <button class="btn-menu-toggle" onclick="toggleMenu()" aria-label="Abrir menu">
+        <i class="bi bi-list"></i>
+      </button>
+      <span class="topbar-titulo">Gestão de Setores</span>
+      <div class="topbar-usuario">
+        <div class="avatar"><i class="bi bi-person-fill"></i></div>
+        <span id="nomeUsuarioTopbar">Usuário</span>
       </div>
-    </aside>
+    </header>
 
-    <div class="content">
+    <!-- MAIN -->
+    <main class="main-content">
 
-      <div class="topbar">
-        <button class="btn-menu-toggle" onclick="toggleMenu()" title="Abrir/fechar menu">
-          <i class="bi bi-list"></i>
+      <!-- TOOLBAR: busca + botão incluir -->
+      <div class="usuarios-toolbar">
+        <input
+          type="text"
+          id="campoBuscaSetor"
+          class="input-busca-usuario"
+          placeholder="Pesquisar por nome do setor..."
+          oninput="filtrarSetores(this.value)"
+        />
+        <button class="btn btn-incluir-usuario" onclick="abrirModalIncluirSetor()">
+          <i class="bi bi-building-add me-1"></i> Incluir Setor
         </button>
-        <span class="topbar-titulo">Gestão de Setores</span>
-        <div class="topbar-usuario">
-          <div class="avatar"><i class="bi bi-person-fill"></i></div>
-          <span id="nomeUsuarioTopbar">Usuário</span>
-        </div>
       </div>
 
-      <div class="main-content">
-        <div class="usuarios-header-box">
-          <div class="usuarios-titulo-box">
-            <i class="bi bi-diagram-3"></i>
-            Gestão de Setores
-          </div>
-
-          <div class="d-flex align-items-center gap-2">
-            <input
-              type="text"
-              id="buscaSetor"
-              class="input-busca-usuario"
-              placeholder="Buscar setor..."
-              oninput="filtrarSetores()"
-            >
-            <button class="btn btn-primary btn-sm" onclick="abrirModalNovoSetor()">
-              <i class="bi bi-plus-lg"></i> Novo Setor
-            </button>
-          </div>
+      <!-- CARD DA TABELA -->
+      <div class="usuarios-card">
+        <div class="usuarios-card-header">
+          <i class="bi bi-building"></i>
+          Setores Cadastrados
         </div>
-
-        <div class="tabela-usuarios-box bg-white">
-          <table class="table table-hover tabela-usuarios mb-0">
+        <div class="table-responsive">
+          <table class="table tabela-usuarios mb-0">
             <thead>
               <tr>
-                <th>#</th>
+                <th style="width:80px;">#</th>
                 <th>Nome do Setor</th>
-                <th>Ações</th>
+                <th>Sala de Aula</th>
+                <th style="width:140px;">Ações</th>
               </tr>
             </thead>
             <tbody id="tabelaSetores">
               <tr>
-                <td>1</td>
-                <td>T.I.</td>
-                <td>
-                  <button class="btn btn-sm btn-outline-primary me-1" onclick="abrirModalEditarSetor(1, 'T.I.')">
-                    <i class="bi bi-pencil"></i>
-                  </button>
-                  <button class="btn btn-sm btn-outline-danger" onclick="abrirModalExcluirSetor(1)">
-                    <i class="bi bi-trash"></i>
-                  </button>
-                </td>
-              </tr>
-              <tr>
-                <td>2</td>
-                <td>Financeiro</td>
-                <td>
-                  <button class="btn btn-sm btn-outline-primary me-1" onclick="abrirModalEditarSetor(2, 'Financeiro')">
-                    <i class="bi bi-pencil"></i>
-                  </button>
-                  <button class="btn btn-sm btn-outline-danger" onclick="abrirModalExcluirSetor(2)">
-                    <i class="bi bi-trash"></i>
-                  </button>
-                </td>
-              </tr>
-              <tr>
-                <td>3</td>
-                <td>RH</td>
-                <td>
-                  <button class="btn btn-sm btn-outline-primary me-1" onclick="abrirModalEditarSetor(3, 'RH')">
-                    <i class="bi bi-pencil"></i>
-                  </button>
-                  <button class="btn btn-sm btn-outline-danger" onclick="abrirModalExcluirSetor(3)">
-                    <i class="bi bi-trash"></i>
-                  </button>
-                </td>
-              </tr>
-              <tr>
-                <td>4</td>
-                <td>Diretoria</td>
-                <td>
-                  <button class="btn btn-sm btn-outline-primary me-1" onclick="abrirModalEditarSetor(4, 'Diretoria')">
-                    <i class="bi bi-pencil"></i>
-                  </button>
-                  <button class="btn btn-sm btn-outline-danger" onclick="abrirModalExcluirSetor(4)">
-                    <i class="bi bi-trash"></i>
-                  </button>
-                </td>
-              </tr>
-              <tr>
-                <td>5</td>
-                <td>Sala de Reunião</td>
-                <td>
-                  <button class="btn btn-sm btn-outline-primary me-1" onclick="abrirModalEditarSetor(5, 'Sala de Reunião')">
-                    <i class="bi bi-pencil"></i>
-                  </button>
-                  <button class="btn btn-sm btn-outline-danger" onclick="abrirModalExcluirSetor(5)">
-                    <i class="bi bi-trash"></i>
-                  </button>
-                </td>
-              </tr>
-              <tr>
-                <td>6</td>
-                <td>Coordenação</td>
-                <td>
-                  <button class="btn btn-sm btn-outline-primary me-1" onclick="abrirModalEditarSetor(6, 'Coordenação')">
-                    <i class="bi bi-pencil"></i>
-                  </button>
-                  <button class="btn btn-sm btn-outline-danger" onclick="abrirModalExcluirSetor(6)">
-                    <i class="bi bi-trash"></i>
-                  </button>
+                <td colspan="4" class="text-center text-muted py-4">
+                  <i class="bi bi-arrow-repeat me-2"></i>Carregando setores...
                 </td>
               </tr>
             </tbody>
@@ -158,61 +131,95 @@
         </div>
       </div>
 
-      <div class="rodape">
-        Sistema de Controle de Patrimônio © 2025
+    </main>
+
+    <!-- RODAPÉ -->
+    <footer class="rodape">
+      Sistema de Controle de Patrimônio © 2025
+    </footer>
+
+  </div><!-- /content -->
+</div><!-- /wrapper -->
+
+
+<!-- ===================== MODAL: INCLUIR SETOR ===================== -->
+<div id="modalIncluirSetor" class="modal-overlay" style="display:none;">
+  <div class="modal-box">
+    <div class="modal-header-custom">
+      <h5><i class="bi bi-building-add me-2"></i>Incluir Novo Setor</h5>
+      <button class="btn-fechar-modal" onclick="fecharModalIncluirSetor()">&times;</button>
+    </div>
+    <div class="modal-body-custom">
+      <div id="msgErroIncluirSetor" class="alert alert-danger py-2 mb-3" style="display:none;"></div>
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Nome do Setor</label>
+        <input type="text" id="incluirNomeSetor" class="form-control" placeholder="Ex: Financeiro"/>
+      </div>
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Sala de Aula?</label>
+        <select id="incluirSalaAula" class="form-select">
+          <option value="N">Não</option>
+          <option value="S">Sim</option>
+        </select>
       </div>
     </div>
-  </div>
-
-  <div class="modal-overlay" id="modalNovoSetor" style="display: none;">
-    <div class="modal-box">
-      <div class="modal-header-custom">
-        <h5>Novo Setor</h5>
-        <button class="btn-fechar-modal" onclick="fecharModalNovoSetor()">&times;</button>
-      </div>
-      <div class="modal-body-custom">
-        <div class="mb-3">
-          <label class="form-label">Nome do Setor</label>
-          <input type="text" class="form-control" id="novoSetorNome" placeholder="Digite o nome do setor">
-        </div>
-      </div>
-      <div class="modal-footer-custom">
-        <button class="btn btn-secondary btn-sm" onclick="fecharModalNovoSetor()">Cancelar</button>
-        <button class="btn btn-primary btn-sm" onclick="fecharModalNovoSetor()">Salvar Setor</button>
-      </div>
+    <div class="modal-footer-custom">
+      <button class="btn btn-outline-secondary" onclick="fecharModalIncluirSetor()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarSetor()">
+        <i class="bi bi-check-lg me-1"></i>Salvar Setor
+      </button>
     </div>
   </div>
+</div>
 
-  <div class="modal-overlay" id="modalEditarSetor" style="display: none;">
-    <div class="modal-box">
-      <div class="modal-header-custom">
-        <h5>Editar Setor</h5>
-        <button class="btn-fechar-modal" onclick="fecharModalEditarSetor()">&times;</button>
+
+<!-- ===================== MODAL: EDITAR SETOR ===================== -->
+<div id="modalEditarSetor" class="modal-overlay" style="display:none;">
+  <div class="modal-box">
+    <div class="modal-header-custom">
+      <h5><i class="bi bi-pencil-fill me-2"></i>Editar Setor</h5>
+      <button class="btn-fechar-modal" onclick="fecharModalEditarSetor()">&times;</button>
+    </div>
+    <div class="modal-body-custom">
+      <div id="msgErroEditarSetor" class="alert alert-danger py-2 mb-3" style="display:none;"></div>
+      <input type="hidden" id="editarIdSetor"/>
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Nome do Setor</label>
+        <input type="text" id="editarNomeSetor" class="form-control"/>
       </div>
-      <div class="modal-body-custom">
-        <input type="hidden" id="editarSetorId">
-        <div class="mb-3">
-          <label class="form-label">Nome do Setor</label>
-          <input type="text" class="form-control" id="editarSetorNome">
-        </div>
-      </div>
-      <div class="modal-footer-custom">
-        <button class="btn btn-secondary btn-sm" onclick="fecharModalEditarSetor()">Cancelar</button>
-        <button class="btn btn-primary btn-sm" onclick="fecharModalEditarSetor()">Salvar Alterações</button>
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Sala de Aula?</label>
+        <select id="editarSalaAula" class="form-select">
+          <option value="N">Não</option>
+          <option value="S">Sim</option>
+        </select>
       </div>
     </div>
-  </div>
-
-  <div class="modal-overlay-confirmacao" id="modalExcluirSetor" style="display: none;">
-    <div class="modal-confirmacao-container">
-      <div class="modal-icone-alerta">!</div>
-      <h4 class="modal-titulo-confirmacao">Confirmar Exclusão</h4>
-      <p class="modal-texto-confirmacao">Deseja realmente excluir este setor?</p>
-      <div class="modal-botoes-confirmacao">
-        <button class="btn-cancelar-confirmacao" onclick="fecharModalExcluirSetor()">Cancelar</button>
-        <button class="btn-inativar-confirmacao" onclick="fecharModalExcluirSetor()">Excluir Setor</button>
-      </div>
+    <div class="modal-footer-custom">
+      <button class="btn btn-outline-secondary" onclick="fecharModalEditarSetor()">Cancelar</button>
+      <button class="btn btn-primary" onclick="atualizarSetor()">
+        <i class="bi bi-check-lg me-1"></i>Salvar Alterações
+      </button>
     </div>
   </div>
+</div>
 
-  <script src="script.js"></script>
+
+<!-- ===================== MODAL: CONFIRMAR EXCLUSÃO ===================== -->
+<div id="modalConfirmarExclusaoSetor" class="modal-overlay-confirmacao" style="display:none;">
+  <div class="modal-confirmacao-container">
+    <div class="modal-icone-alerta">
+      <i class="bi bi-exclamation-triangle-fill" style="font-size:28px;"></i>
+    </div>
+    <h5 class="modal-titulo-confirmacao">Confirmar Exclusão</h5>
+    <p class="modal-texto-confirmacao">Deseja realmente excluir este setor? Esta ação não pode ser desfeita.</p>
+    <div class="modal-botoes-confirmacao">
+      <button class="btn-cancelar-confirmacao" onclick="fecharModalExclusaoSetor()">Cancelar</button>
+      <button class="btn-inativar-confirmacao" onclick="confirmarExclusaoSetor()">Excluir Setor</button>
+    </div>
+  </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="script.js"></script>
