@@ -1,40 +1,233 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manutenção</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Responsáveis</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
+  <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
-    <section id="responsavel-content" class="conteudo-secao ativo">
-            <p class="section-titulo">Gestão de Responsáveis</p>
-            <div class="d-flex justify-content-end mb-3">
-              <button class="btn btn-primary"><i class="bi bi-person-plus-fill me-2"></i>Novo Responsável</button>
-            </div>
-            <div class="box">
-              <div class="table-responsive">
-                <table class="table table-hover tabela-patrimonios mb-0">
-                  <thead>
-                    <tr>
-                      <th>Nome Completo</th>
-                      <th>Matrícula</th>
-                      <th>Cargo</th>
-                      <th>Ações</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>Luís Miguel Gonçalves</td>
-                      <td>12345</td>
-                      <td>Técnico de T.I.</td>
-                      <td><button class="btn btn-sm btn-warning"><i class="bi bi-pencil-square"></i></button></td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </section>
-</body>
-</html>
+
+<div class="wrapper">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <img src="Logo.jpg" alt="Logo Salesiano"/>
+      <span>Salesiano</span>
+    </div>
+    <ul class="sidebar-menu">
+      <li>
+        <a href="dashboard.html">
+          <i class="bi bi-grid-1x2-fill"></i> Dashboard
+        </a>
+      </li>
+      <li>
+        <a href="patrimonio.html">
+          <i class="bi bi-box-seam"></i> Patrimônios
+        </a>
+      </li>
+      <li>
+        <a href="usuario.html">
+          <i class="bi bi-people-fill"></i> Usuários
+        </a>
+      </li>
+      <li>
+        <a href="categoria.html">
+          <i class="bi bi-tag-fill"></i> Categorias
+        </a>
+      </li>
+      <li>
+        <a href="setor.html">
+          <i class="bi bi-building"></i> Setores
+        </a>
+      </li>
+      <li class="ativo">
+        <a href="responsavel.html">
+          <i class="bi bi-person-badge-fill"></i> Responsáveis
+        </a>
+      </li>
+      <li>
+        <a href="manutencao.html">
+          <i class="bi bi-tools"></i> Manutenção
+        </a>
+      </li>
+      <li>
+        <a href="movimentacao.html">
+          <i class="bi bi-arrow-left-right"></i> Movimentações
+        </a>
+      </li>
+      <li>
+        <a href="relatorio.html">
+          <i class="bi bi-file-earmark-bar-graph-fill"></i> Relatórios
+        </a>
+      </li>
+    </ul>
+    <div class="sidebar-sair">
+      <a href="#" onclick="fazerLogout()">
+        <i class="bi bi-box-arrow-left"></i> Sair
+      </a>
+    </div>
+  </nav>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <button class="btn-menu-toggle" onclick="toggleMenu()" aria-label="Abrir menu">
+        <i class="bi bi-list"></i>
+      </button>
+      <span class="topbar-titulo">Gestão de Responsáveis</span>
+      <div class="topbar-usuario">
+        <div class="avatar"><i class="bi bi-person-fill"></i></div>
+        <span id="nomeUsuarioTopbar">Usuário</span>
+      </div>
+    </header>
+
+    <!-- MAIN -->
+    <main class="main-content">
+
+      <!-- TOOLBAR -->
+      <div class="usuarios-toolbar">
+        <input
+          type="text"
+          id="campoBuscaResponsavel"
+          class="input-busca-usuario"
+          placeholder="Pesquisar por nome ou matrícula..."
+          oninput="filtrarResponsaveis(this.value)"
+        />
+        <button class="btn btn-incluir-usuario" onclick="abrirModalIncluirResponsavel()">
+          <i class="bi bi-person-badge-fill me-1"></i> Incluir Responsável
+        </button>
+      </div>
+
+      <!-- CARD DA TABELA -->
+      <div class="usuarios-card">
+        <div class="usuarios-card-header">
+          <i class="bi bi-person-badge-fill"></i>
+          Responsáveis Cadastrados
+        </div>
+        <div class="table-responsive">
+          <table class="table tabela-usuarios mb-0">
+            <thead>
+              <tr>
+                <th style="width:60px;">#</th>
+                <th>Nome Completo</th>
+                <th>Matrícula</th>
+                <th>Cargo</th>
+                <th>Status</th>
+                <th style="width:140px;">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tabelaResponsaveis">
+              <tr>
+                <td colspan="6" class="text-center text-muted py-4">
+                  <i class="bi bi-arrow-repeat me-2"></i>Carregando responsáveis...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- RODAPÉ -->
+    <footer class="rodape">
+      Sistema de Controle de Patrimônio © 2025
+    </footer>
+
+  </div>
+</div>
+
+
+<!-- ===================== MODAL: INCLUIR RESPONSÁVEL ===================== -->
+<div id="modalIncluirResponsavel" class="modal-overlay" style="display:none;">
+  <div class="modal-box">
+    <div class="modal-header-custom">
+      <h5><i class="bi bi-person-badge-fill me-2"></i>Incluir Novo Responsável</h5>
+      <button class="btn-fechar-modal" onclick="fecharModalIncluirResponsavel()">&times;</button>
+    </div>
+    <div class="modal-body-custom">
+      <div id="msgErroIncluirResponsavel" class="alert alert-danger py-2 mb-3" style="display:none;"></div>
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Nome Completo</label>
+        <input type="text" id="incluirNomeResponsavel" class="form-control" placeholder="Ex: João da Silva"/>
+      </div>
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Matrícula</label>
+        <input type="text" id="incluirMatriculaResponsavel" class="form-control" placeholder="Ex: 12345"/>
+      </div>
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Cargo</label>
+        <input type="text" id="incluirCargoResponsavel" class="form-control" placeholder="Ex: Coordenador"/>
+      </div>
+    </div>
+    <div class="modal-footer-custom">
+      <button class="btn btn-outline-secondary" onclick="fecharModalIncluirResponsavel()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarResponsavel()">
+        <i class="bi bi-check-lg me-1"></i>Salvar Responsável
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ===================== MODAL: EDITAR RESPONSÁVEL ===================== -->
+<div id="modalEditarResponsavel" class="modal-overlay" style="display:none;">
+  <div class="modal-box">
+    <div class="modal-header-custom">
+      <h5><i class="bi bi-pencil-fill me-2"></i>Editar Responsável</h5>
+      <button class="btn-fechar-modal" onclick="fecharModalEditarResponsavel()">&times;</button>
+    </div>
+    <div class="modal-body-custom">
+      <div id="msgErroEditarResponsavel" class="alert alert-danger py-2 mb-3" style="display:none;"></div>
+      <input type="hidden" id="editarIdResponsavel"/>
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Nome Completo</label>
+        <input type="text" id="editarNomeResponsavel" class="form-control"/>
+      </div>
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Matrícula</label>
+        <input type="text" id="editarMatriculaResponsavel" class="form-control"/>
+      </div>
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Cargo</label>
+        <input type="text" id="editarCargoResponsavel" class="form-control"/>
+      </div>
+      <div class="form-check form-switch mb-1">
+        <input class="form-check-input" type="checkbox" id="editarAtivoResponsavel" checked/>
+        <label class="form-check-label" for="editarAtivoResponsavel">Responsável Ativo</label>
+      </div>
+    </div>
+    <div class="modal-footer-custom">
+      <button class="btn btn-outline-secondary" onclick="fecharModalEditarResponsavel()">Cancelar</button>
+      <button class="btn btn-primary" onclick="atualizarResponsavel()">
+        <i class="bi bi-check-lg me-1"></i>Salvar Alterações
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ===================== MODAL: CONFIRMAR INATIVAÇÃO ===================== -->
+<div id="modalConfirmarInativacaoResponsavel" class="modal-overlay-confirmacao" style="display:none;">
+  <div class="modal-confirmacao-container">
+    <div class="modal-icone-alerta">
+      <i class="bi bi-exclamation-triangle-fill" style="font-size:28px;"></i>
+    </div>
+    <h5 class="modal-titulo-confirmacao">Confirmar Inativação</h5>
+    <p class="modal-texto-confirmacao">Deseja realmente inativar este responsável?</p>
+    <div class="modal-botoes-confirmacao">
+      <button class="btn-cancelar-confirmacao" onclick="fecharModalInativacaoResponsavel()">Cancelar</button>
+      <button class="btn-inativar-confirmacao" onclick="confirmarInativacaoResponsavel()">Inativar Responsável</button>
+    </div>
+  </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="script.js"></script>
