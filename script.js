@@ -223,12 +223,12 @@ function filtrarUsuarios() {
 function abrirModalIncluirUsuario() {
   document.getElementById('formIncluirUsuario').reset();
   document.getElementById('msgIncluirUsuario').textContent = '';
-  document.getElementById('modalIncluirUsuario').style.display = 'flex';
+  document.getElementById('modalIncluir').style.display = 'flex';
 }
 
 // Fecha o modal de inclusao.
 function fecharModalIncluirUsuario() {
-  document.getElementById('modalIncluirUsuario').style.display = 'none';
+  document.getElementById('modalIncluir').style.display = 'none';
 }
 
 // ===================== USUARIOS - CADASTRAR =====================
@@ -281,12 +281,12 @@ function abrirModalEditarUsuario(id) {
   document.getElementById('editAtivoUsuario').checked = usuario.ativo === 'S';
   document.getElementById('msgEditarUsuario').textContent = '';
 
-  document.getElementById('modalEditarUsuario').style.display = 'flex';
+  document.getElementById('modalEditar').style.display = 'flex';
 }
 
 // Fecha o modal de edicao.
 function fecharModalEditarUsuario() {
-  document.getElementById('modalEditarUsuario').style.display = 'none';
+  document.getElementById('modalEditar').style.display = 'none';
 }
 
 // ===================== USUARIOS - EDITAR =====================
@@ -333,17 +333,17 @@ let deveInativarUsuario = false;
 function confirmarInativacaoCheckbox(checkbox) {
   if (!checkbox.checked) {
     checkbox.checked = true;
-    document.getElementById('modalConfirmarInativacao').style.display = 'flex';
+    document.getElementById('modalConfirmacao').style.display = 'flex';
   }
 }
 
 function cancelarInativacao() {
-  document.getElementById('modalConfirmarInativacao').style.display = 'none';
+  document.getElementById('modalConfirmacao').style.display = 'none';
   deveInativarUsuario = false;
 }
 
 async function confirmarInativacaoDefinitivo() {
-  document.getElementById('modalConfirmarInativacao').style.display = 'none';
+  document.getElementById('modalConfirmacao').style.display = 'none';
   deveInativarUsuario = true;
   
   const checkbox = document.querySelector('#editAtivoUsuario');
