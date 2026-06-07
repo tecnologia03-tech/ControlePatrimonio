@@ -1,6 +1,5 @@
 # app.py
 
-# Importa o núcleo do Flask e os recursos usados para receber e devolver dados
 from flask import Flask, jsonify, request
 
 # Importa o CORS para permitir comunicação entre front-end e back-end
@@ -12,6 +11,11 @@ from psycopg_pool import ConnectionPool
 
 # Importa a URL de conexão do banco vinda do arquivo de configuração
 from config import DB_URL
+
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Cria a aplicação principal Flask
 app = Flask(__name__)
@@ -26,22 +30,44 @@ CORS(app)
 # max_idle=300 → fecha conexão que ficou ociosa por mais de 5 minutos (antes do Neon matar)
 # reconnect_timeout=10 → tenta reconectar por até 10 segundos antes de lançar erro
 # kwargs       → connect_timeout=10 garante que uma tentativa de conexão falha rápido em vez de travar
+def _on_reconnect_failed(pool: ConnectionPool) -> None:
+    logger.error("Pool de conexões falhou ao reconectar com o banco de dados.")
+
+def _configurar_conexao(conn: psycopg.Connection) -> None:
+    conn.autocommit = False
+
 pool = ConnectionPool(
     DB_URL,
     open=False,
     min_size=0,
-    max_size=5,
-    max_idle=300,
-    reconnect_timeout=10,
+    max_size=10,
+    max_idle=60,
+    max_lifetime=600,
+    reconnect_timeout=30,
+    reconnect_failed=_on_reconnect_failed,
+    configure=_configurar_conexao,
     kwargs={"connect_timeout": 10}
 )
+
 
 # Abre o pool explicitamente após criar o app, e verifica as conexões existentes
 # pool.open()  → cria o pool de forma controlada
 # pool.check() → descarta conexões inválidas/ociosas e substitui por conexões novas e saudáveis
 with app.app_context():
-    pool.open()
-    pool.check()
+    try:
+        pool.open(wait=True)
+        pool.check()
+        logger.info("Pool de conexões iniciado com sucesso.")
+    except Exception as e:
+        logger.error(f"Falha ao iniciar o pool de conexões: {e}")
+
+
+def get_conn():
+    try:
+        return pool.connection()
+    except Exception as e:
+        logger.error(f"Erro ao obter conexão do pool: {e}")
+        raise RuntimeError("Não foi possível conectar ao banco de dados. Tente novamente.")
 
 
 # Rota criada para testar se a aplicação consegue acessar o banco de dados
@@ -49,7 +75,7 @@ with app.app_context():
 def status_banco():
     try:
         # Abre uma conexão com o banco usando o pool
-        with pool.connection() as conn:
+        with get_conn() as conn:
             # Cria um cursor para executar comandos SQL
             with conn.cursor() as cursor:
                 # Executa um comando simples apenas para validar a conexão
@@ -82,7 +108,7 @@ def login():
             }), 400
 
         # Consulta a tabela Usuario para verificar se existe um usuário ativo com essas credenciais
-        with pool.connection() as conn:
+        with get_conn() as conn:
             with conn.cursor() as cursor:
                 cursor.execute(
                     """
@@ -140,7 +166,7 @@ def incluir_usuario():
         }), 400
 
     try:
-        with pool.connection() as conn:
+        with get_conn() as conn:
             with conn.cursor() as cursor:
                 # Verifica se já existe usuário com a mesma matrícula
                 cursor.execute(
@@ -178,7 +204,7 @@ def incluir_usuario():
 @app.route('/api/usuarios', methods=['GET'])
 def listar_usuarios():
     try:
-        with pool.connection() as conn:
+        with get_conn() as conn:
             with conn.cursor() as cursor:
                 # Consulta os dados dos usuários para exibição na tabela
                 cursor.execute("""
@@ -217,8 +243,8 @@ def listar_usuarios():
 
 
 # Rota para editar um usuário existente
-@app.route('/api/usuarios/<int:id>', methods=['PUT'])
-def editar_usuario(id):
+@app.route('/api/usuarios/<int:id_usuario>', methods=['PUT'])
+def editar_usuario(id_usuario):
     # Recebe os dados enviados pelo front-end
     dados = request.get_json()
 
@@ -237,7 +263,7 @@ def editar_usuario(id):
         }), 400
 
     try:
-        with pool.connection() as conn:
+        with get_conn() as conn:
             with conn.cursor() as cursor:
                 # Verifica se a matrícula informada já pertence a outro usuário
                 cursor.execute("""
@@ -245,7 +271,7 @@ def editar_usuario(id):
                     FROM Usuario
                     WHERE Login_Matricula = %s
                     AND Id_Usuario != %s;
-                """, (matricula, id))
+                """, (matricula, id_usuario))
 
                 # Se encontrar, bloqueia a atualização duplicada
                 if cursor.fetchone():
@@ -264,7 +290,7 @@ def editar_usuario(id):
                             Tp_Usuario = %s,
                             Ativo = %s
                         WHERE Id_Usuario = %s;
-                    """, (nome, matricula, senha, perfil, ativo, id))
+                    """, (nome, matricula, senha, perfil, ativo, id_usuario))
 
                 # Se a senha não foi informada, mantém a senha atual
                 else:
@@ -275,7 +301,7 @@ def editar_usuario(id):
                             Tp_Usuario = %s,
                             Ativo = %s
                         WHERE Id_Usuario = %s;
-                    """, (nome, matricula, perfil, ativo, id))
+                    """, (nome, matricula, perfil, ativo, id_usuario))
 
             # Confirma a alteração no banco
             conn.commit()
@@ -292,13 +318,13 @@ def editar_usuario(id):
 
 
 # Rota para inativar um usuário do sistema
-@app.route('/api/usuarios/<int:id>', methods=['DELETE'])
-def excluir_usuario(id):
+@app.route('/api/usuarios/<int:id_usuario>', methods=['DELETE'])
+def excluir_usuario(id_usuario):
     try:
-        with pool.connection() as conn:
+        with get_conn() as conn:
             with conn.cursor() as cursor:
                 # Verifica se o usuário realmente existe antes de inativar
-                cursor.execute("SELECT 1 FROM Usuario WHERE Id_Usuario = %s;", (id,))
+                cursor.execute("SELECT 1 FROM Usuario WHERE Id_Usuario = %s;", (id_usuario,))
 
                 # Se não existir, retorna erro 404
                 if not cursor.fetchone():
@@ -310,7 +336,7 @@ def excluir_usuario(id):
                 # Em vez de excluir fisicamente, apenas marca como inativo
                 cursor.execute(
                     "UPDATE Usuario SET Ativo = 'N' WHERE Id_Usuario = %s;",
-                    (id,)
+                    (id_usuario,)
                 )
 
             # Confirma a alteração no banco
@@ -331,7 +357,7 @@ def excluir_usuario(id):
 @app.route('/api/setores', methods=['GET'])
 def listar_locais():
     try:
-        with pool.connection() as conn:
+        with get_conn() as conn:
             with conn.cursor() as cursor:
 
                 # Consulta os setores ordenados pelo nome
@@ -388,7 +414,7 @@ def incluir_local():
         }), 400
 
     try:
-        with pool.connection() as conn:
+        with get_conn() as conn:
             with conn.cursor() as cursor:
 
                 # Verifica se já existe um setor com o mesmo nome
@@ -448,7 +474,7 @@ def editar_local(id_local):
         }), 400
 
     try:
-        with pool.connection() as conn:
+        with get_conn() as conn:
             with conn.cursor() as cursor:
 
                 # Verifica se o setor existe antes de editar
@@ -512,7 +538,7 @@ def editar_local(id_local):
 @app.route('/api/setores/<int:id_local>', methods=['DELETE'])
 def excluir_local(id_local):
     try:
-        with pool.connection() as conn:
+        with get_conn() as conn:
             with conn.cursor() as cursor:
 
                 # Verifica se o setor existe antes de tentar excluir
