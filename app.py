@@ -14,6 +14,11 @@ from config import DB_URL
 
 import logging
 
+from contextlib import contextmanager
+import time
+from psycopg import OperationalError, InterfaceError
+from psycopg_pool import ConnectionPool, PoolTimeout
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -313,7 +318,7 @@ def login():
 @app.route('/api/usuarios', methods=['POST'])
 def incluir_usuario():
     # Recebe os dados enviados pelo front-end
-    dados = request.get_json()
+    dados = request.get_json(silent=True) or {}
 
     # Captura e limpa os campos recebidos
     nome = dados.get('nome', '').strip()
@@ -345,10 +350,13 @@ def incluir_usuario():
                     }), 409
 
                 # Insere o novo usuário com status ativo por padrão
-                cursor.execute("""
+                cursor.execute(
+                    """
                     INSERT INTO Usuario (Nome, Login_Matricula, Senha, Tp_Usuario, Ativo)
                     VALUES (%s, %s, %s, %s, 'S');
-                """, (nome, matricula, senha, perfil))
+                    """,
+                    (nome, matricula, senha, perfil)
+                )
 
             # Confirma a transação no banco
             conn.commit()
@@ -361,8 +369,12 @@ def incluir_usuario():
 
     except Exception as e:
         # Retorna erro se houver falha na inclusão
-        return jsonify({"sucesso": False, "mensagem": str(e)}), 500
-    
+        return jsonify({
+            "sucesso": False,
+            "mensagem": str(e)
+        }), 500
+
+
 # Rota para listar todos os usuários cadastrados no sistema
 @app.route('/api/usuarios', methods=['GET'])
 def listar_usuarios():
@@ -370,32 +382,34 @@ def listar_usuarios():
         with get_conn() as conn:
             with conn.cursor() as cursor:
                 # Consulta os dados dos usuários para exibição na tabela
-                cursor.execute("""
+                cursor.execute(
+                    """
                     SELECT Id_Usuario, Nome, Login_Matricula, Tp_Usuario, Ativo
                     FROM Usuario
                     ORDER BY Nome ASC;
-                """)
+                    """
+                )
 
                 # Lê todas as linhas retornadas pela consulta
                 rows = cursor.fetchall()
 
-                # Converte o resultado em uma lista de dicionários
-                usuarios = [
-                    {
-                        "id": r[0],
-                        "nome": r[1],
-                        "matricula": r[2],
-                        "perfil": r[3],
-                        "ativo": r[4]
-                    }
-                    for r in rows
-                ]
+        # Converte o resultado em uma lista de dicionários
+        usuarios = [
+            {
+                "id": r[0],
+                "nome": r[1],
+                "matricula": r[2],
+                "perfil": r[3],
+                "ativo": r[4]
+            }
+            for r in rows
+        ]
 
-                # Retorna os usuários em JSON
-                return jsonify({
-                    "sucesso": True,
-                    "usuarios": usuarios
-                }), 200
+        # Retorna os usuários em JSON
+        return jsonify({
+            "sucesso": True,
+            "usuarios": usuarios
+        }), 200
 
     except Exception as e:
         # Retorna erro se ocorrer falha na consulta
@@ -409,14 +423,14 @@ def listar_usuarios():
 @app.route('/api/usuarios/<int:id_usuario>', methods=['PUT'])
 def editar_usuario(id_usuario):
     # Recebe os dados enviados pelo front-end
-    dados = request.get_json()
+    dados = request.get_json(silent=True) or {}
 
     # Captura e limpa os campos enviados
     nome = dados.get('nome', '').strip()
     matricula = dados.get('matricula', '').strip()
     senha = dados.get('senha', '').strip()
     perfil = dados.get('perfil', '').strip()
-    ativo = dados.get('ativo', 'S')
+    ativo = (dados.get('ativo') or 'S').strip().upper()
 
     # Valida os campos obrigatórios da edição
     if not nome or not matricula or not perfil:
@@ -425,16 +439,34 @@ def editar_usuario(id_usuario):
             "mensagem": "Preencha todos os campos obrigatórios."
         }), 400
 
+    if ativo not in ('S', 'N'):
+        ativo = 'S'
+
     try:
         with get_conn() as conn:
             with conn.cursor() as cursor:
+                # Verifica se o usuário existe antes de editar
+                cursor.execute(
+                    "SELECT 1 FROM Usuario WHERE Id_Usuario = %s;",
+                    (id_usuario,)
+                )
+
+                if not cursor.fetchone():
+                    return jsonify({
+                        "sucesso": False,
+                        "mensagem": "Usuário não encontrado."
+                    }), 404
+
                 # Verifica se a matrícula informada já pertence a outro usuário
-                cursor.execute("""
+                cursor.execute(
+                    """
                     SELECT 1
                     FROM Usuario
                     WHERE Login_Matricula = %s
-                    AND Id_Usuario != %s;
-                """, (matricula, id_usuario))
+                      AND Id_Usuario != %s;
+                    """,
+                    (matricula, id_usuario)
+                )
 
                 # Se encontrar, bloqueia a atualização duplicada
                 if cursor.fetchone():
@@ -445,7 +477,8 @@ def editar_usuario(id_usuario):
 
                 # Se a senha foi informada, atualiza também a senha
                 if senha:
-                    cursor.execute("""
+                    cursor.execute(
+                        """
                         UPDATE Usuario
                         SET Nome = %s,
                             Login_Matricula = %s,
@@ -453,18 +486,23 @@ def editar_usuario(id_usuario):
                             Tp_Usuario = %s,
                             Ativo = %s
                         WHERE Id_Usuario = %s;
-                    """, (nome, matricula, senha, perfil, ativo, id_usuario))
+                        """,
+                        (nome, matricula, senha, perfil, ativo, id_usuario)
+                    )
 
                 # Se a senha não foi informada, mantém a senha atual
                 else:
-                    cursor.execute("""
+                    cursor.execute(
+                        """
                         UPDATE Usuario
                         SET Nome = %s,
                             Login_Matricula = %s,
                             Tp_Usuario = %s,
                             Ativo = %s
                         WHERE Id_Usuario = %s;
-                    """, (nome, matricula, perfil, ativo, id_usuario))
+                        """,
+                        (nome, matricula, perfil, ativo, id_usuario)
+                    )
 
             # Confirma a alteração no banco
             conn.commit()
@@ -477,7 +515,10 @@ def editar_usuario(id_usuario):
 
     except Exception as e:
         # Retorna erro se houver falha no processo de edição
-        return jsonify({"sucesso": False, "mensagem": str(e)}), 500
+        return jsonify({
+            "sucesso": False,
+            "mensagem": str(e)
+        }), 500
 
 
 # Rota para inativar um usuário do sistema
@@ -487,7 +528,10 @@ def excluir_usuario(id_usuario):
         with get_conn() as conn:
             with conn.cursor() as cursor:
                 # Verifica se o usuário realmente existe antes de inativar
-                cursor.execute("SELECT 1 FROM Usuario WHERE Id_Usuario = %s;", (id_usuario,))
+                cursor.execute(
+                    "SELECT 1 FROM Usuario WHERE Id_Usuario = %s;",
+                    (id_usuario,)
+                )
 
                 # Se não existir, retorna erro 404
                 if not cursor.fetchone():
@@ -512,7 +556,11 @@ def excluir_usuario(id_usuario):
         }), 200
 
     except Exception as e:
-        return jsonify({"sucesso": False, "mensagem": str(e)}), 500
+        return jsonify({
+            "sucesso": False,
+            "mensagem": str(e)
+        }), 500
+
 
 # Rota para listar todos os setores cadastrados
 # Observação: no banco a tabela continua se chamando Local,

@@ -1,3 +1,8 @@
+function getApiUrl(path) {
+  const baseUrl = 'https://controlepatrimonio.onrender.com';
+  return `${baseUrl}${path}`;
+}
+
 // ===================== LOGIN =====================
 // Responsável por autenticar o usuário no sistema.
 async function fazerLogin(e) {
@@ -125,59 +130,82 @@ function renderizarGrafico() {
   });
 }
 
-// ===================== USUARIOS - VARIAVEL GLOBAL =====================
+// ===================== USUARIOS - VARIAVEL GLOBAL ===================== //
 let listaUsuarios = [];
 let listaUsuariosFiltrada = [];
 
-// ===================== USUARIOS - CARREGAR DA API =====================
+// ===================== USUARIOS - CARREGAR DA API ===================== //
 async function carregarUsuarios() {
   const tbody = document.getElementById('tabelaUsuarios');
+
   if (!tbody) {
     console.error('tbody tabelaUsuarios nao encontrado');
     return;
   }
 
-  tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">Carregando usuários...</td></tr>';
+  tbody.innerHTML = `
+    <tr>
+      <td colspan="5" class="text-center text-muted py-4">
+        Carregando usuários...
+      </td>
+    </tr>
+  `;
 
   try {
-    const resposta = await fetch('https://controlepatrimonio.onrender.com/api/usuarios');
-
-    if (!resposta.ok) {
-      throw new Error('Falha na requisição: ' + resposta.status);
-    }
-
+    const resposta = await fetch(getApiUrl('/api/usuarios'));
     const dados = await resposta.json();
-    console.log('dados usuarios:', dados);
 
-    if (!dados.sucesso) {
-      tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger py-4">' + dados.mensagem + '</td></tr>';
+    if (!resposta.ok || !dados.sucesso) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="5" class="text-center text-danger py-4">
+            ${dados.mensagem || 'Erro ao carregar usuários.'}
+          </td>
+        </tr>
+      `;
       return;
     }
 
     listaUsuarios = dados.usuarios || [];
     listaUsuariosFiltrada = [...listaUsuarios];
     renderizarUsuarios(listaUsuariosFiltrada);
-
   } catch (erro) {
     console.error('Erro ao carregar usuários:', erro);
-    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger py-4">Erro ao conectar com o servidor.</td></tr>';
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="5" class="text-center text-danger py-4">
+          Erro ao conectar com o servidor.
+        </td>
+      </tr>
+    `;
   }
 }
 
-// ===================== USUARIOS - RENDERIZAR LISTA =====================
+// ===================== USUARIOS - RENDERIZAR LISTA ===================== //
 function renderizarUsuarios(lista) {
   const tbody = document.getElementById('tabelaUsuarios');
+
   if (!tbody) {
     console.error('tbody tabelaUsuarios nao encontrado');
     return;
   }
 
   if (!lista || lista.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">Nenhum usuário cadastrado.</td></tr>';
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="5" class="text-center text-muted py-4">
+          Nenhum usuário cadastrado.
+        </td>
+      </tr>
+    `;
     return;
   }
 
-  const mapPerfil = { 'A': 'Administrador', 'O': 'Operador', 'V': 'Visualizador' };
+  const mapPerfil = {
+    A: 'Administrador',
+    O: 'Operador',
+    V: 'Visualizador'
+  };
 
   tbody.innerHTML = lista.map(usuario => {
     const perfil = mapPerfil[usuario.perfil] || usuario.perfil;
@@ -199,8 +227,7 @@ function renderizarUsuarios(lista) {
   }).join('');
 }
 
-// ===================== USUARIOS - FILTRAR =====================
-// Filtra usuarios por nome ou matricula.
+// ===================== USUARIOS - FILTRAR ===================== //
 function filtrarUsuarios() {
   const termo = document.getElementById('buscaUsuario').value.trim().toLowerCase();
 
@@ -218,21 +245,18 @@ function filtrarUsuarios() {
   renderizarUsuarios(listaUsuariosFiltrada);
 }
 
-// ===================== USUARIOS - MODAL INCLUIR =====================
-// Abre o modal de inclusao e limpa os campos anteriores.
+// ===================== USUARIOS - MODAL INCLUIR ===================== //
 function abrirModalIncluirUsuario() {
   document.getElementById('formIncluirUsuario').reset();
   document.getElementById('msgIncluirUsuario').textContent = '';
   document.getElementById('modalIncluir').style.display = 'flex';
 }
 
-// Fecha o modal de inclusao.
 function fecharModalIncluirUsuario() {
   document.getElementById('modalIncluir').style.display = 'none';
 }
 
-// ===================== USUARIOS - CADASTRAR =====================
-// Valida os campos e envia os dados do novo usuario para a API.
+// ===================== USUARIOS - CADASTRAR ===================== //
 async function salvarUsuario() {
   const nome = document.getElementById('nomeUsuario').value.trim();
   const matricula = document.getElementById('matriculaUsuario').value.trim();
@@ -248,7 +272,7 @@ async function salvarUsuario() {
   }
 
   try {
-    const resposta = await fetch('https://controlepatrimonio.onrender.com/api/usuarios', {
+    const resposta = await fetch(getApiUrl('/api/usuarios'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ nome, matricula, senha, perfil })
@@ -256,21 +280,23 @@ async function salvarUsuario() {
 
     const dados = await resposta.json();
 
-    if (dados.sucesso) {
-      fecharModalIncluirUsuario();
-      carregarUsuarios();
-    } else {
-      msg.textContent = dados.mensagem;
+    if (!resposta.ok || !dados.sucesso) {
+      msg.textContent = dados.mensagem || 'Erro ao cadastrar usuário.';
+      return;
     }
+
+    fecharModalIncluirUsuario();
+    await carregarUsuarios();
   } catch (erro) {
-    msg.textContent = 'Erro ao cadastrar usuário.';
+    console.error('Erro ao cadastrar usuário:', erro);
+    msg.textContent = 'Erro ao conectar com o servidor.';
   }
 }
 
-// ===================== USUARIOS - MODAL EDITAR =====================
-// Abre o modal de edicao preenchendo os campos com os dados do usuario selecionado.
+// ===================== USUARIOS - MODAL EDITAR ===================== //
 function abrirModalEditarUsuario(id) {
   const usuario = listaUsuarios.find(u => u.id === id);
+
   if (!usuario) return;
 
   document.getElementById('editUsuarioId').value = usuario.id;
@@ -280,17 +306,14 @@ function abrirModalEditarUsuario(id) {
   document.getElementById('editPerfilUsuario').value = usuario.perfil;
   document.getElementById('editAtivoUsuario').checked = usuario.ativo === 'S';
   document.getElementById('msgEditarUsuario').textContent = '';
-
   document.getElementById('modalEditar').style.display = 'flex';
 }
 
-// Fecha o modal de edicao.
 function fecharModalEditarUsuario() {
   document.getElementById('modalEditar').style.display = 'none';
 }
 
-// ===================== USUARIOS - EDITAR =====================
-// Valida os campos e envia a atualizacao do usuario para a API.
+// ===================== USUARIOS - EDITAR ===================== //
 async function salvarEdicaoUsuario() {
   const id = document.getElementById('editUsuarioId').value;
   const nome = document.getElementById('editNomeUsuario').value.trim();
@@ -308,7 +331,7 @@ async function salvarEdicaoUsuario() {
   }
 
   try {
-    const resposta = await fetch('https://controlepatrimonio.onrender.com/api/usuarios/' + id, {
+    const resposta = await fetch(getApiUrl(`/api/usuarios/${id}`), {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ nome, matricula, senha, perfil, ativo })
@@ -316,38 +339,17 @@ async function salvarEdicaoUsuario() {
 
     const dados = await resposta.json();
 
-    if (dados.sucesso) {
-      fecharModalEditarUsuario();
-      carregarUsuarios();
-    } else {
-      msg.textContent = dados.mensagem;
+    if (!resposta.ok || !dados.sucesso) {
+      msg.textContent = dados.mensagem || 'Erro ao atualizar usuário.';
+      return;
     }
+
+    fecharModalEditarUsuario();
+    await carregarUsuarios();
   } catch (erro) {
-    msg.textContent = 'Erro ao atualizar usuário.';
+    console.error('Erro ao atualizar usuário:', erro);
+    msg.textContent = 'Erro ao conectar com o servidor.';
   }
-}
-
-// ===== CONFIRMAR INATIVACAO =====
-let deveInativarUsuario = false;
-
-function confirmarInativacaoCheckbox(checkbox) {
-  if (!checkbox.checked) {
-    checkbox.checked = true;
-    document.getElementById('modalConfirmacao').style.display = 'flex';
-  }
-}
-
-function cancelarInativacao() {
-  document.getElementById('modalConfirmacao').style.display = 'none';
-  deveInativarUsuario = false;
-}
-
-async function confirmarInativacaoDefinitivo() {
-  document.getElementById('modalConfirmacao').style.display = 'none';
-  deveInativarUsuario = true;
-  
-  const checkbox = document.querySelector('#editAtivoUsuario');
-  checkbox.checked = false;
 }
 
 // ===================== SETORES - VARIÁVEIS GLOBAIS =====================
