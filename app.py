@@ -30,45 +30,208 @@ CORS(app)
 # max_idle=300 → fecha conexão que ficou ociosa por mais de 5 minutos (antes do Neon matar)
 # reconnect_timeout=10 → tenta reconectar por até 10 segundos antes de lançar erro
 # kwargs       → connect_timeout=10 garante que uma tentativa de conexão falha rápido em vez de travar
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s"
+)
+logger = logging.getLogger(__name__)
+
+# Cria a aplicação principal Flask
+app = Flask(__name__)
+
+# Habilita CORS para permitir chamadas da interface web para a API
+CORS(app)
+
+# Configurações centralizadas do pool para ambiente web com Neon/serverless
+POOL_MIN_SIZE = 0
+POOL_MAX_SIZE = 10
+POOL_TIMEOUT = 10
+POOL_MAX_IDLE = 45
+POOL_MAX_LIFETIME = 600
+POOL_RECONNECT_TIMEOUT = 8
+DB_CONNECT_TIMEOUT = 8
+DB_RECOVERY_RETRIES = 2
+DB_RECOVERY_WAIT_SECONDS = 0.3
+
+
 def _on_reconnect_failed(pool: ConnectionPool) -> None:
+    # Registra quando o pool não consegue se recuperar dentro da janela definida
     logger.error("Pool de conexões falhou ao reconectar com o banco de dados.")
 
+
 def _configurar_conexao(conn: psycopg.Connection) -> None:
+    # Mantém transações explícitas por rota para preservar consistência
     conn.autocommit = False
 
+
+# Cria o pool de conexões de forma controlada
+# min_size=0 evita manter conexão ociosa aberta sem necessidade
+# max_idle=45 fecha conexões paradas antes que fiquem envelhecidas no uso diário
+# reconnect_timeout menor reduz tempo de espera quando a conexão morreu
 pool = ConnectionPool(
-    DB_URL,
+    conninfo=DB_URL,
     open=False,
-    min_size=0,
-    max_size=10,
-    max_idle=60,
-    max_lifetime=600,
-    reconnect_timeout=30,
+    min_size=POOL_MIN_SIZE,
+    max_size=POOL_MAX_SIZE,
+    timeout=POOL_TIMEOUT,
+    max_idle=POOL_MAX_IDLE,
+    max_lifetime=POOL_MAX_LIFETIME,
+    reconnect_timeout=POOL_RECONNECT_TIMEOUT,
     reconnect_failed=_on_reconnect_failed,
     configure=_configurar_conexao,
-    kwargs={"connect_timeout": 10}
+    kwargs={
+        "connect_timeout": DB_CONNECT_TIMEOUT,
+        "application_name": "controle_patrimonio_flask"
+    }
 )
 
 
-# Abre o pool explicitamente após criar o app, e verifica as conexões existentes
-# pool.open()  → cria o pool de forma controlada
-# pool.check() → descarta conexões inválidas/ociosas e substitui por conexões novas e saudáveis
+def _pool_aberto() -> bool:
+    # Compatível com psycopg_pool: verifica se o pool já foi aberto
+    try:
+        return not pool.closed
+    except Exception:
+        return False
+
+
+def garantir_pool_ativo() -> None:
+    # Garante que o pool esteja aberto no momento da requisição
+    # Isso ajuda em cenários em que a aplicação sobe antes do banco estar disponível
+    if _pool_aberto():
+        return
+
+    logger.warning("Pool estava fechado. Tentando abrir novamente.")
+    pool.open(wait=True)
+    logger.info("Pool de conexões aberto com sucesso.")
+
+
+def validar_conexao(conn: psycopg.Connection) -> None:
+    # Faz um ping rápido para confirmar que a conexão está realmente utilizável
+    with conn.cursor() as cursor:
+        cursor.execute("SELECT 1;")
+
+
+def _erro_de_conexao_recuperavel(exc: Exception) -> bool:
+    # Define os erros que justificam nova tentativa controlada
+    return isinstance(exc, (OperationalError, InterfaceError, PoolTimeout))
+
+
+@contextmanager
+def get_conn():
+    # Obtém uma conexão válida do pool com recuperação automática
+    ultima_excecao = None
+
+    for tentativa in range(1, DB_RECOVERY_RETRIES + 1):
+        conn = None
+
+        try:
+            # Garante que o pool esteja ativo antes de obter conexão
+            garantir_pool_ativo()
+
+            # Obtém uma conexão do pool
+            conn = pool.getconn()
+
+            # Valida a conexão antes de entregá-la para a rota
+            validar_conexao(conn)
+
+            logger.debug("Conexão com o banco validada com sucesso na tentativa %s.", tentativa)
+
+            try:
+                yield conn
+            except Exception:
+                # Em qualquer erro durante a rota, faz rollback para evitar conexão suja
+                if conn and not conn.closed:
+                    try:
+                        conn.rollback()
+                    except Exception:
+                        logger.exception("Falha ao executar rollback da transação.")
+                raise
+            else:
+                # O commit continua explícito nas rotas para não mascarar fluxos de escrita
+                pass
+            finally:
+                # Sempre devolve a conexão ao pool com estado limpo
+                if conn is not None:
+                    try:
+                        if not conn.closed:
+                            try:
+                                conn.rollback()
+                            except Exception:
+                                logger.exception("Falha ao limpar transação antes de devolver conexão ao pool.")
+                        pool.putconn(conn)
+                    except Exception:
+                        logger.exception("Falha ao devolver conexão ao pool.")
+
+            return
+
+        except Exception as exc:
+            ultima_excecao = exc
+
+            # Se a conexão falhou antes de chegar à rota, tenta descartá-la corretamente
+            if conn is not None:
+                try:
+                    pool.putconn(conn, close=True)
+                except Exception:
+                    logger.exception("Falha ao descartar conexão inválida do pool.")
+
+            if _erro_de_conexao_recuperavel(exc):
+                logger.warning(
+                    "Falha ao obter/validar conexão com o banco na tentativa %s/%s: %s",
+                    tentativa,
+                    DB_RECOVERY_RETRIES,
+                    exc
+                )
+
+                # Força o pool a revisar conexões antes de tentar novamente
+                try:
+                    garantir_pool_ativo()
+                    pool.check()
+                    logger.info("Pool revisado após falha de conexão.")
+                except Exception as check_exc:
+                    logger.warning("Falha ao revisar o pool após erro de conexão: %s", check_exc)
+
+                if tentativa < DB_RECOVERY_RETRIES:
+                    time.sleep(DB_RECOVERY_WAIT_SECONDS)
+                    continue
+
+            logger.exception("Erro definitivo ao obter conexão com o banco.")
+            break
+
+    raise RuntimeError(
+        "Não foi possível conectar ao banco de dados no momento. "
+        "Atualize a página e tente novamente em alguns instantes."
+    ) from ultima_excecao
+
+
+def resposta_erro_banco(e: Exception):
+    # Centraliza erro amigável de banco sem expor detalhes internos ao usuário
+    logger.exception("Erro de banco/processamento na requisição: %s", e)
+    return jsonify({
+        "sucesso": False,
+        "mensagem": str(e) if isinstance(e, RuntimeError) else "Erro interno ao processar a operação."
+    }), 500
+
+
+def normalizar_flag_sn(valor, padrao='N'):
+    # Normaliza campos CHAR(1) do tipo Sim/Não
+    valor = (valor or padrao)
+    valor = str(valor).strip().upper()
+    return 'S' if valor == 'S' else 'N'
+
+
+# Abre o pool explicitamente após criar o app
+# Se o banco não estiver disponível na largada, a aplicação continua e tenta recuperar na próxima requisição
 with app.app_context():
     try:
-        pool.open(wait=True)
-        pool.check()
+        garantir_pool_ativo()
+        try:
+            pool.check()
+        except Exception as e:
+            logger.warning("Pool abriu, mas a checagem inicial encontrou inconsistências: %s", e)
+
         logger.info("Pool de conexões iniciado com sucesso.")
     except Exception as e:
-        logger.error(f"Falha ao iniciar o pool de conexões: {e}")
-
-
-def get_conn():
-    try:
-        return pool.connection()
-    except Exception as e:
-        logger.error(f"Erro ao obter conexão do pool: {e}")
-        raise RuntimeError("Não foi possível conectar ao banco de dados. Tente novamente.")
-
+        logger.warning("Aplicação iniciou sem conexão pronta com o banco. Recuperação será tentada sob demanda: %s", e)
 
 # Rota criada para testar se a aplicação consegue acessar o banco de dados
 @app.route('/api/status')
