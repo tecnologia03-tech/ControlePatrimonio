@@ -15,8 +15,8 @@
   <!-- SIDEBAR -->
   <nav class="sidebar" id="sidebar">
     <div class="sidebar-header">
-      <img src="Logo.jpeg" alt="Logo Salesiano"/>
-      <span>Controle de Patrimônio</span>
+      <img src="Logo.jpg" alt="Logo Salesiano"/>
+      <span>Salesiano</span>
     </div>
     <ul class="sidebar-menu">
       <li>
@@ -99,7 +99,7 @@
           placeholder="Pesquisar por nome ou matrícula..."
           oninput="filtrarUsuarios(this.value)"
         />
-        <button class="btn btn-incluir-usuario" onclick="abrirModalIncluirUsuario()">
+        <button class="btn btn-incluir-usuario" onclick="abrirModalIncluir()">
           <i class="bi bi-person-plus-fill me-1"></i> Incluir Usuário
         </button>
       </div>
@@ -136,7 +136,7 @@
 
     <!-- RODAPÉ -->
     <footer class="rodape">
-      Sistema de Controle de Patrimônio © 2026
+      Sistema de Controle de Patrimônio © 2025
     </footer>
 
   </div><!-- /content -->
@@ -154,7 +154,7 @@
       <div id="msgErroIncluir" class="alert alert-danger py-2 mb-3" style="display:none;"></div>
       <div class="mb-3">
         <label class="form-label fw-semibold">Nome Completo</label>
-        <input type="text" id="incluirNome" class="form-control" placeholder="Ex: Luís Miguel"/>
+        <input type="text" id="incluirNome" class="form-control" placeholder="Ex: Maria Souza"/>
       </div>
       <div class="mb-3">
         <label class="form-label fw-semibold">Matrícula</label>
@@ -162,7 +162,7 @@
       </div>
       <div class="mb-3">
         <label class="form-label fw-semibold">Senha</label>
-        <input type="password" id="incluirSenha" class="form-control" placeholder="Senha"/>
+        <input type="password" id="incluirSenha" class="form-control" placeholder="Mínimo 6 caracteres"/>
       </div>
       <div class="mb-3">
         <label class="form-label fw-semibold">Perfil</label>
@@ -221,8 +221,8 @@
       </div>
     </div>
     <div class="modal-footer-custom">
-      <button class="btn btn-outline-secondary" onclick="fecharModalEditarUsuario()">Cancelar</button>
-      <button class="btn btn-primary" onclick="salvarEdicaoUsuario()">
+      <button class="btn btn-outline-secondary" onclick="fecharModalEditar()">Cancelar</button>
+      <button class="btn btn-primary" onclick="atualizarUsuario()">
         <i class="bi bi-check-lg me-1"></i>Salvar Alterações
       </button>
     </div>

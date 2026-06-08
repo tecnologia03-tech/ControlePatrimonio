@@ -1,5 +1,6 @@
 # app.py
 
+# Importa o núcleo do Flask e os recursos usados para receber e devolver dados
 from flask import Flask, jsonify, request
 
 # Importa o CORS para permitir comunicação entre front-end e back-end
@@ -11,16 +12,6 @@ from psycopg_pool import ConnectionPool
 
 # Importa a URL de conexão do banco vinda do arquivo de configuração
 from config import DB_URL
-
-import logging
-
-from contextlib import contextmanager
-import time
-from psycopg import OperationalError, InterfaceError
-from psycopg_pool import ConnectionPool, PoolTimeout
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 # Cria a aplicação principal Flask
 app = Flask(__name__)
@@ -35,215 +26,30 @@ CORS(app)
 # max_idle=300 → fecha conexão que ficou ociosa por mais de 5 minutos (antes do Neon matar)
 # reconnect_timeout=10 → tenta reconectar por até 10 segundos antes de lançar erro
 # kwargs       → connect_timeout=10 garante que uma tentativa de conexão falha rápido em vez de travar
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s"
-)
-logger = logging.getLogger(__name__)
-
-# Cria a aplicação principal Flask
-app = Flask(__name__)
-
-# Habilita CORS para permitir chamadas da interface web para a API
-CORS(app)
-
-# Configurações centralizadas do pool para ambiente web com Neon/serverless
-POOL_MIN_SIZE = 0
-POOL_MAX_SIZE = 10
-POOL_TIMEOUT = 10
-POOL_MAX_IDLE = 45
-POOL_MAX_LIFETIME = 600
-POOL_RECONNECT_TIMEOUT = 8
-DB_CONNECT_TIMEOUT = 8
-DB_RECOVERY_RETRIES = 2
-DB_RECOVERY_WAIT_SECONDS = 0.3
-
-
-def _on_reconnect_failed(pool: ConnectionPool) -> None:
-    # Registra quando o pool não consegue se recuperar dentro da janela definida
-    logger.error("Pool de conexões falhou ao reconectar com o banco de dados.")
-
-
-def _configurar_conexao(conn: psycopg.Connection) -> None:
-    # Mantém transações explícitas por rota para preservar consistência
-    conn.autocommit = False
-
-
-# Cria o pool de conexões de forma controlada
-# min_size=0 evita manter conexão ociosa aberta sem necessidade
-# max_idle=45 fecha conexões paradas antes que fiquem envelhecidas no uso diário
-# reconnect_timeout menor reduz tempo de espera quando a conexão morreu
 pool = ConnectionPool(
-    conninfo=DB_URL,
+    DB_URL,
     open=False,
-    min_size=POOL_MIN_SIZE,
-    max_size=POOL_MAX_SIZE,
-    timeout=POOL_TIMEOUT,
-    max_idle=POOL_MAX_IDLE,
-    max_lifetime=POOL_MAX_LIFETIME,
-    reconnect_timeout=POOL_RECONNECT_TIMEOUT,
-    reconnect_failed=_on_reconnect_failed,
-    configure=_configurar_conexao,
-    kwargs={
-        "connect_timeout": DB_CONNECT_TIMEOUT,
-        "application_name": "controle_patrimonio_flask"
-    }
+    min_size=0,
+    max_size=5,
+    max_idle=300,
+    reconnect_timeout=10,
+    kwargs={"connect_timeout": 10}
 )
 
-
-def _pool_aberto() -> bool:
-    # Compatível com psycopg_pool: verifica se o pool já foi aberto
-    try:
-        return not pool.closed
-    except Exception:
-        return False
-
-
-def garantir_pool_ativo() -> None:
-    # Garante que o pool esteja aberto no momento da requisição
-    # Isso ajuda em cenários em que a aplicação sobe antes do banco estar disponível
-    if _pool_aberto():
-        return
-
-    logger.warning("Pool estava fechado. Tentando abrir novamente.")
-    pool.open(wait=True)
-    logger.info("Pool de conexões aberto com sucesso.")
-
-
-def validar_conexao(conn: psycopg.Connection) -> None:
-    # Faz um ping rápido para confirmar que a conexão está realmente utilizável
-    with conn.cursor() as cursor:
-        cursor.execute("SELECT 1;")
-
-
-def _erro_de_conexao_recuperavel(exc: Exception) -> bool:
-    # Define os erros que justificam nova tentativa controlada
-    return isinstance(exc, (OperationalError, InterfaceError, PoolTimeout))
-
-
-@contextmanager
-def get_conn():
-    # Obtém uma conexão válida do pool com recuperação automática
-    ultima_excecao = None
-
-    for tentativa in range(1, DB_RECOVERY_RETRIES + 1):
-        conn = None
-
-        try:
-            # Garante que o pool esteja ativo antes de obter conexão
-            garantir_pool_ativo()
-
-            # Obtém uma conexão do pool
-            conn = pool.getconn()
-
-            # Valida a conexão antes de entregá-la para a rota
-            validar_conexao(conn)
-
-            logger.debug("Conexão com o banco validada com sucesso na tentativa %s.", tentativa)
-
-            try:
-                yield conn
-            except Exception:
-                # Em qualquer erro durante a rota, faz rollback para evitar conexão suja
-                if conn and not conn.closed:
-                    try:
-                        conn.rollback()
-                    except Exception:
-                        logger.exception("Falha ao executar rollback da transação.")
-                raise
-            else:
-                # O commit continua explícito nas rotas para não mascarar fluxos de escrita
-                pass
-            finally:
-                # Sempre devolve a conexão ao pool com estado limpo
-                if conn is not None:
-                    try:
-                        if not conn.closed:
-                            try:
-                                conn.rollback()
-                            except Exception:
-                                logger.exception("Falha ao limpar transação antes de devolver conexão ao pool.")
-                        pool.putconn(conn)
-                    except Exception:
-                        logger.exception("Falha ao devolver conexão ao pool.")
-
-            return
-
-        except Exception as exc:
-            ultima_excecao = exc
-
-            # Se a conexão falhou antes de chegar à rota, tenta descartá-la corretamente
-            if conn is not None:
-                try:
-                    pool.putconn(conn, close=True)
-                except Exception:
-                    logger.exception("Falha ao descartar conexão inválida do pool.")
-
-            if _erro_de_conexao_recuperavel(exc):
-                logger.warning(
-                    "Falha ao obter/validar conexão com o banco na tentativa %s/%s: %s",
-                    tentativa,
-                    DB_RECOVERY_RETRIES,
-                    exc
-                )
-
-                # Força o pool a revisar conexões antes de tentar novamente
-                try:
-                    garantir_pool_ativo()
-                    pool.check()
-                    logger.info("Pool revisado após falha de conexão.")
-                except Exception as check_exc:
-                    logger.warning("Falha ao revisar o pool após erro de conexão: %s", check_exc)
-
-                if tentativa < DB_RECOVERY_RETRIES:
-                    time.sleep(DB_RECOVERY_WAIT_SECONDS)
-                    continue
-
-            logger.exception("Erro definitivo ao obter conexão com o banco.")
-            break
-
-    raise RuntimeError(
-        "Não foi possível conectar ao banco de dados no momento. "
-        "Atualize a página e tente novamente em alguns instantes."
-    ) from ultima_excecao
-
-
-def resposta_erro_banco(e: Exception):
-    # Centraliza erro amigável de banco sem expor detalhes internos ao usuário
-    logger.exception("Erro de banco/processamento na requisição: %s", e)
-    return jsonify({
-        "sucesso": False,
-        "mensagem": str(e) if isinstance(e, RuntimeError) else "Erro interno ao processar a operação."
-    }), 500
-
-
-def normalizar_flag_sn(valor, padrao='N'):
-    # Normaliza campos CHAR(1) do tipo Sim/Não
-    valor = (valor or padrao)
-    valor = str(valor).strip().upper()
-    return 'S' if valor == 'S' else 'N'
-
-
-# Abre o pool explicitamente após criar o app
-# Se o banco não estiver disponível na largada, a aplicação continua e tenta recuperar na próxima requisição
+# Abre o pool explicitamente após criar o app, e verifica as conexões existentes
+# pool.open()  → cria o pool de forma controlada
+# pool.check() → descarta conexões inválidas/ociosas e substitui por conexões novas e saudáveis
 with app.app_context():
-    try:
-        garantir_pool_ativo()
-        try:
-            pool.check()
-        except Exception as e:
-            logger.warning("Pool abriu, mas a checagem inicial encontrou inconsistências: %s", e)
+    pool.open()
+    pool.check()
 
-        logger.info("Pool de conexões iniciado com sucesso.")
-    except Exception as e:
-        logger.warning("Aplicação iniciou sem conexão pronta com o banco. Recuperação será tentada sob demanda: %s", e)
 
 # Rota criada para testar se a aplicação consegue acessar o banco de dados
 @app.route('/api/status')
 def status_banco():
     try:
         # Abre uma conexão com o banco usando o pool
-        with get_conn() as conn:
+        with pool.connection() as conn:
             # Cria um cursor para executar comandos SQL
             with conn.cursor() as cursor:
                 # Executa um comando simples apenas para validar a conexão
@@ -276,7 +82,7 @@ def login():
             }), 400
 
         # Consulta a tabela Usuario para verificar se existe um usuário ativo com essas credenciais
-        with get_conn() as conn:
+        with pool.connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute(
                     """
@@ -318,7 +124,7 @@ def login():
 @app.route('/api/usuarios', methods=['POST'])
 def incluir_usuario():
     # Recebe os dados enviados pelo front-end
-    dados = request.get_json(silent=True) or {}
+    dados = request.get_json()
 
     # Captura e limpa os campos recebidos
     nome = dados.get('nome', '').strip()
@@ -334,7 +140,7 @@ def incluir_usuario():
         }), 400
 
     try:
-        with get_conn() as conn:
+        with pool.connection() as conn:
             with conn.cursor() as cursor:
                 # Verifica se já existe usuário com a mesma matrícula
                 cursor.execute(
@@ -350,13 +156,10 @@ def incluir_usuario():
                     }), 409
 
                 # Insere o novo usuário com status ativo por padrão
-                cursor.execute(
-                    """
+                cursor.execute("""
                     INSERT INTO Usuario (Nome, Login_Matricula, Senha, Tp_Usuario, Ativo)
                     VALUES (%s, %s, %s, %s, 'S');
-                    """,
-                    (nome, matricula, senha, perfil)
-                )
+                """, (nome, matricula, senha, perfil))
 
             # Confirma a transação no banco
             conn.commit()
@@ -369,47 +172,42 @@ def incluir_usuario():
 
     except Exception as e:
         # Retorna erro se houver falha na inclusão
-        return jsonify({
-            "sucesso": False,
-            "mensagem": str(e)
-        }), 500
+        return jsonify({"sucesso": False, "mensagem": str(e)}), 500
 
 
 # Rota para listar todos os usuários cadastrados no sistema
 @app.route('/api/usuarios', methods=['GET'])
 def listar_usuarios():
     try:
-        with get_conn() as conn:
+        with pool.connection() as conn:
             with conn.cursor() as cursor:
                 # Consulta os dados dos usuários para exibição na tabela
-                cursor.execute(
-                    """
+                cursor.execute("""
                     SELECT Id_Usuario, Nome, Login_Matricula, Tp_Usuario, Ativo
                     FROM Usuario
                     ORDER BY Nome ASC;
-                    """
-                )
+                """)
 
                 # Lê todas as linhas retornadas pela consulta
                 rows = cursor.fetchall()
 
-        # Converte o resultado em uma lista de dicionários
-        usuarios = [
-            {
-                "id": r[0],
-                "nome": r[1],
-                "matricula": r[2],
-                "perfil": r[3],
-                "ativo": r[4]
-            }
-            for r in rows
-        ]
+                # Converte o resultado em uma lista de dicionários
+                usuarios = [
+                    {
+                        "id": r[0],
+                        "nome": r[1],
+                        "matricula": r[2],
+                        "perfil": r[3],
+                        "ativo": r[4]
+                    }
+                    for r in rows
+                ]
 
-        # Retorna os usuários em JSON
-        return jsonify({
-            "sucesso": True,
-            "usuarios": usuarios
-        }), 200
+                # Retorna os usuários em JSON
+                return jsonify({
+                    "sucesso": True,
+                    "usuarios": usuarios
+                }), 200
 
     except Exception as e:
         # Retorna erro se ocorrer falha na consulta
@@ -420,17 +218,17 @@ def listar_usuarios():
 
 
 # Rota para editar um usuário existente
-@app.route('/api/usuarios/<int:id_usuario>', methods=['PUT'])
-def editar_usuario(id_usuario):
+@app.route('/api/usuarios/<int:id>', methods=['PUT'])
+def editar_usuario(id):
     # Recebe os dados enviados pelo front-end
-    dados = request.get_json(silent=True) or {}
+    dados = request.get_json()
 
     # Captura e limpa os campos enviados
     nome = dados.get('nome', '').strip()
     matricula = dados.get('matricula', '').strip()
     senha = dados.get('senha', '').strip()
     perfil = dados.get('perfil', '').strip()
-    ativo = (dados.get('ativo') or 'S').strip().upper()
+    ativo = dados.get('ativo', 'S')
 
     # Valida os campos obrigatórios da edição
     if not nome or not matricula or not perfil:
@@ -439,34 +237,16 @@ def editar_usuario(id_usuario):
             "mensagem": "Preencha todos os campos obrigatórios."
         }), 400
 
-    if ativo not in ('S', 'N'):
-        ativo = 'S'
-
     try:
-        with get_conn() as conn:
+        with pool.connection() as conn:
             with conn.cursor() as cursor:
-                # Verifica se o usuário existe antes de editar
-                cursor.execute(
-                    "SELECT 1 FROM Usuario WHERE Id_Usuario = %s;",
-                    (id_usuario,)
-                )
-
-                if not cursor.fetchone():
-                    return jsonify({
-                        "sucesso": False,
-                        "mensagem": "Usuário não encontrado."
-                    }), 404
-
                 # Verifica se a matrícula informada já pertence a outro usuário
-                cursor.execute(
-                    """
+                cursor.execute("""
                     SELECT 1
                     FROM Usuario
                     WHERE Login_Matricula = %s
-                      AND Id_Usuario != %s;
-                    """,
-                    (matricula, id_usuario)
-                )
+                    AND Id_Usuario != %s;
+                """, (matricula, id))
 
                 # Se encontrar, bloqueia a atualização duplicada
                 if cursor.fetchone():
@@ -477,8 +257,7 @@ def editar_usuario(id_usuario):
 
                 # Se a senha foi informada, atualiza também a senha
                 if senha:
-                    cursor.execute(
-                        """
+                    cursor.execute("""
                         UPDATE Usuario
                         SET Nome = %s,
                             Login_Matricula = %s,
@@ -486,23 +265,18 @@ def editar_usuario(id_usuario):
                             Tp_Usuario = %s,
                             Ativo = %s
                         WHERE Id_Usuario = %s;
-                        """,
-                        (nome, matricula, senha, perfil, ativo, id_usuario)
-                    )
+                    """, (nome, matricula, senha, perfil, ativo, id))
 
                 # Se a senha não foi informada, mantém a senha atual
                 else:
-                    cursor.execute(
-                        """
+                    cursor.execute("""
                         UPDATE Usuario
                         SET Nome = %s,
                             Login_Matricula = %s,
                             Tp_Usuario = %s,
                             Ativo = %s
                         WHERE Id_Usuario = %s;
-                        """,
-                        (nome, matricula, perfil, ativo, id_usuario)
-                    )
+                    """, (nome, matricula, perfil, ativo, id))
 
             # Confirma a alteração no banco
             conn.commit()
@@ -515,23 +289,17 @@ def editar_usuario(id_usuario):
 
     except Exception as e:
         # Retorna erro se houver falha no processo de edição
-        return jsonify({
-            "sucesso": False,
-            "mensagem": str(e)
-        }), 500
+        return jsonify({"sucesso": False, "mensagem": str(e)}), 500
 
 
 # Rota para inativar um usuário do sistema
-@app.route('/api/usuarios/<int:id_usuario>', methods=['DELETE'])
-def excluir_usuario(id_usuario):
+@app.route('/api/usuarios/<int:id>', methods=['DELETE'])
+def excluir_usuario(id):
     try:
-        with get_conn() as conn:
+        with pool.connection() as conn:
             with conn.cursor() as cursor:
                 # Verifica se o usuário realmente existe antes de inativar
-                cursor.execute(
-                    "SELECT 1 FROM Usuario WHERE Id_Usuario = %s;",
-                    (id_usuario,)
-                )
+                cursor.execute("SELECT 1 FROM Usuario WHERE Id_Usuario = %s;", (id,))
 
                 # Se não existir, retorna erro 404
                 if not cursor.fetchone():
@@ -543,7 +311,7 @@ def excluir_usuario(id_usuario):
                 # Em vez de excluir fisicamente, apenas marca como inativo
                 cursor.execute(
                     "UPDATE Usuario SET Ativo = 'N' WHERE Id_Usuario = %s;",
-                    (id_usuario,)
+                    (id,)
                 )
 
             # Confirma a alteração no banco
@@ -556,10 +324,7 @@ def excluir_usuario(id_usuario):
         }), 200
 
     except Exception as e:
-        return jsonify({
-            "sucesso": False,
-            "mensagem": str(e)
-        }), 500
+        return jsonify({"sucesso": False, "mensagem": str(e)}), 500
 
 
 # Rota para listar todos os setores cadastrados
