@@ -335,24 +335,24 @@ async function salvarEdicaoUsuario() {
 // ===== CONFIRMAR INATIVAÇÃO =====
 let deveInativarUsuario = false;
 
-function confirmarInativacaoCheckbox(checkbox) {
-  if (!checkbox.checked) {
-    checkbox.checked = true;
-    document.getElementById('modalConfirmarInativacao').style.display = 'flex';
+function abrirConfirmacaoInativacao() {
+  const modalEditar = document.getElementById('modalEditar');
+  const modalConfirmacao = document.getElementById('modalConfirmacaoInativacao');
+
+  if (modalEditar) {
+    modalEditar.style.display = 'none';
+  }
+
+  if (modalConfirmacao) {
+    modalConfirmacao.style.display = 'flex';
   }
 }
 
-function cancelarInativacao() {
-  document.getElementById('modalConfirmarInativacao').style.display = 'none';
-  deveInativarUsuario = false;
-}
-
-async function confirmarInativacaoDefinitivo() {
-  document.getElementById('modalConfirmarInativacao').style.display = 'none';
-  deveInativarUsuario = true;
-
-  const checkbox = document.querySelector('#editAtivoUsuario');
-  checkbox.checked = false;
+function fecharConfirmacaoInativacao() {
+  const modalConfirmacao = document.getElementById('modalConfirmacaoInativacao');
+  if (modalConfirmacao) {
+    modalConfirmacao.style.display = 'none';
+  }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
