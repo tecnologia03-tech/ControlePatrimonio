@@ -378,7 +378,7 @@ function fecharModalConfirmacao() {
   checkboxAtivoUsuario = null;
 }
 
-function confirmarInativacao() {
+async function confirmarInativacao() {
 
   document.getElementById('modalConfirmarInativacao').style.display = 'none';
 
@@ -387,7 +387,6 @@ function confirmarInativacao() {
   }
 
   checkboxAtivoUsuario = null;
-}
 
   try {
     const resposta = await fetch(getApiUrl(`/api/usuarios/${idUsuarioInativar}`), {
@@ -395,8 +394,6 @@ function confirmarInativacao() {
     });
 
     const dados = await resposta.json();
-
-    fecharModalConfirmacao();
 
     if (!dados.sucesso) {
       alert(dados.mensagem || 'Erro ao inativar usuário.');
@@ -406,9 +403,9 @@ function confirmarInativacao() {
     await carregarUsuarios();
 
   } catch (erro) {
-    fecharModalConfirmacao();
     alert('Erro ao conectar com o servidor.');
   }
+}
 
 
 // ===================== SETORES - VARIÁVEIS GLOBAIS =====================
