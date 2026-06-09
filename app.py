@@ -175,62 +175,54 @@ def incluir_usuario():
         return jsonify({"sucesso": False, "mensagem": str(e)}), 500
 
 
-# Rota para listar todos os usuários cadastrados no sistema
+# ROTA PARA LISTAR TODOS OS USUÁRIOS
 @app.route('/api/usuarios', methods=['GET'])
 def listar_usuarios():
     try:
         with pool.connection() as conn:
             with conn.cursor() as cursor:
-                # Consulta os dados dos usuários para exibição na tabela
                 cursor.execute("""
                     SELECT Id_Usuario, Nome, Login_Matricula, Tp_Usuario, Ativo
                     FROM Usuario
                     ORDER BY Nome ASC;
                 """)
 
-                # Lê todas as linhas retornadas pela consulta
                 rows = cursor.fetchall()
 
-                # Converte o resultado em uma lista de dicionários
                 usuarios = [
                     {
                         "id": r[0],
                         "nome": r[1],
                         "matricula": r[2],
                         "perfil": r[3],
-                        "ativo": r[4]
+                        "ativo": r[4],
                     }
                     for r in rows
                 ]
 
-                # Retorna os usuários em JSON
                 return jsonify({
                     "sucesso": True,
                     "usuarios": usuarios
                 }), 200
 
     except Exception as e:
-        # Retorna erro se ocorrer falha na consulta
         return jsonify({
             "sucesso": False,
             "mensagem": str(e)
         }), 500
 
 
-# Rota para editar um usuário existente
-@app.route('/api/usuarios/<int:id>', methods=['PUT'])
-def editar_usuario(id):
-    # Recebe os dados enviados pelo front-end
+# ROTA PARA EDITAR UM USUÁRIO EXISTENTE
+@app.route('/api/usuarios/<int:id_usuario>', methods=['PUT'])
+def editar_usuario(id_usuario):
     dados = request.get_json()
 
-    # Captura e limpa os campos enviados
     nome = dados.get('nome', '').strip()
     matricula = dados.get('matricula', '').strip()
     senha = dados.get('senha', '').strip()
     perfil = dados.get('perfil', '').strip()
     ativo = dados.get('ativo', 'S')
 
-    # Valida os campos obrigatórios da edição
     if not nome or not matricula or not perfil:
         return jsonify({
             "sucesso": False,
@@ -240,22 +232,19 @@ def editar_usuario(id):
     try:
         with pool.connection() as conn:
             with conn.cursor() as cursor:
-                # Verifica se a matrícula informada já pertence a outro usuário
                 cursor.execute("""
                     SELECT 1
                     FROM Usuario
                     WHERE Login_Matricula = %s
                     AND Id_Usuario != %s;
-                """, (matricula, id))
+                """, (matricula, id_usuario))
 
-                # Se encontrar, bloqueia a atualização duplicada
                 if cursor.fetchone():
                     return jsonify({
                         "sucesso": False,
                         "mensagem": "Matrícula já cadastrada para outro usuário."
                     }), 409
 
-                # Se a senha foi informada, atualiza também a senha
                 if senha:
                     cursor.execute("""
                         UPDATE Usuario
@@ -265,9 +254,7 @@ def editar_usuario(id):
                             Tp_Usuario = %s,
                             Ativo = %s
                         WHERE Id_Usuario = %s;
-                    """, (nome, matricula, senha, perfil, ativo, id))
-
-                # Se a senha não foi informada, mantém a senha atual
+                    """, (nome, matricula, senha, perfil, ativo, id_usuario))
                 else:
                     cursor.execute("""
                         UPDATE Usuario
@@ -276,57 +263,54 @@ def editar_usuario(id):
                             Tp_Usuario = %s,
                             Ativo = %s
                         WHERE Id_Usuario = %s;
-                    """, (nome, matricula, perfil, ativo, id))
+                    """, (nome, matricula, perfil, ativo, id_usuario))
 
-            # Confirma a alteração no banco
-            conn.commit()
+                conn.commit()
 
-        # Retorna sucesso após atualizar o usuário
-        return jsonify({
-            "sucesso": True,
-            "mensagem": "Usuário atualizado com sucesso!"
-        }), 200
+                return jsonify({
+                    "sucesso": True,
+                    "mensagem": "Usuário atualizado com sucesso!"
+                }), 200
 
     except Exception as e:
-        # Retorna erro se houver falha no processo de edição
-        return jsonify({"sucesso": False, "mensagem": str(e)}), 500
+        return jsonify({
+            "sucesso": False,
+            "mensagem": str(e)
+        }), 500
 
 
-# Rota para inativar um usuário do sistema
-@app.route('/api/usuarios/<int:id>', methods=['DELETE'])
-def excluir_usuario(id):
+# ROTA PARA INATIVAR UM USUÁRIO
+@app.route('/api/usuarios/<int:id_usuario>', methods=['DELETE'])
+def excluir_usuario(id_usuario):
     try:
         with pool.connection() as conn:
             with conn.cursor() as cursor:
-                # Verifica se o usuário realmente existe antes de inativar
-                cursor.execute("SELECT 1 FROM Usuario WHERE Id_Usuario = %s;", (id,))
+                cursor.execute("SELECT 1 FROM Usuario WHERE Id_Usuario = %s;", (id_usuario,))
 
-                # Se não existir, retorna erro 404
                 if not cursor.fetchone():
                     return jsonify({
                         "sucesso": False,
                         "mensagem": "Usuário não encontrado."
                     }), 404
 
-                # Em vez de excluir fisicamente, apenas marca como inativo
                 cursor.execute(
                     "UPDATE Usuario SET Ativo = 'N' WHERE Id_Usuario = %s;",
-                    (id,)
+                    (id_usuario,)
                 )
 
-            # Confirma a alteração no banco
-            conn.commit()
+                conn.commit()
 
-        # Retorna sucesso após inativar o usuário
-        return jsonify({
-            "sucesso": True,
-            "mensagem": "Usuário inativado com sucesso!"
-        }), 200
+                return jsonify({
+                    "sucesso": True,
+                    "mensagem": "Usuário inativado com sucesso!"
+                }), 200
 
     except Exception as e:
-        return jsonify({"sucesso": False, "mensagem": str(e)}), 500
-
-
+        return jsonify({
+            "sucesso": False,
+            "mensagem": str(e)
+        }), 500
+    
 # Rota para listar todos os setores cadastrados
 # Observação: no banco a tabela continua se chamando Local,
 # mas na API usamos o nome de negócio "setores"
