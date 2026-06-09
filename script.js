@@ -394,12 +394,17 @@ async function confirmarInativacao() {
     const dados = await resposta.json();
 
     if (!dados.sucesso) {
-      alert(dados.mensagem || 'Erro ao inativar usuário.');
+      alert(dados.mensagem || 'Erro ao conectar com o servidor.');
       return;
     }
 
     idUsuarioInativar = null;
-    await carregarUsuarios();
+
+    try {
+      await carregarUsuarios();
+    } catch (erroAtualizacao) {
+      console.error('Usuário inativado, mas houve falha ao recarregar a tabela.', erroAtualizacao);
+    }
 
   } catch (erro) {
     alert('Erro ao conectar com o servidor.');
