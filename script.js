@@ -350,14 +350,13 @@ async function salvarEdicaoUsuario() {
 // ===================== USUARIOS - INATIVAR ===================== //
 let checkboxAtivoUsuario = null;
 
-
 function confirmarInativacaoCheckbox(checkbox) {
-
   if (checkbox.checked) {
     return;
   }
 
   checkboxAtivoUsuario = checkbox;
+  idUsuarioInativar = document.getElementById('editUsuarioId').value;
 
   document.getElementById('modalConfirmarInativacao').style.display = 'flex';
 }
