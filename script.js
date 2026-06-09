@@ -368,7 +368,6 @@ function abrirModalConfirmarInativacao(id) {
 }
 
 function fecharModalConfirmacao() {
-
   document.getElementById('modalConfirmarInativacao').style.display = 'none';
 
   if (checkboxAtivoUsuario) {
@@ -376,10 +375,10 @@ function fecharModalConfirmacao() {
   }
 
   checkboxAtivoUsuario = null;
+  idUsuarioInativar = null;
 }
 
 async function confirmarInativacao() {
-
   document.getElementById('modalConfirmarInativacao').style.display = 'none';
 
   if (checkboxAtivoUsuario) {
@@ -400,13 +399,14 @@ async function confirmarInativacao() {
       return;
     }
 
+    idUsuarioInativar = null;
     await carregarUsuarios();
 
   } catch (erro) {
     alert('Erro ao conectar com o servidor.');
   }
 }
-
+//teste
 
 // ===================== SETORES - VARIÁVEIS GLOBAIS =====================
 // Lista completa de setores recebida da API
