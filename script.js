@@ -349,7 +349,7 @@ async function salvarEdicaoUsuario() {
 
 // ===================== USUARIOS - INATIVAR ===================== //
 let checkboxAtivoUsuario = null;
-let idUsuarioInativar = null;
+
 
 function confirmarInativacaoCheckbox(checkbox) {
 
