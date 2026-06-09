@@ -134,7 +134,6 @@ function renderizarGrafico() {
 let listaUsuarios = [];
 let listaUsuariosFiltrada = [];
 
-let checkboxAtivoUsuario = null;
 
 // ===================== USUÁRIOS - CARREGAR DA API =====================
 async function carregarUsuarios() {
