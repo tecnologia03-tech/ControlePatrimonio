@@ -210,17 +210,17 @@
 
   <!-- Modal de confirmação de inativação ao desmarcar o checkbox de usuário ativo -->
   <div class="modal-overlay-confirmacao" id="modalConfirmarInativacao" style="display: none;">
-    <div class="modal-confirmacao-container">
-      <div class="modal-icone-alerta">!</div>
-      <h4 class="modal-titulo-confirmacao">Confirmar Inativação</h4>
-      <p class="modal-texto-confirmacao">Deseja realmente inativar este usuário?</p>
+  <div class="modal-confirmacao-container">
+    <div class="modal-icone-alerta">!</div>
+    <h4 class="modal-titulo-confirmacao">Confirmar Inativação</h4>
+    <p class="modal-texto-confirmacao">Deseja realmente inativar este usuário?</p>
 
-      <div class="modal-botoes-confirmacao">
-        <button class="btn-cancelar-confirmacao" onclick="cancelarInativacao()">Cancelar</button>
-        <button class="btn-inativar-confirmacao" onclick="confirmarInativacaoDefinitivo()">Inativar Usuário</button>
-      </div>
+    <div class="modal-botoes-confirmacao">
+      <button class="btn-cancelar-confirmacao" onclick="fecharModalConfirmacao()">Cancelar</button>
+      <button class="btn-inativar-confirmacao" onclick="confirmarInativacao()">Inativar Usuário</button>
     </div>
   </div>
+</div>
 
   <script src="script.js"></script>
   <script>
