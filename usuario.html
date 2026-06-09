@@ -191,7 +191,7 @@
         </div>
 
         <div class="form-check">
-          <input class="form-check-input" type="checkbox" id="editAtivoUsuario" onchange="abrirConfirmacaoInativacao()">
+          <input class="form-check-input" type="checkbox" id="editAtivoUsuario" onchange="confirmarInativacaoCheckbox(this)">
           <label class="form-check-label" for="editAtivoUsuario">
             Usuário Ativo
           </label>
@@ -202,8 +202,8 @@
       </div>
 
       <div class="modal-footer-custom">
-        <button type="button" onclick="fecharConfirmacaoInativacao()">Cancelar</button>
-        <button type="button" onclick="inativarUsuarioConfirmado()">Inativar Usuário</button>
+        <button class="btn btn-secondary btn-sm" onclick="fecharModalEditarUsuario()">Cancelar</button>
+        <button class="btn btn-primary btn-sm" onclick="salvarEdicaoUsuario()">Salvar Alterações</button>
       </div>
     </div>
   </div>

@@ -294,64 +294,362 @@ function fecharModalEditarUsuario() {
   document.getElementById('modalEditarUsuario').style.display = 'none';
 }
 
-// ===================== USUÁRIOS - EDITAR =====================
-// Valida os campos e envia a atualização do usuário para a API.
+// ===================== USUARIOS - EDITAR ===================== //
 async function salvarEdicaoUsuario() {
-  const id = document.getElementById('editUsuarioId').value;
-  const nome = document.getElementById('editNomeUsuario').value.trim();
-  const matricula = document.getElementById('editMatriculaUsuario').value.trim();
-  const senha = document.getElementById('editSenhaUsuario').value.trim();
-  const perfil = document.getElementById('editPerfilUsuario').value;
-  const ativo = document.getElementById('editAtivoUsuario').checked ? 'S' : 'N';
-  const msg = document.getElementById('msgEditarUsuario');
+  const id = document.getElementById('editarId').value;
+  const nome = document.getElementById('editarNome').value.trim();
+  const matricula = document.getElementById('editarMatricula').value.trim();
+  const senha = document.getElementById('editarSenha').value.trim();
+  const perfil = document.getElementById('editarPerfil').value;
+  const ativo = document.getElementById('editarAtivo').checked ? 'S' : 'N';
 
-  msg.textContent = '';
+  const msg = document.getElementById('msgErroEditar');
 
   if (!nome || !matricula || !perfil) {
     msg.textContent = 'Preencha todos os campos obrigatórios.';
+    msg.style.display = 'block';
     return;
   }
 
   try {
-    const resposta = await fetch('https://controlepatrimonio.onrender.com/api/usuarios/' + id, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nome, matricula, senha, perfil, ativo })
+    const resposta = await fetch(
+      getApiUrl(`/api/usuarios/${id}`),
+      {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nome,
+          matricula,
+          senha,
+          perfil,
+          ativo
+        })
+      }
+    );
+
+    const dados = await resposta.json();
+
+    if (!dados.sucesso) {
+      msg.textContent = dados.mensagem;
+      msg.style.display = 'block';
+      return;
+    }
+
+    fecharModalEditarUsuario();
+    carregarUsuarios();
+
+  } catch (erro) {
+    msg.textContent = 'Erro ao conectar com o servidor.';
+    msg.style.display = 'block';
+  }
+}
+
+// ===================== USUARIOS - INATIVAR ===================== //
+
+let idUsuarioInativar = null;
+
+function abrirModalConfirmarInativacao(id) {
+  idUsuarioInativar = id;
+  document.getElementById('modalConfirmarInativacao').style.display = 'flex';
+}
+
+function fecharModalConfirmacao() {
+  idUsuarioInativar = null;
+  document.getElementById('modalConfirmarInativacao').style.display = 'none';
+}
+
+async function confirmarInativacao() {
+  if (!idUsuarioInativar) return;
+
+  try {
+    const resposta = await fetch(getApiUrl(`/api/usuarios/${idUsuarioInativar}`), {
+      method: 'DELETE'
     });
 
     const dados = await resposta.json();
 
-    if (dados.sucesso) {
-      fecharModalEditarUsuario();
-      carregarUsuarios();
-    } else {
-      msg.textContent = dados.mensagem;
+    fecharModalConfirmacao();
+
+    if (!dados.sucesso) {
+      alert(dados.mensagem || 'Erro ao inativar usuário.');
+      return;
     }
+
+    await carregarUsuarios();
+
   } catch (erro) {
-    msg.textContent = 'Erro ao atualizar usuário.';
+    fecharModalConfirmacao();
+    alert('Erro ao conectar com o servidor.');
   }
 }
 
-// ===== CONFIRMAR INATIVAÇÃO =====
-let deveInativarUsuario = false;
+// ===================== SETORES - VARIÁVEIS GLOBAIS =====================
+// Lista completa de setores recebida da API
+let listaSetores = [];
 
-function abrirConfirmacaoInativacao() {
-  const modalEditar = document.getElementById('modalEditar');
-  const modalConfirmacao = document.getElementById('modalConfirmacaoInativacao');
+// Lista usada para exibição, podendo ser filtrada pela busca
+let listaSetoresFiltrada = [];
 
-  if (modalEditar) {
-    modalEditar.style.display = 'none';
-  }
+// Armazena o ID do setor selecionado para exclusão
+let idSetorParaExcluir = null;
 
-  if (modalConfirmacao) {
-    modalConfirmacao.style.display = 'flex';
+
+// ===================== SETORES - CARREGAR DA API =====================
+// Busca a lista de setores na API e exibe na tabela
+async function carregarSetores() {
+  const tbody = document.getElementById('tabelaSetores');
+  if (!tbody) return;
+
+  // Exibe mensagem de carregamento enquanto aguarda a resposta da API
+  tbody.innerHTML = `
+    <tr>
+      <td colspan="4" class="text-center text-muted py-4">
+        <i class="bi bi-arrow-repeat me-2"></i>Carregando setores...
+      </td>
+    </tr>`;
+
+  try {
+    // Faz a requisição GET para listar os setores
+    const resposta = await fetch(getApiUrl('/api/setores'));
+    const dados = await resposta.json();
+
+    if (!dados.sucesso) {
+      tbody.innerHTML = `<tr><td colspan="4" class="text-center text-danger py-4">${dados.mensagem || 'Erro ao carregar setores.'}</td></tr>`;
+      return;
+    }
+
+    // Salva a lista completa e inicializa a lista filtrada com todos os registros
+    listaSetores = dados.locais || [];
+    listaSetoresFiltrada = [...listaSetores];
+
+    // Renderiza os setores na tabela
+    renderizarSetores(listaSetoresFiltrada);
+
+  } catch (erro) {
+    tbody.innerHTML = `<tr><td colspan="4" class="text-center text-danger py-4"><i class="bi bi-wifi-off me-2"></i>Erro ao conectar com o servidor.</td></tr>`;
   }
 }
 
-function fecharConfirmacaoInativacao() {
-  const modalConfirmacao = document.getElementById('modalConfirmacaoInativacao');
-  if (modalConfirmacao) {
-    modalConfirmacao.style.display = 'none';
+
+// ===================== SETORES - RENDERIZAR TABELA =====================
+// Recebe uma lista de setores e monta as linhas da tabela dinamicamente
+function renderizarSetores(setores) {
+  const tbody = document.getElementById('tabelaSetores');
+  if (!tbody) return;
+
+  // Exibe mensagem caso não haja registros para mostrar
+  if (!setores.length) {
+    tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted py-4">Nenhum setor encontrado.</td></tr>`;
+    return;
+  }
+
+  // Gera uma linha HTML para cada setor da lista
+  tbody.innerHTML = setores.map((setor, index) => `
+    <tr>
+      <td>${index + 1}</td>
+      <td>${setor.nome_local || '-'}</td>
+      <td>${setor.sala_aula === 'S'
+        ? '<span class="badge-status-ativo">Sim</span>'
+        : '<span class="badge-inativo">Não</span>'}</td>
+      <td>
+        <button class="btn-editar-usuario me-1" onclick="abrirModalEditarSetor(${setor.id_local})">Editar</button>
+        <button class="btn btn-sm btn-outline-danger" onclick="abrirModalExclusaoSetor(${setor.id_local})">Excluir</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+
+// ===================== SETORES - FILTRAR =====================
+// Filtra a lista de setores pelo nome digitado na busca
+function filtrarSetores(termo) {
+  const filtro = (termo || '').toLowerCase().trim();
+
+  listaSetoresFiltrada = listaSetores.filter(setor =>
+    (setor.nome_local || '').toLowerCase().includes(filtro)
+  );
+
+  renderizarSetores(listaSetoresFiltrada);
+}
+
+
+// ===================== SETORES - MODAL INCLUIR =====================
+// Abre o modal de inclusão de novo setor com os campos limpos
+function abrirModalIncluirSetor() {
+  document.getElementById('incluirNomeSetor').value = '';
+  document.getElementById('incluirSalaAula').value = 'N';
+
+  // Oculta mensagem de erro de tentativas anteriores
+  const msg = document.getElementById('msgErroIncluirSetor');
+  if (msg) {
+    msg.style.display = 'none';
+    msg.textContent = '';
+  }
+
+  document.getElementById('modalIncluirSetor').style.display = 'flex';
+}
+
+// Fecha o modal de inclusão de setor
+function fecharModalIncluirSetor() {
+  document.getElementById('modalIncluirSetor').style.display = 'none';
+}
+
+// Envia os dados do formulário para a API e salva o novo setor
+async function salvarSetor() {
+  // Captura os valores digitados no formulário
+  const nome_local = document.getElementById('incluirNomeSetor').value.trim();
+  const sala_aula = document.getElementById('incluirSalaAula').value;
+  const msgErro = document.getElementById('msgErroIncluirSetor');
+
+  // Validação do campo obrigatório
+  if (!nome_local) {
+    msgErro.textContent = 'Informe o nome do setor.';
+    msgErro.style.display = 'block';
+    return;
+  }
+
+  msgErro.style.display = 'none';
+
+  try {
+    // Envia os dados para a API via POST
+    const resposta = await fetch(getApiUrl('/api/setores'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nome_local, sala_aula })
+    });
+
+    const dados = await resposta.json();
+
+    if (!dados.sucesso) {
+      msgErro.textContent = dados.mensagem || 'Erro ao salvar setor.';
+      msgErro.style.display = 'block';
+      return;
+    }
+
+    // Fecha o modal e recarrega a tabela após salvar com sucesso
+    fecharModalIncluirSetor();
+    await carregarSetores();
+
+  } catch (erro) {
+    msgErro.textContent = 'Erro ao conectar com o servidor.';
+    msgErro.style.display = 'block';
+  }
+}
+
+
+// ===================== SETORES - MODAL EDITAR =====================
+// Abre o modal de edição preenchendo os campos com os dados do setor selecionado
+function abrirModalEditarSetor(id) {
+  // Busca o setor na lista local pelo ID recebido
+  const setor = listaSetores.find(item => item.id_local === id);
+  if (!setor) return;
+
+  // Preenche os campos do modal com os dados atuais do setor
+  document.getElementById('editarIdSetor').value = setor.id_local;
+  document.getElementById('editarNomeSetor').value = setor.nome_local || '';
+  document.getElementById('editarSalaAula').value = setor.sala_aula || 'N';
+
+  // Oculta mensagem de erro de tentativas anteriores
+  const msg = document.getElementById('msgErroEditarSetor');
+  if (msg) {
+    msg.style.display = 'none';
+    msg.textContent = '';
+  }
+
+  document.getElementById('modalEditarSetor').style.display = 'flex';
+}
+
+// Fecha o modal de edição de setor
+function fecharModalEditarSetor() {
+  document.getElementById('modalEditarSetor').style.display = 'none';
+}
+
+// Envia os dados alterados para a API e atualiza o setor
+async function atualizarSetor() {
+  // Captura os valores dos campos do modal de edição
+  const id = document.getElementById('editarIdSetor').value;
+  const nome_local = document.getElementById('editarNomeSetor').value.trim();
+  const sala_aula = document.getElementById('editarSalaAula').value;
+  const msgErro = document.getElementById('msgErroEditarSetor');
+
+  // Validação do campo obrigatório
+  if (!nome_local) {
+    msgErro.textContent = 'Informe o nome do setor.';
+    msgErro.style.display = 'block';
+    return;
+  }
+
+  msgErro.style.display = 'none';
+
+  try {
+    // Envia os dados atualizados para a API via PUT, passando o ID na URL
+    const resposta = await fetch(getApiUrl(`/api/setores/${id}`), {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nome_local, sala_aula })
+    });
+
+    const dados = await resposta.json();
+
+    if (!dados.sucesso) {
+      msgErro.textContent = dados.mensagem || 'Erro ao atualizar setor.';
+      msgErro.style.display = 'block';
+      return;
+    }
+
+    // Fecha o modal e recarrega a tabela após atualizar com sucesso
+    fecharModalEditarSetor();
+    await carregarSetores();
+
+  } catch (erro) {
+    msgErro.textContent = 'Erro ao conectar com o servidor.';
+    msgErro.style.display = 'block';
+  }
+}
+
+
+// ===================== SETORES - MODAL EXCLUIR =====================
+// Abre o modal de confirmação de exclusão de setor
+function abrirModalExclusaoSetor(id) {
+  // Salva o ID do setor que será excluído na variável global
+  idSetorParaExcluir = id;
+  document.getElementById('modalConfirmarExclusaoSetor').style.display = 'flex';
+}
+
+// Fecha o modal de confirmação de exclusão
+function fecharModalExclusaoSetor() {
+  idSetorParaExcluir = null;
+  document.getElementById('modalConfirmarExclusaoSetor').style.display = 'none';
+}
+
+// Confirma a exclusão do setor e envia a requisição para a API
+async function confirmarExclusaoSetor() {
+  if (!idSetorParaExcluir) return;
+
+  try {
+    // Envia a requisição DELETE para a API, passando o ID do setor na URL
+    const resposta = await fetch(getApiUrl(`/api/setores/${idSetorParaExcluir}`), {
+      method: 'DELETE'
+    });
+
+    const dados = await resposta.json();
+
+    // Fecha o modal independentemente do resultado
+    fecharModalExclusaoSetor();
+
+    if (!dados.sucesso) {
+      // Exibe a mensagem de erro retornada pela API
+      // (ex: setor vinculado a patrimônios ou movimentações)
+      alert(dados.mensagem || 'Erro ao excluir setor.');
+      return;
+    }
+
+    // Recarrega a tabela após excluir com sucesso
+    await carregarSetores();
+
+  } catch (erro) {
+    fecharModalExclusaoSetor();
+    alert('Erro ao conectar com o servidor.');
   }
 }
 
@@ -372,25 +670,23 @@ document.addEventListener('DOMContentLoaded', () => {
     'relatorio.html'
   ];
 
-  // Se está em página protegida sem sessão → manda para login
   if (paginasProtegidas.includes(paginaAtual) && usuarioLogado !== 'true') {
     window.location.href = 'index.html';
     return;
   }
 
-  // Se está no login com sessão ativa → manda para dashboard
   if (paginaAtual === 'index.html' && usuarioLogado === 'true') {
     window.location.href = 'dashboard.html';
     return;
   }
 
-  // Inicializa gráfico se estiver no dashboard
   if (document.getElementById('graficoCategoria')) {
     renderizarGrafico();
   }
 
-  // Inicializa tabela de usuários se estiver na página de usuários
   if (document.getElementById('tabelaUsuarios')) {
     carregarUsuarios();
   }
+
+  monitorarCheckboxAtivo(); // <-- AQUI
 });
