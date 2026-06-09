@@ -134,6 +134,8 @@ function renderizarGrafico() {
 let listaUsuarios = [];
 let listaUsuariosFiltrada = [];
 
+let checkboxAtivoUsuario = null;
+
 // ===================== USUÁRIOS - CARREGAR DA API =====================
 async function carregarUsuarios() {
   const tbody = document.getElementById('tabelaUsuarios');
@@ -296,27 +298,30 @@ function fecharModalEditarUsuario() {
 
 // ===================== USUARIOS - EDITAR ===================== //
 async function salvarEdicaoUsuario() {
-  const id = document.getElementById('editarId').value;
-  const nome = document.getElementById('editarNome').value.trim();
-  const matricula = document.getElementById('editarMatricula').value.trim();
-  const senha = document.getElementById('editarSenha').value.trim();
-  const perfil = document.getElementById('editarPerfil').value;
-  const ativo = document.getElementById('editarAtivo').checked ? 'S' : 'N';
+  const id = document.getElementById('editUsuarioId').value;
+  const nome = document.getElementById('editNomeUsuario').value.trim();
+  const matricula = document.getElementById('editMatriculaUsuario').value.trim();
+  const senha = document.getElementById('editSenhaUsuario').value.trim();
+  const perfil = document.getElementById('editPerfilUsuario').value;
+  const ativo = document.getElementById('editAtivoUsuario').checked ? 'S' : 'N';
 
-  const msg = document.getElementById('msgErroEditar');
+  const msg = document.getElementById('msgEditarUsuario');
+
+  msg.textContent = '';
 
   if (!nome || !matricula || !perfil) {
     msg.textContent = 'Preencha todos os campos obrigatórios.';
-    msg.style.display = 'block';
     return;
   }
 
   try {
     const resposta = await fetch(
-      getApiUrl(`/api/usuarios/${id}`),
+      `https://controlepatrimonio.onrender.com/api/usuarios/${id}`,
       {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json'
+        },
         body: JSON.stringify({
           nome,
           matricula,
@@ -331,22 +336,32 @@ async function salvarEdicaoUsuario() {
 
     if (!dados.sucesso) {
       msg.textContent = dados.mensagem;
-      msg.style.display = 'block';
       return;
     }
 
     fecharModalEditarUsuario();
-    carregarUsuarios();
+    await carregarUsuarios();
 
   } catch (erro) {
+    console.error(erro);
     msg.textContent = 'Erro ao conectar com o servidor.';
-    msg.style.display = 'block';
   }
 }
 
 // ===================== USUARIOS - INATIVAR ===================== //
-
+let checkboxAtivoUsuario = null;
 let idUsuarioInativar = null;
+
+function confirmarInativacaoCheckbox(checkbox) {
+
+  if (checkbox.checked) {
+    return;
+  }
+
+  checkboxAtivoUsuario = checkbox;
+
+  document.getElementById('modalConfirmarInativacao').style.display = 'flex';
+}
 
 function abrirModalConfirmarInativacao(id) {
   idUsuarioInativar = id;
@@ -354,12 +369,26 @@ function abrirModalConfirmarInativacao(id) {
 }
 
 function fecharModalConfirmacao() {
-  idUsuarioInativar = null;
+
   document.getElementById('modalConfirmarInativacao').style.display = 'none';
+
+  if (checkboxAtivoUsuario) {
+    checkboxAtivoUsuario.checked = true;
+  }
+
+  checkboxAtivoUsuario = null;
 }
 
-async function confirmarInativacao() {
-  if (!idUsuarioInativar) return;
+function confirmarInativacao() {
+
+  document.getElementById('modalConfirmarInativacao').style.display = 'none';
+
+  if (checkboxAtivoUsuario) {
+    checkboxAtivoUsuario.checked = false;
+  }
+
+  checkboxAtivoUsuario = null;
+}
 
   try {
     const resposta = await fetch(getApiUrl(`/api/usuarios/${idUsuarioInativar}`), {
@@ -381,7 +410,7 @@ async function confirmarInativacao() {
     fecharModalConfirmacao();
     alert('Erro ao conectar com o servidor.');
   }
-}
+
 
 // ===================== SETORES - VARIÁVEIS GLOBAIS =====================
 // Lista completa de setores recebida da API
@@ -688,5 +717,4 @@ document.addEventListener('DOMContentLoaded', () => {
     carregarUsuarios();
   }
 
-  monitorarCheckboxAtivo(); // <-- AQUI
 });
