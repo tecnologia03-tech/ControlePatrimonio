@@ -28,12 +28,9 @@ CORS(app)
 # kwargs       → connect_timeout=10 garante que uma tentativa de conexão falha rápido em vez de travar
 pool = ConnectionPool(
     DB_URL,
-    open=False,
     min_size=0,
-    max_size=5,
-    max_idle=300,
-    reconnect_timeout=10,
-    kwargs={"connect_timeout": 10}
+    max_size=10,
+    check=ConnectionPool.check_connection,
 )
 
 # Abre o pool explicitamente após criar o app, e verifica as conexões existentes
