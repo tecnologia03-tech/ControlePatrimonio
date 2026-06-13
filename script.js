@@ -394,20 +394,20 @@ async function confirmarInativacao() {
     const dados = await resposta.json();
 
     if (!dados.sucesso) {
-      alert(dados.mensagem || 'Erro ao conectar com o servidor.');
+      alert(dados.mensagem || 'Erro ao inativar usuário.');
       return;
     }
 
     idUsuarioInativar = null;
 
     try {
-      await carregarUsuarios();
+      await carregarUsuarios();  // falha aqui não vai mais acionar o catch principal
     } catch (erroAtualizacao) {
       console.error('Usuário inativado, mas houve falha ao recarregar a tabela.', erroAtualizacao);
     }
 
   } catch (erro) {
-    alert('Erro ao conectar com o servidor.');
+    alert('Erro ao conectar com o servidor.'); // só dispara se o DELETE falhar de verdade
   }
 }
 
