@@ -212,13 +212,13 @@ def listar_usuarios():
 # ROTA PARA EDITAR UM USUÁRIO EXISTENTE
 @app.route('/api/usuarios/<int:id_usuario>', methods=['PUT'])
 def editar_usuario(id_usuario):
-    dados = request.get_json()
+    dados = request.get_json(silent=True) or {}
 
     nome = dados.get('nome', '').strip()
     matricula = dados.get('matricula', '').strip()
     senha = dados.get('senha', '').strip()
     perfil = dados.get('perfil', '').strip()
-    ativo = dados.get('ativo', 'S')
+    ativo = dados.get('ativo', 'S').strip().upper()
 
     if not nome or not matricula or not perfil:
         return jsonify({
@@ -233,7 +233,7 @@ def editar_usuario(id_usuario):
                     SELECT 1
                     FROM Usuario
                     WHERE Login_Matricula = %s
-                    AND Id_Usuario != %s;
+                      AND Id_Usuario != %s;
                 """, (matricula, id_usuario))
 
                 if cursor.fetchone():
@@ -245,29 +245,35 @@ def editar_usuario(id_usuario):
                 if senha:
                     cursor.execute("""
                         UPDATE Usuario
-                        SET Nome = %s,
-                            Login_Matricula = %s,
-                            Senha = %s,
-                            Tp_Usuario = %s,
-                            Ativo = %s
-                        WHERE Id_Usuario = %s;
+                           SET Nome = %s,
+                               Login_Matricula = %s,
+                               Senha = %s,
+                               Tp_Usuario = %s,
+                               Ativo = %s
+                         WHERE Id_Usuario = %s;
                     """, (nome, matricula, senha, perfil, ativo, id_usuario))
                 else:
                     cursor.execute("""
                         UPDATE Usuario
-                        SET Nome = %s,
-                            Login_Matricula = %s,
-                            Tp_Usuario = %s,
-                            Ativo = %s
-                        WHERE Id_Usuario = %s;
+                           SET Nome = %s,
+                               Login_Matricula = %s,
+                               Tp_Usuario = %s,
+                               Ativo = %s
+                         WHERE Id_Usuario = %s;
                     """, (nome, matricula, perfil, ativo, id_usuario))
+
+                if cursor.rowcount == 0:
+                    return jsonify({
+                        "sucesso": False,
+                        "mensagem": "Usuário não encontrado."
+                    }), 404
 
                 conn.commit()
 
-                return jsonify({
-                    "sucesso": True,
-                    "mensagem": "Usuário atualizado com sucesso!"
-                }), 200
+        return jsonify({
+            "sucesso": True,
+            "mensagem": "Usuário atualizado com sucesso!"
+        }), 200
 
     except Exception as e:
         return jsonify({
@@ -275,8 +281,6 @@ def editar_usuario(id_usuario):
             "mensagem": str(e)
         }), 500
 
-
-# ROTA PARA INATIVAR UM USUÁRIO
 @app.route('/api/usuarios/<int:id_usuario>', methods=['DELETE'])
 def excluir_usuario(id_usuario):
     try:
@@ -297,10 +301,10 @@ def excluir_usuario(id_usuario):
 
                 conn.commit()
 
-                return jsonify({
-                    "sucesso": True,
-                    "mensagem": "Usuário inativado com sucesso!"
-                }), 200
+        return jsonify({
+            "sucesso": True,
+            "mensagem": "Usuário inativado com sucesso!"
+        }), 200
 
     except Exception as e:
         return jsonify({

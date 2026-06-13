@@ -303,7 +303,6 @@ async function salvarEdicaoUsuario() {
   const senha = document.getElementById('editSenhaUsuario').value.trim();
   const perfil = document.getElementById('editPerfilUsuario').value;
   const ativo = document.getElementById('editAtivoUsuario').checked ? 'S' : 'N';
-
   const msg = document.getElementById('msgEditarUsuario');
 
   msg.textContent = '';
@@ -314,50 +313,36 @@ async function salvarEdicaoUsuario() {
   }
 
   try {
-    const resposta = await fetch(
-      `https://controlepatrimonio.onrender.com/api/usuarios/${id}`,
-      {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          nome,
-          matricula,
-          senha,
-          perfil,
-          ativo
-        })
-      }
-    );
+    const resposta = await fetch(`https://controlepatrimonio.onrender.com/api/usuarios/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nome, matricula, senha, perfil, ativo })
+    });
 
     const dados = await resposta.json();
 
     if (!dados.sucesso) {
-      msg.textContent = dados.mensagem;
+      msg.textContent = dados.mensagem || 'Erro ao salvar alterações.';
       return;
     }
 
     fecharModalEditarUsuario();
     await carregarUsuarios();
-
   } catch (erro) {
-    console.error(erro);
-    msg.textContent = 'Erro ao conectar com o servidor.';
+    console.error('Erro ao salvar edição do usuário:', erro);
+    msg.textContent = 'Erro ao salvar alterações do usuário.';
   }
 }
 
 // ===================== USUARIOS - INATIVAR ===================== //
 let checkboxAtivoUsuario = null;
+let idUsuarioInativar = null;
 
 function confirmarInativacaoCheckbox(checkbox) {
-  if (checkbox.checked) {
-    return;
-  }
+  if (checkbox.checked) return;
 
   checkboxAtivoUsuario = checkbox;
   idUsuarioInativar = document.getElementById('editUsuarioId').value;
-
   document.getElementById('modalConfirmarInativacao').style.display = 'flex';
 }
 
@@ -377,7 +362,7 @@ function fecharModalConfirmacao() {
   idUsuarioInativar = null;
 }
 
-async function confirmarInativacao() {
+function confirmarInativacao() {
   document.getElementById('modalConfirmarInativacao').style.display = 'none';
 
   if (checkboxAtivoUsuario) {
@@ -385,30 +370,6 @@ async function confirmarInativacao() {
   }
 
   checkboxAtivoUsuario = null;
-
-  try {
-    const resposta = await fetch(getApiUrl(`/api/usuarios/${idUsuarioInativar}`), {
-      method: 'DELETE'
-    });
-
-    const dados = await resposta.json();
-
-    if (!dados.sucesso) {
-      alert(dados.mensagem || 'Erro ao inativar usuário.');
-      return;
-    }
-
-    idUsuarioInativar = null;
-
-    try {
-      await carregarUsuarios();  // falha aqui não vai mais acionar o catch principal
-    } catch (erroAtualizacao) {
-      console.error('Usuário inativado, mas houve falha ao recarregar a tabela.', erroAtualizacao);
-    }
-
-  } catch (erro) {
-    alert('Erro ao conectar com o servidor.'); // só dispara se o DELETE falhar de verdade
-  }
 }
 
 // ===================== SETORES - VARIÁVEIS GLOBAIS =====================
