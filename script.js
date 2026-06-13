@@ -410,7 +410,6 @@ async function confirmarInativacao() {
     alert('Erro ao conectar com o servidor.');
   }
 }
-//teste
 
 // ===================== SETORES - VARIÁVEIS GLOBAIS =====================
 // Lista completa de setores recebida da API
