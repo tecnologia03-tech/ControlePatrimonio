@@ -312,137 +312,116 @@ def excluir_usuario(id_usuario):
             "mensagem": str(e)
         }), 500
     
-# Rota para listar todos os setores cadastrados
-# Observação: no banco a tabela continua se chamando Local,
-# mas na API usamos o nome de negócio "setores"
-@app.route('/api/setores', methods=['GET'])
-def listar_locais():
-    try:
-        with get_conn() as conn:
-            with conn.cursor() as cursor:
+# ===================== SETORES ===================== #
 
-                # Consulta os setores ordenados pelo nome
-                cursor.execute(
-                    """
+@app.route('/api/setores', methods=['GET'])
+def listar_setores():
+    try:
+        with pool.connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("""
                     SELECT Id_Local, Nome_Local, Sala_Aula
                     FROM Local
                     ORDER BY Nome_Local ASC;
-                    """
-                )
+                """)
 
-                # Recupera todas as linhas encontradas
                 rows = cursor.fetchall()
 
-        # Monta a lista de setores em formato JSON
-        locais = [
+        setores = [
             {
-                'id_local': row[0],
-                'nome_local': row[1],
+                'id': row[0],
+                'nome': row[1],
                 'sala_aula': row[2]
             }
             for row in rows
         ]
 
-        # Retorna a lista de setores
         return jsonify({
             'sucesso': True,
-            'locais': locais
+            'setores': setores
         }), 200
 
     except Exception as e:
-        # Retorna erro caso a consulta falhe
         return jsonify({
             'sucesso': False,
             'mensagem': str(e)
         }), 500
 
 
-# Rota para incluir um novo setor
 @app.route('/api/setores', methods=['POST'])
-def incluir_local():
-    # Recebe os dados enviados pelo front-end
+def incluir_setor():
     dados = request.get_json(silent=True) or {}
 
-    # Captura os campos e faz limpeza básica
-    nome_local = (dados.get('nome_local') or '').strip()
-    sala_aula = normalizar_flag_sn(dados.get('sala_aula'), 'N')
+    nome = (dados.get('nome') or '').strip()
+    sala_aula = (dados.get('sala_aula') or 'N').strip().upper()
 
-    # Valida o campo obrigatório
-    if not nome_local:
+    if sala_aula not in ('S', 'N'):
+        sala_aula = 'N'
+
+    if not nome:
         return jsonify({
             'sucesso': False,
             'mensagem': 'Informe o nome do setor.'
         }), 400
 
     try:
-        with get_conn() as conn:
+        with pool.connection() as conn:
             with conn.cursor() as cursor:
+                cursor.execute("""
+                    SELECT 1
+                    FROM Local
+                    WHERE UPPER(TRIM(Nome_Local)) = UPPER(TRIM(%s));
+                """, (nome,))
 
-                # Verifica se já existe um setor com o mesmo nome
-                cursor.execute(
-                    'SELECT 1 FROM Local WHERE UPPER(TRIM(Nome_Local)) = UPPER(TRIM(%s));',
-                    (nome_local,)
-                )
-
-                # Se já existir, impede cadastro duplicado
                 if cursor.fetchone():
                     return jsonify({
                         'sucesso': False,
                         'mensagem': 'Já existe um setor com este nome.'
                     }), 409
 
-                # Insere o novo setor na tabela Local
-                cursor.execute(
-                    """
+                cursor.execute("""
                     INSERT INTO Local (Nome_Local, Sala_Aula)
                     VALUES (%s, %s);
-                    """,
-                    (nome_local, sala_aula)
-                )
+                """, (nome, sala_aula))
 
-                # Confirma a transação no banco
                 conn.commit()
 
-        # Retorna sucesso após o cadastro
         return jsonify({
             'sucesso': True,
             'mensagem': 'Setor cadastrado com sucesso!'
         }), 201
 
     except Exception as e:
-        # Retorna erro se houver falha ao cadastrar
         return jsonify({
             'sucesso': False,
             'mensagem': str(e)
         }), 500
 
 
-# Rota para editar um setor já existente
-@app.route('/api/setores/<int:id_local>', methods=['PUT'])
-def editar_local(id_local):
-    # Recebe os dados enviados pelo front-end
+@app.route('/api/setores/<int:id_setor>', methods=['PUT'])
+def editar_setor(id_setor):
     dados = request.get_json(silent=True) or {}
 
-    # Captura e limpa os campos enviados
-    nome_local = (dados.get('nome_local') or '').strip()
-    sala_aula = normalizar_flag_sn(dados.get('sala_aula'), 'N')
+    nome = (dados.get('nome') or '').strip()
+    sala_aula = (dados.get('sala_aula') or 'N').strip().upper()
 
-    # Valida o nome do setor
-    if not nome_local:
+    if sala_aula not in ('S', 'N'):
+        sala_aula = 'N'
+
+    if not nome:
         return jsonify({
             'sucesso': False,
             'mensagem': 'Informe o nome do setor.'
         }), 400
 
     try:
-        with get_conn() as conn:
+        with pool.connection() as conn:
             with conn.cursor() as cursor:
-
-                # Verifica se o setor existe antes de editar
-                cursor.execute(
-                    'SELECT 1 FROM Local WHERE Id_Local = %s;',
-                    (id_local,)
-                )
+                cursor.execute("""
+                    SELECT 1
+                    FROM Local
+                    WHERE Id_Local = %s;
+                """, (id_setor,))
 
                 if not cursor.fetchone():
                     return jsonify({
@@ -450,16 +429,12 @@ def editar_local(id_local):
                         'mensagem': 'Setor não encontrado.'
                     }), 404
 
-                # Verifica se o novo nome já está sendo usado por outro setor
-                cursor.execute(
-                    """
+                cursor.execute("""
                     SELECT 1
                     FROM Local
                     WHERE UPPER(TRIM(Nome_Local)) = UPPER(TRIM(%s))
-                      AND Id_Local != %s;
-                    """,
-                    (nome_local, id_local)
-                )
+                      AND Id_Local <> %s;
+                """, (nome, id_setor))
 
                 if cursor.fetchone():
                     return jsonify({
@@ -467,46 +442,37 @@ def editar_local(id_local):
                         'mensagem': 'Já existe outro setor com este nome.'
                     }), 409
 
-                # Atualiza os dados do setor
-                cursor.execute(
-                    """
+                cursor.execute("""
                     UPDATE Local
                     SET Nome_Local = %s,
                         Sala_Aula = %s
                     WHERE Id_Local = %s;
-                    """,
-                    (nome_local, sala_aula, id_local)
-                )
+                """, (nome, sala_aula, id_setor))
 
-                # Confirma a alteração no banco
                 conn.commit()
 
-        # Retorna sucesso após atualizar o setor
         return jsonify({
             'sucesso': True,
             'mensagem': 'Setor atualizado com sucesso!'
         }), 200
 
     except Exception as e:
-        # Retorna erro se ocorrer falha no processo
         return jsonify({
             'sucesso': False,
             'mensagem': str(e)
         }), 500
 
 
-# Rota para excluir um setor
-@app.route('/api/setores/<int:id_local>', methods=['DELETE'])
-def excluir_local(id_local):
+@app.route('/api/setores/<int:id_setor>', methods=['DELETE'])
+def excluir_setor(id_setor):
     try:
-        with get_conn() as conn:
+        with pool.connection() as conn:
             with conn.cursor() as cursor:
-
-                # Verifica se o setor existe antes de tentar excluir
-                cursor.execute(
-                    'SELECT 1 FROM Local WHERE Id_Local = %s;',
-                    (id_local,)
-                )
+                cursor.execute("""
+                    SELECT 1
+                    FROM Local
+                    WHERE Id_Local = %s;
+                """, (id_setor,))
 
                 if not cursor.fetchone():
                     return jsonify({
@@ -514,11 +480,12 @@ def excluir_local(id_local):
                         'mensagem': 'Setor não encontrado.'
                     }), 404
 
-                # Verifica se o setor está vinculado a patrimônios
-                cursor.execute(
-                    'SELECT 1 FROM Patrimonio WHERE Id_Local = %s LIMIT 1;',
-                    (id_local,)
-                )
+                cursor.execute("""
+                    SELECT 1
+                    FROM Patrimonio
+                    WHERE Id_Local = %s
+                    LIMIT 1;
+                """, (id_setor,))
 
                 if cursor.fetchone():
                     return jsonify({
@@ -526,11 +493,13 @@ def excluir_local(id_local):
                         'mensagem': 'Este setor não pode ser excluído porque está vinculado a patrimônios.'
                     }), 409
 
-                # Verifica se o setor já foi utilizado em movimentações
-                cursor.execute(
-                    'SELECT 1 FROM Historico_Movimentacao WHERE Id_Local_Origem = %s OR Id_Local_Destino = %s LIMIT 1;',
-                    (id_local, id_local)
-                )
+                cursor.execute("""
+                    SELECT 1
+                    FROM Historico_Movimentacao
+                    WHERE Id_Local_Origem = %s
+                       OR Id_Local_Destino = %s
+                    LIMIT 1;
+                """, (id_setor, id_setor))
 
                 if cursor.fetchone():
                     return jsonify({
@@ -538,23 +507,19 @@ def excluir_local(id_local):
                         'mensagem': 'Este setor não pode ser excluído porque já possui histórico de movimentação.'
                     }), 409
 
-                # Exclui o setor fisicamente da tabela
-                cursor.execute(
-                    'DELETE FROM Local WHERE Id_Local = %s;',
-                    (id_local,)
-                )
+                cursor.execute("""
+                    DELETE FROM Local
+                    WHERE Id_Local = %s;
+                """, (id_setor,))
 
-                # Confirma a exclusão no banco
                 conn.commit()
 
-        # Retorna sucesso após excluir
         return jsonify({
             'sucesso': True,
             'mensagem': 'Setor excluído com sucesso!'
         }), 200
 
     except Exception as e:
-        # Retorna erro se houver falha na exclusão
         return jsonify({
             'sucesso': False,
             'mensagem': str(e)
