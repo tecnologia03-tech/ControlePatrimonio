@@ -20,7 +20,7 @@
       <ul class="sidebar-menu">
         <li><a href="dashboard.html"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
         <li><a href="usuario.html"><i class="bi bi-people"></i> Usuários</a></li>
-        <li class="ativo"><a href="setor.html"><i class="bi bi-diagram-3"></i> Setores</a></li>
+        <li class="ativo"><a href="local.html"><i class="bi bi-diagram-3"></i> Locais</a></li>
         <li><a href="categoria.html"><i class="bi bi-tags"></i> Categorias</a></li>
         <li><a href="responsavel.html"><i class="bi bi-person-badge"></i> Responsáveis</a></li>
         <li><a href="patrimonio.html"><i class="bi bi-box-seam"></i> Patrimônios</a></li>
@@ -40,7 +40,7 @@
         <button class="btn-menu-toggle" onclick="toggleMenu()" aria-label="Abrir menu">
           <i class="bi bi-list"></i>
         </button>
-        <span class="topbar-titulo">Gestão de Setores</span>
+        <span class="topbar-titulo">Gestão de Locais</span>
 
         <div class="topbar-usuario">
           <div class="avatar">
@@ -54,21 +54,21 @@
         <div class="usuarios-toolbar">
           <input
             type="text"
-            id="campoBuscaSetor"
+            id="campoBuscaLocal"
             class="input-busca-usuario"
-            placeholder="Pesquisar por nome do setor..."
-            oninput="filtrarSetores(this.value)"
+            placeholder="Pesquisar por nome do local..."
+            oninput="filtrarLocais(this.value)"
           >
 
-          <button class="btn btn-incluir-usuario" onclick="abrirModalIncluirSetor()">
-            <i class="bi bi-building-add me-1"></i> Incluir Setor
+          <button class="btn btn-incluir-usuario" onclick="abrirModalIncluirLocal()">
+            <i class="bi bi-building-add me-1"></i> Incluir Local
           </button>
         </div>
 
         <div class="usuarios-card">
           <div class="usuarios-card-header">
             <i class="bi bi-building"></i>
-            Setores Cadastrados
+            Locais Cadastrados
           </div>
 
           <div class="table-responsive">
@@ -76,15 +76,15 @@
               <thead>
                 <tr>
                   <th style="width: 70px;">#</th>
-                  <th>Nome do Setor</th>
+                  <th>Nome do Local</th>
                   <th>Sala de Aula</th>
                   <th style="width: 140px;">Ações</th>
                 </tr>
               </thead>
-              <tbody id="tabelaSetores">
+              <tbody id="tabelaLocais">
                 <tr>
                   <td colspan="4" class="text-center text-muted py-4">
-                    <i class="bi bi-arrow-repeat me-2"></i>Carregando setores...
+                    <i class="bi bi-arrow-repeat me-2"></i>Carregando locais...
                   </td>
                 </tr>
               </tbody>
@@ -99,19 +99,19 @@
     </div>
   </div>
 
-  <div id="modalIncluirSetor" class="modal-overlay" style="display:none;">
+  <div id="modalIncluirLocal" class="modal-overlay" style="display:none;">
     <div class="modal-box">
       <div class="modal-header-custom">
-        <h5><i class="bi bi-building-add me-2"></i>Incluir Novo Setor</h5>
-        <button class="btn-fechar-modal" onclick="fecharModalIncluirSetor()">&times;</button>
+        <h5><i class="bi bi-building-add me-2"></i>Incluir Novo Local</h5>
+        <button class="btn-fechar-modal" onclick="fecharModalIncluirLocal()">&times;</button>
       </div>
 
       <div class="modal-body-custom">
-        <div id="msgErroIncluirSetor" class="alert alert-danger py-2 mb-3" style="display:none;"></div>
+        <div id="msgErroIncluirLocal" class="alert alert-danger py-2 mb-3" style="display:none;"></div>
 
         <div class="mb-3">
-          <label for="incluirNomeSetor" class="form-label fw-semibold">Nome do Setor</label>
-          <input type="text" id="incluirNomeSetor" class="form-control" placeholder="Ex.: Laboratório de Informática">
+          <label for="incluirNomeLocal" class="form-label fw-semibold">Nome do Local</label>
+          <input type="text" id="incluirNomeLocal" class="form-control" placeholder="Ex.: Laboratório de Informática">
         </div>
 
         <div class="mb-3">
@@ -124,29 +124,29 @@
       </div>
 
       <div class="modal-footer-custom">
-        <button class="btn btn-outline-secondary" onclick="fecharModalIncluirSetor()">Cancelar</button>
-        <button class="btn btn-primary" onclick="salvarSetor()">
-          <i class="bi bi-check-lg me-1"></i>Salvar Setor
+        <button class="btn btn-outline-secondary" onclick="fecharModalIncluirLocal()">Cancelar</button>
+        <button class="btn btn-primary" onclick="salvarLocal()">
+          <i class="bi bi-check-lg me-1"></i>Salvar Local
         </button>
       </div>
     </div>
   </div>
 
-  <div id="modalEditarSetor" class="modal-overlay" style="display:none;">
+  <div id="modalEditarLocal" class="modal-overlay" style="display:none;">
     <div class="modal-box">
       <div class="modal-header-custom">
-        <h5><i class="bi bi-pencil-fill me-2"></i>Editar Setor</h5>
-        <button class="btn-fechar-modal" onclick="fecharModalEditarSetor()">&times;</button>
+        <h5><i class="bi bi-pencil-fill me-2"></i>Editar Local</h5>
+        <button class="btn-fechar-modal" onclick="fecharModalEditarLocal()">&times;</button>
       </div>
 
       <div class="modal-body-custom">
-        <div id="msgErroEditarSetor" class="alert alert-danger py-2 mb-3" style="display:none;"></div>
+        <div id="msgErroEditarLocal" class="alert alert-danger py-2 mb-3" style="display:none;"></div>
 
-        <input type="hidden" id="editarIdSetor">
+        <input type="hidden" id="editarIdLocal">
 
         <div class="mb-3">
-          <label for="editarNomeSetor" class="form-label fw-semibold">Nome do Setor</label>
-          <input type="text" id="editarNomeSetor" class="form-control">
+          <label for="editarNomeLocal" class="form-label fw-semibold">Nome do Local</label>
+          <input type="text" id="editarNomeLocal" class="form-control">
         </div>
 
         <div class="mb-3">
@@ -159,15 +159,15 @@
       </div>
 
       <div class="modal-footer-custom">
-        <button class="btn btn-outline-secondary" onclick="fecharModalEditarSetor()">Cancelar</button>
-        <button class="btn btn-primary" onclick="atualizarSetor()">
+        <button class="btn btn-outline-secondary" onclick="fecharModalEditarLocal()">Cancelar</button>
+        <button class="btn btn-primary" onclick="atualizarLocal()">
           <i class="bi bi-check-lg me-1"></i>Salvar Alterações
         </button>
       </div>
     </div>
   </div>
 
-  <div id="modalConfirmarExclusaoSetor" class="modal-overlay-confirmacao" style="display:none;">
+  <div id="modalConfirmarExclusaoLocal" class="modal-overlay-confirmacao" style="display:none;">
     <div class="modal-confirmacao-container">
       <div class="modal-icone-alerta">
         <i class="bi bi-exclamation-triangle-fill" style="font-size: 28px;"></i>
@@ -175,12 +175,12 @@
 
       <h5 class="modal-titulo-confirmacao">Confirmar Exclusão</h5>
       <p class="modal-texto-confirmacao">
-        Deseja realmente excluir este setor? Esta ação não pode ser desfeita.
+        Deseja realmente excluir este local? Esta ação não pode ser desfeita.
       </p>
 
       <div class="modal-botoes-confirmacao">
-        <button class="btn-cancelar-confirmacao" onclick="fecharModalExclusaoSetor()">Cancelar</button>
-        <button class="btn-inativar-confirmacao" onclick="confirmarExclusaoSetor()">Excluir Setor</button>
+        <button class="btn-cancelar-confirmacao" onclick="fecharModalExclusaoLocal()">Cancelar</button>
+        <button class="btn-inativar-confirmacao" onclick="confirmarExclusaoLocal()">Excluir Local</button>
       </div>
     </div>
   </div>

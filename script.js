@@ -372,42 +372,42 @@ function confirmarInativacao() {
   checkboxAtivoUsuario = null;
 }
 
-// ===================== SETORES - VARIÁVEIS GLOBAIS ===================== //
-let listaSetores = [];
-let listaSetoresFiltrada = [];
-let idSetorParaExcluir = null;
+// ===================== LOCAIS - VARIÁVEIS GLOBAIS ===================== //
+let listaLocais = [];
+let listaLocaisFiltrada = [];
+let idLocalParaExcluir = null;
 
-// ===================== SETORES - CARREGAR ===================== //
-async function carregarSetores() {
-  const tbody = document.getElementById('tabelaSetores');
+// ===================== LOCAIS - CARREGAR ===================== //
+async function carregarLocais() {
+  const tbody = document.getElementById('tabelaLocais');
   if (!tbody) return;
 
   tbody.innerHTML = `
     <tr>
       <td colspan="4" class="text-center text-muted py-4">
-        <i class="bi bi-arrow-repeat me-2"></i>Carregando setores...
+        <i class="bi bi-arrow-repeat me-2"></i>Carregando locais...
       </td>
     </tr>
   `;
 
   try {
-    const resposta = await fetch('https://controlepatrimonio.onrender.com/api/setores');
+    const resposta = await fetch('https://controlepatrimonio.onrender.com/api/locais');
     const dados = await resposta.json();
 
     if (!resposta.ok || !dados.sucesso) {
       tbody.innerHTML = `
         <tr>
           <td colspan="4" class="text-center text-danger py-4">
-            ${dados.mensagem || 'Erro ao carregar setores.'}
+            ${dados.mensagem || 'Erro ao carregar locais.'}
           </td>
         </tr>
       `;
       return;
     }
 
-    listaSetores = dados.setores || [];
-    listaSetoresFiltrada = [...listaSetores];
-    renderizarSetores(listaSetoresFiltrada);
+    listaLocais = dados.locais || [];
+    listaLocaisFiltrada = [...listaLocais];
+    renderizarLocais(listaLocaisFiltrada);
   } catch (erro) {
     tbody.innerHTML = `
       <tr>
@@ -419,88 +419,88 @@ async function carregarSetores() {
   }
 }
 
-// ===================== SETORES - RENDERIZAR ===================== //
-function renderizarSetores(setores) {
-  const tbody = document.getElementById('tabelaSetores');
+// ===================== LOCAIS - RENDERIZAR ===================== //
+function renderizarLocais(locais) {
+  const tbody = document.getElementById('tabelaLocais');
   if (!tbody) return;
 
-  if (!setores.length) {
+  if (!locais.length) {
     tbody.innerHTML = `
       <tr>
         <td colspan="4" class="text-center text-muted py-4">
-          Nenhum setor encontrado.
+          Nenhum local encontrado.
         </td>
       </tr>
     `;
     return;
   }
 
-  tbody.innerHTML = setores.map((setor, index) => `
+  tbody.innerHTML = locais.map((local, index) => `
     <tr>
       <td>${index + 1}</td>
-      <td>${setor.nome}</td>
+      <td>${local.nome}</td>
       <td>
-        ${setor.sala_aula === 'S'
+        ${local.sala_aula === 'S'
           ? '<span class="badge-status-ativo">Sim</span>'
           : '<span class="badge-inativo">Não</span>'}
       </td>
       <td>
         <div class="acoes-tabela">
-          <button class="btn-editar-usuario" onclick="abrirModalEditarSetor(${setor.id})">Editar</button>
-          <button class="btn btn-sm btn-outline-danger" onclick="abrirModalExclusaoSetor(${setor.id})">Excluir</button>
+          <button class="btn-editar-usuario" onclick="abrirModalEditarLocal(${local.id})">Editar</button>
+          <button class="btn btn-sm btn-outline-danger" onclick="abrirModalExclusaoLocal(${local.id})">Excluir</button>
         </div>
       </td>
     </tr>
   `).join('');
 }
 
-// ===================== SETORES - FILTRO ===================== //
-function filtrarSetores(termo) {
+// ===================== LOCAIS - FILTRO ===================== //
+function filtrarLocais(termo) {
   const filtro = (termo || '').trim().toLowerCase();
 
   if (!filtro) {
-    listaSetoresFiltrada = [...listaSetores];
+    listaLocaisFiltrada = [...listaLocais];
   } else {
-    listaSetoresFiltrada = listaSetores.filter(setor =>
-      (setor.nome || '').toLowerCase().includes(filtro)
+    listaLocaisFiltrada = listaLocais.filter(local =>
+      (local.nome || '').toLowerCase().includes(filtro)
     );
   }
 
-  renderizarSetores(listaSetoresFiltrada);
+  renderizarLocais(listaLocaisFiltrada);
 }
 
-// ===================== SETORES - MODAL INCLUIR ===================== //
-function abrirModalIncluirSetor() {
-  document.getElementById('incluirNomeSetor').value = '';
+// ===================== LOCAIS - MODAL INCLUIR ===================== //
+function abrirModalIncluirLocal() {
+  document.getElementById('incluirNomeLocal').value = '';
   document.getElementById('incluirSalaAula').value = 'N';
 
-  const msg = document.getElementById('msgErroIncluirSetor');
+  const msg = document.getElementById('msgErroIncluirLocal');
   msg.style.display = 'none';
   msg.textContent = '';
 
-  document.getElementById('modalIncluirSetor').style.display = 'flex';
+  document.getElementById('modalIncluirLocal').style.display = 'flex';
 }
 
-function fecharModalIncluirSetor() {
-  document.getElementById('modalIncluirSetor').style.display = 'none';
+function fecharModalIncluirLocal() {
+  document.getElementById('modalIncluirLocal').style.display = 'none';
 }
 
-async function salvarSetor() {
-  const nome = document.getElementById('incluirNomeSetor').value.trim();
+async function salvarLocal() {
+  const nome = document.getElementById('incluirNomeLocal').value.trim();
   const sala_aula = document.getElementById('incluirSalaAula').value;
-  const msg = document.getElementById('msgErroIncluirSetor');
+  const msg = document.getElementById('msgErroIncluirLocal');
 
   msg.style.display = 'none';
   msg.textContent = '';
 
   if (!nome) {
-    msg.textContent = 'Informe o nome do setor.';
+    msg.textContent = 'Informe o nome do local.';
     msg.style.display = 'block';
     return;
   }
 
   try {
-    const resposta = await fetch('https://controlepatrimonio.onrender.com/api/setores', {
+    const resposta = await fetch('https://controlepatrimonio.onrender.com/api/locais', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ nome, sala_aula })
@@ -509,56 +509,56 @@ async function salvarSetor() {
     const dados = await resposta.json();
 
     if (!resposta.ok || !dados.sucesso) {
-      msg.textContent = dados.mensagem || 'Erro ao salvar setor.';
+      msg.textContent = dados.mensagem || 'Erro ao salvar local.';
       msg.style.display = 'block';
       return;
     }
 
-    fecharModalIncluirSetor();
-    await carregarSetores();
+    fecharModalIncluirLocal();
+    await carregarLocais();
   } catch (erro) {
     msg.textContent = 'Erro ao conectar com o servidor.';
     msg.style.display = 'block';
   }
 }
 
-// ===================== SETORES - MODAL EDITAR ===================== //
-function abrirModalEditarSetor(id) {
-  const setor = listaSetores.find(item => item.id === id);
-  if (!setor) return;
+// ===================== LOCAIS - MODAL EDITAR ===================== //
+function abrirModalEditarLocal(id) {
+  const local = listaLocais.find(item => item.id === id);
+  if (!local) return;
 
-  document.getElementById('editarIdSetor').value = setor.id;
-  document.getElementById('editarNomeSetor').value = setor.nome;
-  document.getElementById('editarSalaAula').value = setor.sala_aula || 'N';
+  document.getElementById('editarIdLocal').value = local.id;
+  document.getElementById('editarNomeLocal').value = local.nome;
+  document.getElementById('editarSalaAula').value = local.sala_aula || 'N';
 
-  const msg = document.getElementById('msgErroEditarSetor');
+  const msg = document.getElementById('msgErroEditarLocal');
   msg.style.display = 'none';
   msg.textContent = '';
 
-  document.getElementById('modalEditarSetor').style.display = 'flex';
+  document.getElementById('modalEditarLocal').style.display = 'flex';
 }
 
-function fecharModalEditarSetor() {
-  document.getElementById('modalEditarSetor').style.display = 'none';
+function fecharModalEditarLocal() {
+  document.getElementById('modalEditarLocal').style.display = 'none';
 }
 
-async function atualizarSetor() {
-  const id = document.getElementById('editarIdSetor').value;
-  const nome = document.getElementById('editarNomeSetor').value.trim();
+async function atualizarLocal() {
+  const id = document.getElementById('editarIdLocal').value;
+  const nome = document.getElementById('editarNomeLocal').value.trim();
   const sala_aula = document.getElementById('editarSalaAula').value;
-  const msg = document.getElementById('msgErroEditarSetor');
+  const msg = document.getElementById('msgErroEditarLocal');
 
   msg.style.display = 'none';
   msg.textContent = '';
 
   if (!nome) {
-    msg.textContent = 'Informe o nome do setor.';
+    msg.textContent = 'Informe o nome do local.';
     msg.style.display = 'block';
     return;
   }
 
   try {
-    const resposta = await fetch(`https://controlepatrimonio.onrender.com/api/setores/${id}`, {
+    const resposta = await fetch(`https://controlepatrimonio.onrender.com/api/locais/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ nome, sala_aula })
@@ -567,49 +567,49 @@ async function atualizarSetor() {
     const dados = await resposta.json();
 
     if (!resposta.ok || !dados.sucesso) {
-      msg.textContent = dados.mensagem || 'Erro ao atualizar setor.';
+      msg.textContent = dados.mensagem || 'Erro ao atualizar local.';
       msg.style.display = 'block';
       return;
     }
 
-    fecharModalEditarSetor();
-    await carregarSetores();
+    fecharModalEditarLocal();
+    await carregarLocais();
   } catch (erro) {
     msg.textContent = 'Erro ao conectar com o servidor.';
     msg.style.display = 'block';
   }
 }
 
-// ===================== SETORES - EXCLUSÃO ===================== //
-function abrirModalExclusaoSetor(id) {
-  idSetorParaExcluir = id;
-  document.getElementById('modalConfirmarExclusaoSetor').style.display = 'flex';
+// ===================== LOCAIS - EXCLUSÃO ===================== //
+function abrirModalExclusaoLocal(id) {
+  idLocalParaExcluir = id;
+  document.getElementById('modalConfirmarExclusaoLocal').style.display = 'flex';
 }
 
-function fecharModalExclusaoSetor() {
-  idSetorParaExcluir = null;
-  document.getElementById('modalConfirmarExclusaoSetor').style.display = 'none';
+function fecharModalExclusaoLocal() {
+  idLocalParaExcluir = null;
+  document.getElementById('modalConfirmarExclusaoLocal').style.display = 'none';
 }
 
-async function confirmarExclusaoSetor() {
-  if (!idSetorParaExcluir) return;
+async function confirmarExclusaoLocal() {
+  if (!idLocalParaExcluir) return;
 
   try {
-    const resposta = await fetch(`https://controlepatrimonio.onrender.com/api/setores/${idSetorParaExcluir}`, {
+    const resposta = await fetch(`https://controlepatrimonio.onrender.com/api/locais/${idLocalParaExcluir}`, {
       method: 'DELETE'
     });
 
     const dados = await resposta.json();
-    fecharModalExclusaoSetor();
+    fecharModalExclusaoLocal();
 
     if (!resposta.ok || !dados.sucesso) {
-      alert(dados.mensagem || 'Erro ao excluir setor.');
+      alert(dados.mensagem || 'Erro ao excluir local.');
       return;
     }
 
-    await carregarSetores();
+    await carregarLocais();
   } catch (erro) {
-    fecharModalExclusaoSetor();
+    fecharModalExclusaoLocal();
     alert('Erro ao conectar com o servidor.');
   }
 }
@@ -624,7 +624,7 @@ document.addEventListener('DOMContentLoaded', () => {
     'dashboard.html',
     'usuario.html',
     'categoria.html',
-    'setor.html',
+    'local.html',
     'responsavel.html',
     'patrimonio.html',
     'movimentacao.html',
@@ -655,9 +655,8 @@ document.addEventListener('DOMContentLoaded', () => {
     return;
   }
 
-  if (paginaAtual === 'setor.html') {
-    carregarSetores();
+  if (paginaAtual === 'local.html') {
+    carregarLocais();
   }
-
 
 });

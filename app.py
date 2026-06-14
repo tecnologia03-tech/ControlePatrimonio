@@ -312,10 +312,10 @@ def excluir_usuario(id_usuario):
             "mensagem": str(e)
         }), 500
     
-# ===================== SETORES ===================== #
+# ===================== LOCAIS ===================== #
 
-@app.route('/api/setores', methods=['GET'])
-def listar_setores():
+@app.route('/api/locais', methods=['GET'])
+def listar_locais():
     try:
         with pool.connection() as conn:
             with conn.cursor() as cursor:
@@ -327,7 +327,7 @@ def listar_setores():
 
                 rows = cursor.fetchall()
 
-        setores = [
+        locais = [
             {
                 'id': row[0],
                 'nome': row[1],
@@ -338,7 +338,7 @@ def listar_setores():
 
         return jsonify({
             'sucesso': True,
-            'setores': setores
+            'locais': locais
         }), 200
 
     except Exception as e:
@@ -348,8 +348,8 @@ def listar_setores():
         }), 500
 
 
-@app.route('/api/setores', methods=['POST'])
-def incluir_setor():
+@app.route('/api/locais', methods=['POST'])
+def incluir_local():
     dados = request.get_json(silent=True) or {}
 
     nome = (dados.get('nome') or '').strip()
@@ -361,7 +361,7 @@ def incluir_setor():
     if not nome:
         return jsonify({
             'sucesso': False,
-            'mensagem': 'Informe o nome do setor.'
+            'mensagem': 'Informe o nome do local.'
         }), 400
 
     try:
@@ -376,7 +376,7 @@ def incluir_setor():
                 if cursor.fetchone():
                     return jsonify({
                         'sucesso': False,
-                        'mensagem': 'Já existe um setor com este nome.'
+                        'mensagem': 'Já existe um local com este nome.'
                     }), 409
 
                 cursor.execute("""
@@ -388,7 +388,7 @@ def incluir_setor():
 
         return jsonify({
             'sucesso': True,
-            'mensagem': 'Setor cadastrado com sucesso!'
+            'mensagem': 'Local cadastrado com sucesso!'
         }), 201
 
     except Exception as e:
@@ -398,8 +398,8 @@ def incluir_setor():
         }), 500
 
 
-@app.route('/api/setores/<int:id_setor>', methods=['PUT'])
-def editar_setor(id_setor):
+@app.route('/api/locais/<int:id_local>', methods=['PUT'])
+def editar_local(id_local):
     dados = request.get_json(silent=True) or {}
 
     nome = (dados.get('nome') or '').strip()
@@ -411,7 +411,7 @@ def editar_setor(id_setor):
     if not nome:
         return jsonify({
             'sucesso': False,
-            'mensagem': 'Informe o nome do setor.'
+            'mensagem': 'Informe o nome do local.'
         }), 400
 
     try:
@@ -421,12 +421,12 @@ def editar_setor(id_setor):
                     SELECT 1
                     FROM Local
                     WHERE Id_Local = %s;
-                """, (id_setor,))
+                """, (id_local,))
 
                 if not cursor.fetchone():
                     return jsonify({
                         'sucesso': False,
-                        'mensagem': 'Setor não encontrado.'
+                        'mensagem': 'Local não encontrado.'
                     }), 404
 
                 cursor.execute("""
@@ -434,12 +434,12 @@ def editar_setor(id_setor):
                     FROM Local
                     WHERE UPPER(TRIM(Nome_Local)) = UPPER(TRIM(%s))
                       AND Id_Local <> %s;
-                """, (nome, id_setor))
+                """, (nome, id_local))
 
                 if cursor.fetchone():
                     return jsonify({
                         'sucesso': False,
-                        'mensagem': 'Já existe outro setor com este nome.'
+                        'mensagem': 'Já existe outro local com este nome.'
                     }), 409
 
                 cursor.execute("""
@@ -447,13 +447,13 @@ def editar_setor(id_setor):
                     SET Nome_Local = %s,
                         Sala_Aula = %s
                     WHERE Id_Local = %s;
-                """, (nome, sala_aula, id_setor))
+                """, (nome, sala_aula, id_local))
 
                 conn.commit()
 
         return jsonify({
             'sucesso': True,
-            'mensagem': 'Setor atualizado com sucesso!'
+            'mensagem': 'Local atualizado com sucesso!'
         }), 200
 
     except Exception as e:
@@ -463,8 +463,8 @@ def editar_setor(id_setor):
         }), 500
 
 
-@app.route('/api/setores/<int:id_setor>', methods=['DELETE'])
-def excluir_setor(id_setor):
+@app.route('/api/locais/<int:id_local>', methods=['DELETE'])
+def excluir_local(id_local):
     try:
         with pool.connection() as conn:
             with conn.cursor() as cursor:
@@ -472,12 +472,12 @@ def excluir_setor(id_setor):
                     SELECT 1
                     FROM Local
                     WHERE Id_Local = %s;
-                """, (id_setor,))
+                """, (id_local,))
 
                 if not cursor.fetchone():
                     return jsonify({
                         'sucesso': False,
-                        'mensagem': 'Setor não encontrado.'
+                        'mensagem': 'Local não encontrado.'
                     }), 404
 
                 cursor.execute("""
@@ -486,24 +486,24 @@ def excluir_setor(id_setor):
                     WHERE Id_Local = %s
                       AND Situacao_Atual IN ('A', 'M')
                     LIMIT 1;
-                """, (id_setor,))
+                """, (id_local,))
 
                 if cursor.fetchone():
                     return jsonify({
                         'sucesso': False,
-                        'mensagem': 'Impossível excluir setor vinculado a um patrimônio ativo ou em manutenção.'
+                        'mensagem': 'Impossível excluir local vinculado a um patrimônio ativo ou em manutenção.'
                     }), 409
 
                 cursor.execute("""
                     DELETE FROM Local
                     WHERE Id_Local = %s;
-                """, (id_setor,))
+                """, (id_local,))
 
                 conn.commit()
 
         return jsonify({
             'sucesso': True,
-            'mensagem': 'Setor excluído com sucesso!'
+            'mensagem': 'Local excluído com sucesso!'
         }), 200
 
     except Exception as e:
