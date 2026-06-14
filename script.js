@@ -445,8 +445,10 @@ function renderizarSetores(setores) {
           : '<span class="badge-inativo">Não</span>'}
       </td>
       <td>
-        <button class="btn-editar-usuario me-1" onclick="abrirModalEditarSetor(${setor.id})">Editar</button>
-        <button class="btn btn-sm btn-outline-danger" onclick="abrirModalExclusaoSetor(${setor.id})">Excluir</button>
+        <div class="acoes-tabela">
+          <button class="btn-editar-usuario" onclick="abrirModalEditarSetor(${setor.id})">Editar</button>
+          <button class="btn btn-sm btn-outline-danger" onclick="abrirModalExclusaoSetor(${setor.id})">Excluir</button>
+        </div>
       </td>
     </tr>
   `).join('');

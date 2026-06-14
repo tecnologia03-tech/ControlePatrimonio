@@ -637,3 +637,18 @@
   background: #0d6efd;
   color: #fff;
 }
+
+/* ===================== BOTÕES DE ACÕES DA TABELA SETORES ===================== */
+
+.acoes-tabela {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.acoes-tabela .btn-editar-usuario,
+.acoes-tabela .btn-outline-danger {
+  min-width: 78px;
+  justify-content: center;
+}

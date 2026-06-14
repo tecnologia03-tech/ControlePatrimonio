@@ -484,27 +484,14 @@ def excluir_setor(id_setor):
                     SELECT 1
                     FROM Patrimonio
                     WHERE Id_Local = %s
+                      AND Situacao_Atual IN ('A', 'M')
                     LIMIT 1;
                 """, (id_setor,))
 
                 if cursor.fetchone():
                     return jsonify({
                         'sucesso': False,
-                        'mensagem': 'Este setor não pode ser excluído porque está vinculado a patrimônios.'
-                    }), 409
-
-                cursor.execute("""
-                    SELECT 1
-                    FROM Historico_Movimentacao
-                    WHERE Id_Local_Origem = %s
-                       OR Id_Local_Destino = %s
-                    LIMIT 1;
-                """, (id_setor, id_setor))
-
-                if cursor.fetchone():
-                    return jsonify({
-                        'sucesso': False,
-                        'mensagem': 'Este setor não pode ser excluído porque já possui histórico de movimentação.'
+                        'mensagem': 'Impossível excluir setor vinculado a um patrimônio ativo ou em manutenção.'
                     }), 409
 
                 cursor.execute("""
@@ -524,7 +511,6 @@ def excluir_setor(id_setor):
             'sucesso': False,
             'mensagem': str(e)
         }), 500
-
 
 # Inicializa a aplicação Flask em modo de desenvolvimento
 if __name__ == '__main__':
