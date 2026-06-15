@@ -862,6 +862,232 @@ async function confirmarExclusaoCategoria() {
 }
 
 
+/* =========================================================
+   RESPONSÁVEIS
+   ---------------------------------------------------------
+   Este bloco concentra toda a lógica da página de responsáveis:
+   listagem, inclusão, edição e exclusão.
+   ========================================================= */
+
+let listaResponsaveis = [];
+let idResponsavelParaExcluir = null;
+
+/* Preenche o nome do usuário no topo, mantendo padrão visual
+   com as demais páginas protegidas do sistema. */
+function preencherNomeUsuarioTopo() {
+  const nome = sessionStorage.getItem('nomeUsuario') || 'Usuário';
+  const elemento = document.getElementById('nomeUsuarioTopo');
+
+  if (elemento) {
+    elemento.textContent = nome;
+  }
+}
+
+/* Busca todos os responsáveis cadastrados na API
+   e atualiza a tabela da tela. */
+async function carregarResponsaveis() {
+  const tbody = document.getElementById('tabelaResponsaveis');
+  if (!tbody) return;
+
+  tbody.innerHTML = `
+    <tr>
+      <td colspan="5">Carregando responsáveis...</td>
+    </tr>
+  `;
+
+  try {
+    const resposta = await fetch('https://controlepatrimonio.onrender.com/api/responsaveis');
+    const dados = await resposta.json();
+
+    if (!resposta.ok || !dados.sucesso) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="5">${dados.mensagem || 'Erro ao carregar responsáveis.'}</td>
+        </tr>
+      `;
+      return;
+    }
+
+    listaResponsaveis = dados.responsaveis || [];
+    renderizarResponsaveis(listaResponsaveis);
+  } catch (erro) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="5">Erro ao conectar com o servidor.</td>
+      </tr>
+    `;
+  }
+}
+
+/* Renderiza a tabela principal de responsáveis. */
+function renderizarResponsaveis(lista) {
+  const tbody = document.getElementById('tabelaResponsaveis');
+  if (!tbody) return;
+
+  if (!lista.length) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="5">Nenhum responsável cadastrado.</td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = lista.map(responsavel => `
+    <tr>
+      <td>${responsavel.nome}</td>
+      <td>${responsavel.matricula}</td>
+      <td>${responsavel.cargo}</td>
+      <td>${responsavel.ativo === 'S' ? 'Ativo' : 'Inativo'}</td>
+      <td>
+        <div class="acoes-tabela">
+          <button class="btn btn-editar" onclick="abrirModalEditarResponsavel(${responsavel.id})">Editar</button>
+          <button class="btn btn-perigo-outline" onclick="abrirModalExcluirResponsavel(${responsavel.id})">Excluir</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+/* ===================== INCLUSÃO ===================== */
+
+function abrirModalNovoResponsavel() {
+  document.getElementById('novoNomeResponsavel').value = '';
+  document.getElementById('novaMatriculaResponsavel').value = '';
+  document.getElementById('novoCargoResponsavel').value = '';
+  document.getElementById('msgErroNovoResponsavel').textContent = '';
+  document.getElementById('modalNovoResponsavel').style.display = 'flex';
+}
+
+function fecharModalNovoResponsavel() {
+  document.getElementById('modalNovoResponsavel').style.display = 'none';
+}
+
+async function salvarResponsavel() {
+  const nome = document.getElementById('novoNomeResponsavel').value.trim();
+  const matricula = document.getElementById('novaMatriculaResponsavel').value.trim();
+  const cargo = document.getElementById('novoCargoResponsavel').value.trim();
+  const msgErro = document.getElementById('msgErroNovoResponsavel');
+
+  msgErro.textContent = '';
+
+  if (!nome || !matricula || !cargo) {
+    msgErro.textContent = 'Preencha nome, matrícula e cargo.';
+    return;
+  }
+
+  try {
+    const resposta = await fetch('https://controlepatrimonio.onrender.com/api/responsaveis', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nome, matricula, cargo })
+    });
+
+    const dados = await resposta.json();
+
+    if (!resposta.ok || !dados.sucesso) {
+      msgErro.textContent = dados.mensagem || 'Erro ao salvar responsável.';
+      return;
+    }
+
+    fecharModalNovoResponsavel();
+    await carregarResponsaveis();
+  } catch (erro) {
+    msgErro.textContent = 'Erro ao conectar com o servidor.';
+  }
+}
+
+/* ===================== EDIÇÃO ===================== */
+
+function abrirModalEditarResponsavel(id) {
+  const responsavel = listaResponsaveis.find(item => item.id === id);
+  if (!responsavel) return;
+
+  document.getElementById('editarIdResponsavel').value = responsavel.id;
+  document.getElementById('editarNomeResponsavel').value = responsavel.nome;
+  document.getElementById('editarMatriculaResponsavel').value = responsavel.matricula;
+  document.getElementById('editarCargoResponsavel').value = responsavel.cargo;
+  document.getElementById('editarAtivoResponsavel').value = responsavel.ativo;
+  document.getElementById('msgErroEditarResponsavel').textContent = '';
+
+  document.getElementById('modalEditarResponsavel').style.display = 'flex';
+}
+
+function fecharModalEditarResponsavel() {
+  document.getElementById('modalEditarResponsavel').style.display = 'none';
+}
+
+async function atualizarResponsavel() {
+  const id = document.getElementById('editarIdResponsavel').value;
+  const nome = document.getElementById('editarNomeResponsavel').value.trim();
+  const matricula = document.getElementById('editarMatriculaResponsavel').value.trim();
+  const cargo = document.getElementById('editarCargoResponsavel').value.trim();
+  const ativo = document.getElementById('editarAtivoResponsavel').value;
+  const msgErro = document.getElementById('msgErroEditarResponsavel');
+
+  msgErro.textContent = '';
+
+  if (!nome || !matricula || !cargo) {
+    msgErro.textContent = 'Preencha nome, matrícula e cargo.';
+    return;
+  }
+
+  try {
+    const resposta = await fetch(`https://controlepatrimonio.onrender.com/api/responsaveis/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nome, matricula, cargo, ativo })
+    });
+
+    const dados = await resposta.json();
+
+    if (!resposta.ok || !dados.sucesso) {
+      msgErro.textContent = dados.mensagem || 'Erro ao atualizar responsável.';
+      return;
+    }
+
+    fecharModalEditarResponsavel();
+    await carregarResponsaveis();
+  } catch (erro) {
+    msgErro.textContent = 'Erro ao conectar com o servidor.';
+  }
+}
+
+/* ===================== EXCLUSÃO ===================== */
+
+function abrirModalExcluirResponsavel(id) {
+  idResponsavelParaExcluir = id;
+  document.getElementById('modalExcluirResponsavel').style.display = 'flex';
+}
+
+function fecharModalExcluirResponsavel() {
+  idResponsavelParaExcluir = null;
+  document.getElementById('modalExcluirResponsavel').style.display = 'none';
+}
+
+async function confirmarExclusaoResponsavel() {
+  if (!idResponsavelParaExcluir) return;
+
+  try {
+    const resposta = await fetch(`https://controlepatrimonio.onrender.com/api/responsaveis/${idResponsavelParaExcluir}`, {
+      method: 'DELETE'
+    });
+
+    const dados = await resposta.json();
+
+    if (!resposta.ok || !dados.sucesso) {
+      alert(dados.mensagem || 'Erro ao excluir responsável.');
+      return;
+    }
+
+    fecharModalExcluirResponsavel();
+    await carregarResponsaveis();
+  } catch (erro) {
+    alert('Erro ao conectar com o servidor.');
+  }
+}
+
+
 
 document.addEventListener('DOMContentLoaded', () => {
   const caminho = window.location.pathname;
@@ -909,6 +1135,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (paginaAtual === 'categoria.html') {
     carregarCategorias();
+  }
+
+  if (paginaAtual === 'responsavel.html') {
+    carregarResponsaveis();
   }
 
 });

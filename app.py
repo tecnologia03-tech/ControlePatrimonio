@@ -280,7 +280,8 @@ def editar_usuario(id_usuario):
             "sucesso": False,
             "mensagem": str(e)
         }), 500
-
+    
+# ROTA PARA EXCLUIR UM USUÁRIO (INATIVAR)
 @app.route('/api/usuarios/<int:id_usuario>', methods=['DELETE'])
 def excluir_usuario(id_usuario):
     try:
@@ -314,6 +315,7 @@ def excluir_usuario(id_usuario):
     
 # ===================== LOCAIS ===================== #
 
+# ROTA PARA LISTAR TODOS OS LOCAIS
 @app.route('/api/locais', methods=['GET'])
 def listar_locais():
     try:
@@ -347,7 +349,7 @@ def listar_locais():
             'mensagem': str(e)
         }), 500
 
-
+# ROTA PARA INCLUIR UM NOVO LOCAL
 @app.route('/api/locais', methods=['POST'])
 def incluir_local():
     dados = request.get_json(silent=True) or {}
@@ -397,7 +399,7 @@ def incluir_local():
             'mensagem': str(e)
         }), 500
 
-
+# ROTA PARA EDITAR UM LOCAL EXISTENTE
 @app.route('/api/locais/<int:id_local>', methods=['PUT'])
 def editar_local(id_local):
     dados = request.get_json(silent=True) or {}
@@ -462,7 +464,7 @@ def editar_local(id_local):
             'mensagem': str(e)
         }), 500
 
-
+# ROTA PARA EXCLUIR UM LOCAL
 @app.route('/api/locais/<int:id_local>', methods=['DELETE'])
 def excluir_local(id_local):
     try:
@@ -515,6 +517,7 @@ def excluir_local(id_local):
 
 # ===================== CATEGORIAS ===================== #
 
+# ROTA PARA LISTAR TODAS AS CATEGORIAS
 @app.route('/api/categorias', methods=['GET'])
 def listar_categorias():
     """
@@ -551,7 +554,7 @@ def listar_categorias():
             'mensagem': str(e)
         }), 500
 
-
+# ROTA PARA INCLUIR UMA NOVA CATEGORIA
 @app.route('/api/categorias', methods=['POST'])
 def incluir_categoria():
     """
@@ -601,7 +604,7 @@ def incluir_categoria():
             'mensagem': str(e)
         }), 500
 
-
+# ROTA PARA EDITAR UMA CATEGORIA EXISTENTE
 @app.route('/api/categorias/<int:id_categoria>', methods=['PUT'])
 def editar_categoria(id_categoria):
     """
@@ -665,7 +668,7 @@ def editar_categoria(id_categoria):
             'mensagem': str(e)
         }), 500
 
-
+# ROTA PARA EXCLUIR UMA CATEGORIA
 @app.route('/api/categorias/<int:id_categoria>', methods=['DELETE'])
 def excluir_categoria(id_categoria):
     """
@@ -720,6 +723,244 @@ def excluir_categoria(id_categoria):
             'sucesso': False,
             'mensagem': str(e)
         }), 500
+
+# ===================== RESPONSÁVEL ===================== #
+
+# ROTA PARA LISTAR TODOS OS RESPONSÁVEIS
+@app.route('/api/responsaveis', methods=['GET'])
+def listar_responsaveis():
+    """
+    Lista todos os responsáveis cadastrados.
+    O retorno já vem adaptado ao contrato esperado pelo frontend.
+    """
+    try:
+        with pool.connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    SELECT Id_Responsavel_Patrimonio,
+                           Nome_Completo,
+                           Matricula,
+                           Cargo,
+                           Ativo
+                    FROM Responsavel_Patrimonio
+                    ORDER BY Nome_Completo ASC;
+                """)
+
+                rows = cursor.fetchall()
+
+        responsaveis = [
+            {
+                "id": row[0],
+                "nome": row[1],
+                "matricula": row[2],
+                "cargo": row[3],
+                "ativo": row[4]
+            }
+            for row in rows
+        ]
+
+        return jsonify({
+            "sucesso": True,
+            "responsaveis": responsaveis
+        }), 200
+
+    except Exception as e:
+        return jsonify({
+            "sucesso": False,
+            "mensagem": str(e)
+        }), 500
+
+# ROTA PARA INCLUIR UM NOVO RESPONSÁVEL
+@app.route('/api/responsaveis', methods=['POST'])
+def incluir_responsavel():
+    """
+    Cadastra um novo responsável.
+    Valida preenchimento obrigatório e evita matrícula duplicada.
+    """
+    dados = request.get_json(silent=True) or {}
+
+    nome = (dados.get('nome') or '').strip()
+    matricula = (dados.get('matricula') or '').strip()
+    cargo = (dados.get('cargo') or '').strip()
+
+    if not nome or not matricula or not cargo:
+        return jsonify({
+            "sucesso": False,
+            "mensagem": "Preencha nome, matrícula e cargo."
+        }), 400
+
+    try:
+        with pool.connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    SELECT 1
+                    FROM Responsavel_Patrimonio
+                    WHERE Matricula = %s;
+                """, (matricula,))
+
+                if cursor.fetchone():
+                    return jsonify({
+                        "sucesso": False,
+                        "mensagem": "Já existe um responsável com esta matrícula."
+                    }), 409
+
+                cursor.execute("""
+                    INSERT INTO Responsavel_Patrimonio
+                    (Nome_Completo, Matricula, Cargo, Ativo)
+                    VALUES (%s, %s, %s, 'S');
+                """, (nome, matricula, cargo))
+
+                conn.commit()
+
+        return jsonify({
+            "sucesso": True,
+            "mensagem": "Responsável cadastrado com sucesso!"
+        }), 201
+
+    except Exception as e:
+        return jsonify({
+            "sucesso": False,
+            "mensagem": str(e)
+        }), 500
+
+# ROTA PARA EDITAR UM RESPONSÁVEL EXISTENTE
+@app.route('/api/responsaveis/<int:id_responsavel>', methods=['PUT'])
+def editar_responsavel(id_responsavel):
+    """
+    Atualiza os dados de um responsável existente.
+    Também valida duplicidade de matrícula em outro registro.
+    """
+    dados = request.get_json(silent=True) or {}
+
+    nome = (dados.get('nome') or '').strip()
+    matricula = (dados.get('matricula') or '').strip()
+    cargo = (dados.get('cargo') or '').strip()
+    ativo = (dados.get('ativo') or 'S').strip().upper()
+
+    if not nome or not matricula or not cargo:
+        return jsonify({
+            "sucesso": False,
+            "mensagem": "Preencha nome, matrícula e cargo."
+        }), 400
+
+    if ativo not in ('S', 'N'):
+        return jsonify({
+            "sucesso": False,
+            "mensagem": "Valor inválido para o campo ativo."
+        }), 400
+
+    try:
+        with pool.connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    SELECT 1
+                    FROM Responsavel_Patrimonio
+                    WHERE Id_Responsavel_Patrimonio = %s;
+                """, (id_responsavel,))
+
+                if not cursor.fetchone():
+                    return jsonify({
+                        "sucesso": False,
+                        "mensagem": "Responsável não encontrado."
+                    }), 404
+
+                cursor.execute("""
+                    SELECT 1
+                    FROM Responsavel_Patrimonio
+                    WHERE Matricula = %s
+                      AND Id_Responsavel_Patrimonio <> %s;
+                """, (matricula, id_responsavel))
+
+                if cursor.fetchone():
+                    return jsonify({
+                        "sucesso": False,
+                        "mensagem": "Já existe outro responsável com esta matrícula."
+                    }), 409
+
+                cursor.execute("""
+                    UPDATE Responsavel_Patrimonio
+                    SET Nome_Completo = %s,
+                        Matricula = %s,
+                        Cargo = %s,
+                        Ativo = %s
+                    WHERE Id_Responsavel_Patrimonio = %s;
+                """, (nome, matricula, cargo, ativo, id_responsavel))
+
+                conn.commit()
+
+        return jsonify({
+            "sucesso": True,
+            "mensagem": "Responsável atualizado com sucesso!"
+        }), 200
+
+    except Exception as e:
+        return jsonify({
+            "sucesso": False,
+            "mensagem": str(e)
+        }), 500
+
+# ROTA PARA EXCLUIR UM RESPONSÁVEL
+@app.route('/api/responsaveis/<int:id_responsavel>', methods=['DELETE'])
+def excluir_responsavel(id_responsavel):
+    """
+    Exclui um responsável somente quando ele não estiver
+    vinculado a patrimônio ativo.
+
+    Regra de negócio:
+    - se existir qualquer patrimônio com Situacao_Atual = 'S'
+      usando este responsável, a exclusão deve ser bloqueada.
+    """
+    try:
+        with pool.connection() as conn:
+            with conn.cursor() as cursor:
+                # Verifica se o responsável existe antes de tentar excluir
+                cursor.execute("""
+                    SELECT 1
+                    FROM Responsavel_Patrimonio
+                    WHERE Id_Responsavel_Patrimonio = %s;
+                """, (id_responsavel,))
+
+                if not cursor.fetchone():
+                    return jsonify({
+                        "sucesso": False,
+                        "mensagem": "Responsável não encontrado."
+                    }), 404
+
+                # Regra de negócio:
+                # bloqueia exclusão se houver patrimônio ativo vinculado
+                cursor.execute("""
+                    SELECT 1
+                    FROM Patrimonio
+                    WHERE Id_Responsavel_Patrimonio = %s
+                      AND Situacao_Atual = 'S'
+                    LIMIT 1;
+                """, (id_responsavel,))
+
+                if cursor.fetchone():
+                    return jsonify({
+                        "sucesso": False,
+                        "mensagem": "Impossível excluir responsável vinculado a patrimônio ativo."
+                    }), 409
+
+                # Exclui fisicamente o responsável quando não houver bloqueio
+                cursor.execute("""
+                    DELETE FROM Responsavel_Patrimonio
+                    WHERE Id_Responsavel_Patrimonio = %s;
+                """, (id_responsavel,))
+
+                conn.commit()
+
+        return jsonify({
+            "sucesso": True,
+            "mensagem": "Responsável excluído com sucesso!"
+        }), 200
+
+    except Exception as e:
+        return jsonify({
+            "sucesso": False,
+            "mensagem": str(e)
+        }), 500
+
 
 # Inicializa a aplicação Flask em modo de desenvolvimento
 if __name__ == '__main__':
