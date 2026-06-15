@@ -2,17 +2,17 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Responsáveis</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"/>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
-  <link rel="stylesheet" href="style.css"/>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-
-<div class="wrapper">
-
-  <aside class="sidebar" id="sidebar">
+  <div class="wrapper">
+    <!-- Sidebar lateral do sistema -->
+    <aside class="sidebar" id="sidebar">
       <div class="sidebar-header">
         <img src="Logo.jpeg" alt="Logo Salesianos">
         <span>Controle de Patrimônio</span>
@@ -36,167 +36,189 @@
       </div>
     </aside>
 
-  <!-- CONTENT -->
-  <div class="content">
-
-
-    <!-- MAIN -->
-     <main class="content">
-      <!-- Topbar da página -->
+    <!-- Conteúdo principal -->
+    <div class="content">
       <header class="topbar">
-        <button class="menu-toggle" onclick="toggleMenu()">
+        <button class="btn-menu-toggle" onclick="toggleMenu()" aria-label="Abrir menu">
           <i class="bi bi-list"></i>
         </button>
-        <h1 class="topbar-titulo">Responsáveis</h1>
+
+        <span class="topbar-titulo">Gestão de Responsáveis</span>
+
+        <div class="topbar-usuario">
+          <div class="avatar">
+            <i class="bi bi-person-fill"></i>
+          </div>
+          <span id="nomeUsuarioTopbar">Usuário</span>
+        </div>
       </header>
 
-      <section class="pagina-cadastro">
-        <!-- Barra superior com ação principal -->
-        <div class="pagina-acoes">
-          <button class="btn btn-primario" onclick="abrirModalNovoResponsavel()">
-            <i class="bi bi-plus-circle"></i>
-            Incluir Responsável
+      <main class="main-content">
+        <!-- Barra de ações -->
+        <div class="usuarios-toolbar">
+          <input
+            type="text"
+            id="campoBuscaResponsavel"
+            class="input-busca-usuario"
+            placeholder="Pesquisar por nome, matrícula ou cargo..."
+            oninput="filtrarResponsaveis(this.value)"
+          >
+
+          <button class="btn btn-incluir-usuario" onclick="abrirModalNovoResponsavel()">
+            <i class="bi bi-plus-circle me-1"></i> Incluir Responsável
           </button>
         </div>
 
-        <!-- Tabela principal -->
-        <div class="card-tabela">
-          <div class="card-tabela-topo">
-            <h2>Responsáveis Cadastrados</h2>
+        <!-- Card da tabela -->
+        <div class="usuarios-card">
+          <div class="usuarios-card-header">
+            <i class="bi bi-person-badge-fill"></i>
+            Responsáveis Cadastrados
           </div>
 
-          <div class="tabela-wrapper">
-            <table class="tabela-padrao">
+          <div class="table-responsive">
+            <table class="table tabela-usuarios mb-0">
               <thead>
                 <tr>
                   <th>Nome Completo</th>
                   <th>Matrícula</th>
                   <th>Cargo</th>
                   <th>Status</th>
-                  <th>Ações</th>
+                  <th style="width: 180px;">Ações</th>
                 </tr>
               </thead>
               <tbody id="tabelaResponsaveis">
                 <tr>
-                  <td colspan="5">Carregando responsáveis...</td>
+                  <td colspan="5" class="text-center text-muted py-4">
+                    <i class="bi bi-arrow-repeat me-2"></i>Carregando responsáveis...
+                  </td>
                 </tr>
               </tbody>
             </table>
           </div>
         </div>
-      </section>
-    </main>
+      </main>
+
+      <footer class="rodape">
+        Sistema de Controle de Patrimônio © 2025
+      </footer>
+    </div>
   </div>
 
-  <!-- Modal: incluir responsável -->
-  <div id="modalNovoResponsavel" class="modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="tituloModalNovoResponsavel">
-    <div class="modal-conteudo">
-      <div class="modal-topo">
-        <h2 id="tituloModalNovoResponsavel">Incluir Novo Responsável</h2>
-        <button class="btn-fechar" onclick="fecharModalNovoResponsavel()">&times;</button>
+  <!-- Modal incluir -->
+  <div id="modalNovoResponsavel" class="modal-overlay" style="display:none;">
+    <div class="modal-box">
+      <div class="modal-header-custom">
+        <h5><i class="bi bi-plus-circle me-2"></i>Incluir Novo Responsável</h5>
+        <button class="btn-fechar-modal" onclick="fecharModalNovoResponsavel()">&times;</button>
       </div>
 
-      <div class="modal-corpo">
-        <div class="form-grupo">
-          <label for="novoNomeResponsavel">Nome Completo</label>
-          <input type="text" id="novoNomeResponsavel" maxlength="100" />
+      <div class="modal-body-custom">
+        <div id="msgErroNovoResponsavel" class="alert alert-danger py-2 mb-3" style="display:none;"></div>
+
+        <div class="mb-3">
+          <label for="novoNomeResponsavel" class="form-label fw-semibold">Nome Completo</label>
+          <input type="text" id="novoNomeResponsavel" class="form-control" maxlength="100" />
         </div>
 
-        <div class="form-grupo">
-          <label for="novaMatriculaResponsavel">Matrícula</label>
-          <input type="text" id="novaMatriculaResponsavel" maxlength="10" />
+        <div class="mb-3">
+          <label for="novaMatriculaResponsavel" class="form-label fw-semibold">Matrícula</label>
+          <input type="text" id="novaMatriculaResponsavel" class="form-control" maxlength="10" />
         </div>
 
-        <div class="form-grupo">
-          <label for="novoCargoResponsavel">Cargo</label>
-          <input type="text" id="novoCargoResponsavel" maxlength="30" />
+        <div class="mb-3">
+          <label for="novoCargoResponsavel" class="form-label fw-semibold">Cargo</label>
+          <input type="text" id="novoCargoResponsavel" class="form-control" maxlength="30" />
         </div>
-
-        <div id="msgErroNovoResponsavel" class="mensagem-erro"></div>
       </div>
 
-      <div class="modal-rodape">
-        <button class="btn btn-secundario" onclick="fecharModalNovoResponsavel()">Cancelar</button>
-        <button class="btn btn-primario" onclick="salvarResponsavel()">Salvar Responsável</button>
+      <div class="modal-footer-custom">
+        <button class="btn btn-outline-secondary" onclick="fecharModalNovoResponsavel()">Cancelar</button>
+        <button class="btn btn-primary" onclick="salvarResponsavel()">
+          <i class="bi bi-check-lg me-1"></i>Salvar Responsável
+        </button>
       </div>
     </div>
   </div>
 
-  <!-- Modal: editar responsável -->
-  <div id="modalEditarResponsavel" class="modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="tituloModalEditarResponsavel">
-    <div class="modal-conteudo">
-      <div class="modal-topo">
-        <h2 id="tituloModalEditarResponsavel">Editar Responsável</h2>
-        <button class="btn-fechar" onclick="fecharModalEditarResponsavel()">&times;</button>
+  <!-- Modal editar -->
+  <div id="modalEditarResponsavel" class="modal-overlay" style="display:none;">
+    <div class="modal-box">
+      <div class="modal-header-custom">
+        <h5><i class="bi bi-pencil-fill me-2"></i>Editar Responsável</h5>
+        <button class="btn-fechar-modal" onclick="fecharModalEditarResponsavel()">&times;</button>
       </div>
 
-      <div class="modal-corpo">
+      <div class="modal-body-custom">
+        <div id="msgErroEditarResponsavel" class="alert alert-danger py-2 mb-3" style="display:none;"></div>
+
         <input type="hidden" id="editarIdResponsavel" />
 
-        <div class="form-grupo">
-          <label for="editarNomeResponsavel">Nome Completo</label>
-          <input type="text" id="editarNomeResponsavel" maxlength="100" />
+        <div class="mb-3">
+          <label for="editarNomeResponsavel" class="form-label fw-semibold">Nome Completo</label>
+          <input type="text" id="editarNomeResponsavel" class="form-control" maxlength="100" />
         </div>
 
-        <div class="form-grupo">
-          <label for="editarMatriculaResponsavel">Matrícula</label>
-          <input type="text" id="editarMatriculaResponsavel" maxlength="10" />
+        <div class="mb-3">
+          <label for="editarMatriculaResponsavel" class="form-label fw-semibold">Matrícula</label>
+          <input type="text" id="editarMatriculaResponsavel" class="form-control" maxlength="10" />
         </div>
 
-        <div class="form-grupo">
-          <label for="editarCargoResponsavel">Cargo</label>
-          <input type="text" id="editarCargoResponsavel" maxlength="30" />
+        <div class="mb-3">
+          <label for="editarCargoResponsavel" class="form-label fw-semibold">Cargo</label>
+          <input type="text" id="editarCargoResponsavel" class="form-control" maxlength="30" />
         </div>
 
-        <div class="form-grupo">
-          <label for="editarAtivoResponsavel">Responsável Ativo</label>
-          <select id="editarAtivoResponsavel">
+        <div class="mb-3">
+          <label for="editarAtivoResponsavel" class="form-label fw-semibold">Responsável Ativo</label>
+          <select id="editarAtivoResponsavel" class="form-select">
             <option value="S">Sim</option>
             <option value="N">Não</option>
           </select>
         </div>
-
-        <div id="msgErroEditarResponsavel" class="mensagem-erro"></div>
       </div>
 
-      <div class="modal-rodape">
-        <button class="btn btn-secundario" onclick="fecharModalEditarResponsavel()">Cancelar</button>
-        <button class="btn btn-primario" onclick="atualizarResponsavel()">Salvar Alterações</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal: exclusão -->
-  <div id="modalExcluirResponsavel" class="modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="tituloModalExcluirResponsavel">
-    <div class="modal-conteudo modal-confirmacao">
-      <div class="modal-topo">
-        <h2 id="tituloModalExcluirResponsavel">Confirmar Exclusão</h2>
-        <button class="btn-fechar" onclick="fecharModalExcluirResponsavel()">&times;</button>
-      </div>
-
-      <div class="modal-corpo">
-        <p>Deseja realmente excluir este responsável? Esta ação não pode ser desfeita.</p>
-      </div>
-
-      <div class="modal-rodape">
-        <button class="btn btn-secundario" onclick="fecharModalExcluirResponsavel()">Cancelar</button>
-        <button class="btn btn-perigo" onclick="confirmarExclusaoResponsavel()">Excluir Responsável</button>
+      <div class="modal-footer-custom">
+        <button class="btn btn-outline-secondary" onclick="fecharModalEditarResponsavel()">Cancelar</button>
+        <button class="btn btn-primary" onclick="atualizarResponsavel()">
+          <i class="bi bi-check-lg me-1"></i>Salvar Alterações
+        </button>
       </div>
     </div>
   </div>
 
+  <!-- Modal excluir -->
+  <div id="modalExcluirResponsavel" class="modal-overlay-confirmacao" style="display:none;">
+    <div class="modal-confirmacao-container">
+      <div class="modal-icone-alerta">
+        <i class="bi bi-exclamation-triangle-fill" style="font-size: 28px;"></i>
+      </div>
 
+      <h5 class="modal-titulo-confirmacao">Confirmar Exclusão</h5>
+      <p class="modal-texto-confirmacao">
+        Deseja realmente excluir este responsável? Esta ação não pode ser desfeita.
+      </p>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="script.js"></script>
+      <div class="modal-botoes-confirmacao">
+        <button class="btn-cancelar-confirmacao" onclick="fecharModalExcluirResponsavel()">Cancelar</button>
+        <button class="btn-inativar-confirmacao" onclick="confirmarExclusaoResponsavel()">Excluir Responsável</button>
+      </div>
+    </div>
+  </div>
 
-<script>
+  <script src="script.js"></script>
+
+  <script>
     document.addEventListener('DOMContentLoaded', function () {
       const nome = sessionStorage.getItem('nomeUsuario') || 'Usuário';
       const el = document.getElementById('nomeUsuarioTopbar');
       if (el) el.textContent = nome;
+
+      if (typeof carregarUsuarios === 'function') {
+        carregarUsuarios();
+      }
     });
   </script>
-
+  
 </body>
 </html>
