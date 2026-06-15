@@ -874,52 +874,6 @@ let idResponsavelParaExcluir = null;
 
 /* Preenche o nome do usuário no topo, mantendo padrão visual
    com as demais páginas protegidas do sistema. */
-function preencherNomeUsuarioTopo() {
-  const nome = sessionStorage.getItem('nomeUsuario') || 'Usuário';
-  const elemento = document.getElementById('nomeUsuarioTopo');
-
-  if (elemento) {
-    elemento.textContent = nome;
-  }
-}
-
-/* Busca todos os responsáveis cadastrados na API
-   e atualiza a tabela da tela. */
-async function carregarResponsaveis() {
-  const tbody = document.getElementById('tabelaResponsaveis');
-  if (!tbody) return;
-
-  tbody.innerHTML = `
-    <tr>
-      <td colspan="5">Carregando responsáveis...</td>
-    </tr>
-  `;
-
-  try {
-    const resposta = await fetch('https://controlepatrimonio.onrender.com/api/responsaveis');
-    const dados = await resposta.json();
-
-    if (!resposta.ok || !dados.sucesso) {
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="5">${dados.mensagem || 'Erro ao carregar responsáveis.'}</td>
-        </tr>
-      `;
-      return;
-    }
-
-    listaResponsaveis = dados.responsaveis || [];
-    renderizarResponsaveis(listaResponsaveis);
-  } catch (erro) {
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="5">Erro ao conectar com o servidor.</td>
-      </tr>
-    `;
-  }
-}
-
-/* Renderiza a tabela principal de responsáveis. */
 function renderizarResponsaveis(lista) {
   const tbody = document.getElementById('tabelaResponsaveis');
   if (!tbody) return;
@@ -927,7 +881,9 @@ function renderizarResponsaveis(lista) {
   if (!lista.length) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="5">Nenhum responsável cadastrado.</td>
+        <td colspan="5" class="text-center text-muted py-4">
+          Nenhum responsável cadastrado.
+        </td>
       </tr>
     `;
     return;
@@ -938,11 +894,26 @@ function renderizarResponsaveis(lista) {
       <td>${responsavel.nome}</td>
       <td>${responsavel.matricula}</td>
       <td>${responsavel.cargo}</td>
-      <td>${responsavel.ativo === 'S' ? 'Ativo' : 'Inativo'}</td>
+      <td>
+        <span class="badge-status-ativo">Ativo</span>
+      </td>
       <td>
         <div class="acoes-tabela">
-          <button class="btn btn-editar" onclick="abrirModalEditarResponsavel(${responsavel.id})">Editar</button>
-          <button class="btn btn-perigo-outline" onclick="abrirModalExcluirResponsavel(${responsavel.id})">Excluir</button>
+          <button
+            type="button"
+            class="btn-editar-usuario"
+            onclick="abrirModalEditarResponsavel(${responsavel.id})"
+          >
+            Editar
+          </button>
+
+          <button
+            type="button"
+            class="btn btn-sm btn-outline-danger"
+            onclick="abrirModalExcluirResponsavel(${responsavel.id})"
+          >
+            Excluir
+          </button>
         </div>
       </td>
     </tr>
@@ -1007,8 +978,12 @@ function abrirModalEditarResponsavel(id) {
   document.getElementById('editarNomeResponsavel').value = responsavel.nome;
   document.getElementById('editarMatriculaResponsavel').value = responsavel.matricula;
   document.getElementById('editarCargoResponsavel').value = responsavel.cargo;
-  document.getElementById('editarAtivoResponsavel').value = responsavel.ativo;
-  document.getElementById('msgErroEditarResponsavel').textContent = '';
+
+  const msg = document.getElementById('msgErroEditarResponsavel');
+  if (msg) {
+    msg.style.display = 'none';
+    msg.textContent = '';
+  }
 
   document.getElementById('modalEditarResponsavel').style.display = 'flex';
 }
@@ -1022,13 +997,14 @@ async function atualizarResponsavel() {
   const nome = document.getElementById('editarNomeResponsavel').value.trim();
   const matricula = document.getElementById('editarMatriculaResponsavel').value.trim();
   const cargo = document.getElementById('editarCargoResponsavel').value.trim();
-  const ativo = document.getElementById('editarAtivoResponsavel').value;
-  const msgErro = document.getElementById('msgErroEditarResponsavel');
+  const msg = document.getElementById('msgErroEditarResponsavel');
 
-  msgErro.textContent = '';
+  msg.style.display = 'none';
+  msg.textContent = '';
 
   if (!nome || !matricula || !cargo) {
-    msgErro.textContent = 'Preencha nome, matrícula e cargo.';
+    msg.textContent = 'Preencha nome, matrícula e cargo.';
+    msg.style.display = 'block';
     return;
   }
 
@@ -1036,20 +1012,22 @@ async function atualizarResponsavel() {
     const resposta = await fetch(`https://controlepatrimonio.onrender.com/api/responsaveis/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nome, matricula, cargo, ativo })
+      body: JSON.stringify({ nome, matricula, cargo })
     });
 
     const dados = await resposta.json();
 
     if (!resposta.ok || !dados.sucesso) {
-      msgErro.textContent = dados.mensagem || 'Erro ao atualizar responsável.';
+      msg.textContent = dados.mensagem || 'Erro ao atualizar responsável.';
+      msg.style.display = 'block';
       return;
     }
 
     fecharModalEditarResponsavel();
     await carregarResponsaveis();
   } catch (erro) {
-    msgErro.textContent = 'Erro ao conectar com o servidor.';
+    msg.textContent = 'Erro ao conectar com o servidor.';
+    msg.style.display = 'block';
   }
 }
 

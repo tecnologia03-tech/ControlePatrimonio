@@ -681,8 +681,7 @@
   flex-wrap: wrap;
 }
 
-.acoes-tabela .btn-editar-usuario,
-.acoes-tabela .btn-outline-danger {
+.acoes-tabela button {
   min-width: 82px;
   height: 34px;
   display: inline-flex;
@@ -693,30 +692,31 @@
   border-radius: 4px;
   padding: 5px 12px;
   transition: all 0.2s ease;
+  cursor: pointer;
 }
 
-/* Botão Editar - mesmo padrão azul */
-.btn-editar-usuario {
-  background: #fff;
-  color: #0d6efd;
-  border: 1px solid #0d6efd;
+/* Botão editar */
+.acoes-tabela .btn-editar-usuario {
+  background: #fff !important;
+  color: #0d6efd !important;
+  border: 1px solid #0d6efd !important;
 }
 
-.btn-editar-usuario:hover {
-  background: #0d6efd;
-  color: #fff;
-  border-color: #0d6efd;
+.acoes-tabela .btn-editar-usuario:hover {
+  background: #0d6efd !important;
+  color: #fff !important;
+  border-color: #0d6efd !important;
 }
 
-/* Botão Excluir - mesmo padrão vermelho outline */
-.btn-outline-danger {
-  background: #fff;
-  color: #dc3545;
-  border: 1px solid #dc3545;
+/* Botão excluir */
+.acoes-tabela .btn-outline-danger {
+  background: #fff !important;
+  color: #dc3545 !important;
+  border: 1px solid #dc3545 !important;
 }
 
-.btn-outline-danger:hover {
-  background: #dc3545;
-  color: #fff;
-  border-color: #dc3545;
+.acoes-tabela .btn-outline-danger:hover {
+  background: #dc3545 !important;
+  color: #fff !important;
+  border-color: #dc3545 !important;
 }
