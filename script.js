@@ -615,6 +615,254 @@ async function confirmarExclusaoLocal() {
 }
 
 
+/* =========================================================
+   CATEGORIAS
+   ---------------------------------------------------------
+   Este bloco controla toda a tela de categorias:
+   - carregamento da listagem
+   - filtro local por nome
+   - inclusão
+   - edição
+   - exclusão
+   ========================================================= */
+
+let listaCategorias = [];
+let listaCategoriasFiltrada = [];
+let idCategoriaParaExcluir = null;
+
+/* Busca todas as categorias cadastradas na API */
+async function carregarCategorias() {
+  const tbody = document.getElementById('tabelaCategorias');
+  if (!tbody) return;
+
+  tbody.innerHTML = `
+    <tr>
+      <td colspan="3" class="text-center text-muted py-4">
+        <i class="bi bi-arrow-repeat me-2"></i>Carregando categorias...
+      </td>
+    </tr>
+  `;
+
+  try {
+    const resposta = await fetch('https://controlepatrimonio.onrender.com/api/categorias');
+    const dados = await resposta.json();
+
+    if (!resposta.ok || !dados.sucesso) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="3" class="text-center text-danger py-4">
+            ${dados.mensagem || 'Erro ao carregar categorias.'}
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    listaCategorias = dados.categorias || [];
+    listaCategoriasFiltrada = [...listaCategorias];
+    renderizarCategorias(listaCategoriasFiltrada);
+  } catch (erro) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="3" class="text-center text-danger py-4">
+          <i class="bi bi-wifi-off me-2"></i>Erro ao conectar com o servidor.
+        </td>
+      </tr>
+    `;
+  }
+}
+
+/* Renderiza a tabela de categorias no HTML */
+function renderizarCategorias(categorias) {
+  const tbody = document.getElementById('tabelaCategorias');
+  if (!tbody) return;
+
+  if (!categorias.length) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="3" class="text-center text-muted py-4">
+          Nenhuma categoria encontrada.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = categorias.map((categoria, index) => `
+    <tr>
+      <td>${index + 1}</td>
+      <td>${categoria.nome}</td>
+      <td>
+        <div class="acoes-tabela">
+          <button class="btn-editar-usuario" onclick="abrirModalEditarCategoria(${categoria.id})">Editar</button>
+          <button class="btn btn-sm btn-outline-danger" onclick="abrirModalExclusaoCategoria(${categoria.id})">Excluir</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+/* Filtra a lista em memória para melhorar a experiência da busca */
+function filtrarCategorias(termo) {
+  const filtro = (termo || '').trim().toLowerCase();
+
+  if (!filtro) {
+    listaCategoriasFiltrada = [...listaCategorias];
+  } else {
+    listaCategoriasFiltrada = listaCategorias.filter(categoria =>
+      (categoria.nome || '').toLowerCase().includes(filtro)
+    );
+  }
+
+  renderizarCategorias(listaCategoriasFiltrada);
+}
+
+/* ===================== MODAL DE INCLUSÃO ===================== */
+
+function abrirModalIncluirCategoria() {
+  document.getElementById('incluirNomeCategoria').value = '';
+
+  const msg = document.getElementById('msgErroIncluirCategoria');
+  msg.style.display = 'none';
+  msg.textContent = '';
+
+  document.getElementById('modalIncluirCategoria').style.display = 'flex';
+}
+
+function fecharModalIncluirCategoria() {
+  document.getElementById('modalIncluirCategoria').style.display = 'none';
+}
+
+async function salvarCategoria() {
+  const nome = document.getElementById('incluirNomeCategoria').value.trim();
+  const msg = document.getElementById('msgErroIncluirCategoria');
+
+  msg.style.display = 'none';
+  msg.textContent = '';
+
+  if (!nome) {
+    msg.textContent = 'Informe o nome da categoria.';
+    msg.style.display = 'block';
+    return;
+  }
+
+  try {
+    const resposta = await fetch('https://controlepatrimonio.onrender.com/api/categorias', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nome })
+    });
+
+    const dados = await resposta.json();
+
+    if (!resposta.ok || !dados.sucesso) {
+      msg.textContent = dados.mensagem || 'Erro ao salvar categoria.';
+      msg.style.display = 'block';
+      return;
+    }
+
+    fecharModalIncluirCategoria();
+    await carregarCategorias();
+  } catch (erro) {
+    msg.textContent = 'Erro ao conectar com o servidor.';
+    msg.style.display = 'block';
+  }
+}
+
+/* ===================== MODAL DE EDIÇÃO ===================== */
+
+function abrirModalEditarCategoria(id) {
+  const categoria = listaCategorias.find(item => item.id === id);
+  if (!categoria) return;
+
+  document.getElementById('editarIdCategoria').value = categoria.id;
+  document.getElementById('editarNomeCategoria').value = categoria.nome;
+
+  const msg = document.getElementById('msgErroEditarCategoria');
+  msg.style.display = 'none';
+  msg.textContent = '';
+
+  document.getElementById('modalEditarCategoria').style.display = 'flex';
+}
+
+function fecharModalEditarCategoria() {
+  document.getElementById('modalEditarCategoria').style.display = 'none';
+}
+
+async function atualizarCategoria() {
+  const id = document.getElementById('editarIdCategoria').value;
+  const nome = document.getElementById('editarNomeCategoria').value.trim();
+  const msg = document.getElementById('msgErroEditarCategoria');
+
+  msg.style.display = 'none';
+  msg.textContent = '';
+
+  if (!nome) {
+    msg.textContent = 'Informe o nome da categoria.';
+    msg.style.display = 'block';
+    return;
+  }
+
+  try {
+    const resposta = await fetch(`https://controlepatrimonio.onrender.com/api/categorias/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nome })
+    });
+
+    const dados = await resposta.json();
+
+    if (!resposta.ok || !dados.sucesso) {
+      msg.textContent = dados.mensagem || 'Erro ao atualizar categoria.';
+      msg.style.display = 'block';
+      return;
+    }
+
+    fecharModalEditarCategoria();
+    await carregarCategorias();
+  } catch (erro) {
+    msg.textContent = 'Erro ao conectar com o servidor.';
+    msg.style.display = 'block';
+  }
+}
+
+/* ===================== MODAL DE EXCLUSÃO ===================== */
+
+function abrirModalExclusaoCategoria(id) {
+  idCategoriaParaExcluir = id;
+  document.getElementById('modalConfirmarExclusaoCategoria').style.display = 'flex';
+}
+
+function fecharModalExclusaoCategoria() {
+  idCategoriaParaExcluir = null;
+  document.getElementById('modalConfirmarExclusaoCategoria').style.display = 'none';
+}
+
+async function confirmarExclusaoCategoria() {
+  if (!idCategoriaParaExcluir) return;
+
+  try {
+    const resposta = await fetch(`https://controlepatrimonio.onrender.com/api/categorias/${idCategoriaParaExcluir}`, {
+      method: 'DELETE'
+    });
+
+    const dados = await resposta.json();
+    fecharModalExclusaoCategoria();
+
+    if (!resposta.ok || !dados.sucesso) {
+      alert(dados.mensagem || 'Erro ao excluir categoria.');
+      return;
+    }
+
+    await carregarCategorias();
+  } catch (erro) {
+    fecharModalExclusaoCategoria();
+    alert('Erro ao conectar com o servidor.');
+  }
+}
+
+
+
 document.addEventListener('DOMContentLoaded', () => {
   const caminho = window.location.pathname;
   const paginaAtual = caminho.substring(caminho.lastIndexOf('/') + 1) || 'index.html';
@@ -657,6 +905,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (paginaAtual === 'local.html') {
     carregarLocais();
+  }
+
+  if (paginaAtual === 'categoria.html') {
+    carregarCategorias();
   }
 
 });

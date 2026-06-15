@@ -512,6 +512,215 @@ def excluir_local(id_local):
             'mensagem': str(e)
         }), 500
 
+
+# ===================== CATEGORIAS ===================== #
+
+@app.route('/api/categorias', methods=['GET'])
+def listar_categorias():
+    """
+    Lista todas as categorias cadastradas no sistema.
+    O retorno já vem no formato consumido pela interface.
+    """
+    try:
+        with pool.connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    SELECT Id_Categoria, Nome_Categoria
+                    FROM Categoria
+                    ORDER BY Nome_Categoria ASC;
+                """)
+
+                rows = cursor.fetchall()
+
+        categorias = [
+            {
+                'id': row[0],
+                'nome': row[1]
+            }
+            for row in rows
+        ]
+
+        return jsonify({
+            'sucesso': True,
+            'categorias': categorias
+        }), 200
+
+    except Exception as e:
+        return jsonify({
+            'sucesso': False,
+            'mensagem': str(e)
+        }), 500
+
+
+@app.route('/api/categorias', methods=['POST'])
+def incluir_categoria():
+    """
+    Cadastra uma nova categoria.
+    Valida nome obrigatório e duplicidade por nome.
+    """
+    dados = request.get_json(silent=True) or {}
+
+    nome = (dados.get('nome') or '').strip()
+
+    if not nome:
+        return jsonify({
+            'sucesso': False,
+            'mensagem': 'Informe o nome da categoria.'
+        }), 400
+
+    try:
+        with pool.connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    SELECT 1
+                    FROM Categoria
+                    WHERE UPPER(TRIM(Nome_Categoria)) = UPPER(TRIM(%s));
+                """, (nome,))
+
+                if cursor.fetchone():
+                    return jsonify({
+                        'sucesso': False,
+                        'mensagem': 'Já existe uma categoria com este nome.'
+                    }), 409
+
+                cursor.execute("""
+                    INSERT INTO Categoria (Nome_Categoria)
+                    VALUES (%s);
+                """, (nome,))
+
+                conn.commit()
+
+        return jsonify({
+            'sucesso': True,
+            'mensagem': 'Categoria cadastrada com sucesso!'
+        }), 201
+
+    except Exception as e:
+        return jsonify({
+            'sucesso': False,
+            'mensagem': str(e)
+        }), 500
+
+
+@app.route('/api/categorias/<int:id_categoria>', methods=['PUT'])
+def editar_categoria(id_categoria):
+    """
+    Atualiza o nome de uma categoria existente.
+    Também impede duplicidade com outra categoria já cadastrada.
+    """
+    dados = request.get_json(silent=True) or {}
+
+    nome = (dados.get('nome') or '').strip()
+
+    if not nome:
+        return jsonify({
+            'sucesso': False,
+            'mensagem': 'Informe o nome da categoria.'
+        }), 400
+
+    try:
+        with pool.connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    SELECT 1
+                    FROM Categoria
+                    WHERE Id_Categoria = %s;
+                """, (id_categoria,))
+
+                if not cursor.fetchone():
+                    return jsonify({
+                        'sucesso': False,
+                        'mensagem': 'Categoria não encontrada.'
+                    }), 404
+
+                cursor.execute("""
+                    SELECT 1
+                    FROM Categoria
+                    WHERE UPPER(TRIM(Nome_Categoria)) = UPPER(TRIM(%s))
+                      AND Id_Categoria <> %s;
+                """, (nome, id_categoria))
+
+                if cursor.fetchone():
+                    return jsonify({
+                        'sucesso': False,
+                        'mensagem': 'Já existe outra categoria com este nome.'
+                    }), 409
+
+                cursor.execute("""
+                    UPDATE Categoria
+                    SET Nome_Categoria = %s
+                    WHERE Id_Categoria = %s;
+                """, (nome, id_categoria))
+
+                conn.commit()
+
+        return jsonify({
+            'sucesso': True,
+            'mensagem': 'Categoria atualizada com sucesso!'
+        }), 200
+
+    except Exception as e:
+        return jsonify({
+            'sucesso': False,
+            'mensagem': str(e)
+        }), 500
+
+
+@app.route('/api/categorias/<int:id_categoria>', methods=['DELETE'])
+def excluir_categoria(id_categoria):
+    """
+    Exclui fisicamente uma categoria somente quando ela não
+    estiver vinculada a nenhum patrimônio.
+    """
+    try:
+        with pool.connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    SELECT 1
+                    FROM Categoria
+                    WHERE Id_Categoria = %s;
+                """, (id_categoria,))
+
+                if not cursor.fetchone():
+                    return jsonify({
+                        'sucesso': False,
+                        'mensagem': 'Categoria não encontrada.'
+                    }), 404
+
+                # Regra de negócio:
+                # se a categoria estiver sendo usada em qualquer patrimônio,
+                # a exclusão deve ser bloqueada.
+                cursor.execute("""
+                    SELECT 1
+                    FROM Patrimonio
+                    WHERE Id_Categoria = %s
+                    LIMIT 1;
+                """, (id_categoria,))
+
+                if cursor.fetchone():
+                    return jsonify({
+                        'sucesso': False,
+                        'mensagem': 'Impossível excluir categoria vinculada a um patrimônio.'
+                    }), 409
+
+                cursor.execute("""
+                    DELETE FROM Categoria
+                    WHERE Id_Categoria = %s;
+                """, (id_categoria,))
+
+                conn.commit()
+
+        return jsonify({
+            'sucesso': True,
+            'mensagem': 'Categoria excluída com sucesso!'
+        }), 200
+
+    except Exception as e:
+        return jsonify({
+            'sucesso': False,
+            'mensagem': str(e)
+        }), 500
+
 # Inicializa a aplicação Flask em modo de desenvolvimento
 if __name__ == '__main__':
     app.run(debug=True)
