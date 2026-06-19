@@ -862,18 +862,57 @@ async function confirmarExclusaoCategoria() {
 }
 
 
-/* =========================================================
-   RESPONSÁVEIS
-   ---------------------------------------------------------
-   Este bloco concentra toda a lógica da página de responsáveis:
-   listagem, inclusão, edição e exclusão.
-   ========================================================= */
+// ===================== RESPONSÁVEIS =====================
+// Este bloco controla toda a tela de responsáveis no front-end.
+// Ele busca os dados da API, renderiza a tabela, abre/fecha modais,
+// salva alterações e exclui registros.
+// A regra de negócio aplicada aqui é simples: responsável aparece ativo na tela
+// e só deixa de aparecer quando for excluído do banco.
 
 let listaResponsaveis = [];
+let listaResponsaveisFiltrada = [];
 let idResponsavelParaExcluir = null;
 
-/* Preenche o nome do usuário no topo, mantendo padrão visual
-   com as demais páginas protegidas do sistema. */
+async function carregarResponsaveis() {
+  const tbody = document.getElementById('tabelaResponsaveis');
+  if (!tbody) return;
+
+  tbody.innerHTML = `
+    <tr>
+      <td colspan="5" class="text-center text-muted py-4">
+        Carregando responsáveis...
+      </td>
+    </tr>
+  `;
+
+  try {
+    const resposta = await fetch('https://controlepatrimonio.onrender.com/api/responsaveis');
+    const dados = await resposta.json();
+
+    if (!resposta.ok || !dados.sucesso) {
+      throw new Error(dados.mensagem || 'Erro ao carregar responsáveis.');
+    }
+
+    listaResponsaveis = dados.responsaveis || [];
+    listaResponsaveisFiltrada = [...listaResponsaveis];
+    renderizarResponsaveis(listaResponsaveisFiltrada);
+
+  } catch (erro) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="5" class="text-center text-danger py-4">
+          Erro ao carregar responsáveis.
+        </td>
+      </tr>
+    `;
+    console.error('Erro ao carregar responsáveis:', erro);
+  }
+}
+
+
+// ===================== RENDERIZAÇÃO =====================
+// Monta as linhas da tabela.
+// Quando não houver registros, exibe a mensagem centralizada.
 function renderizarResponsaveis(lista) {
   const tbody = document.getElementById('tabelaResponsaveis');
   if (!tbody) return;
@@ -894,24 +933,19 @@ function renderizarResponsaveis(lista) {
       <td>${responsavel.nome}</td>
       <td>${responsavel.matricula}</td>
       <td>${responsavel.cargo}</td>
-      <td>
-        <span class="badge-status-ativo">Ativo</span>
-      </td>
+      <td><span class="badge-status-ativo">Ativo</span></td>
       <td>
         <div class="acoes-tabela">
           <button
             type="button"
             class="btn-editar-usuario"
-            onclick="abrirModalEditarResponsavel(${responsavel.id})"
-          >
+            onclick="abrirModalEditarResponsavel(${responsavel.id})">
             Editar
           </button>
-
           <button
             type="button"
             class="btn btn-sm btn-outline-danger"
-            onclick="abrirModalExcluirResponsavel(${responsavel.id})"
-          >
+            onclick="abrirModalExcluirResponsavel(${responsavel.id})">
             Excluir
           </button>
         </div>
@@ -920,13 +954,33 @@ function renderizarResponsaveis(lista) {
   `).join('');
 }
 
-/* ===================== INCLUSÃO ===================== */
 
+// ===================== FILTRO =====================
+// Filtra a lista localmente por nome, matrícula ou cargo.
+function filtrarResponsaveis(valor) {
+  const termo = (valor || '').toLowerCase().trim();
+
+  listaResponsaveisFiltrada = listaResponsaveis.filter(responsavel =>
+    responsavel.nome.toLowerCase().includes(termo) ||
+    responsavel.matricula.toLowerCase().includes(termo) ||
+    responsavel.cargo.toLowerCase().includes(termo)
+  );
+
+  renderizarResponsaveis(listaResponsaveisFiltrada);
+}
+
+
+// ===================== MODAL NOVO =====================
+// Abre e fecha o modal de cadastro, limpando campos e mensagens.
 function abrirModalNovoResponsavel() {
   document.getElementById('novoNomeResponsavel').value = '';
   document.getElementById('novaMatriculaResponsavel').value = '';
   document.getElementById('novoCargoResponsavel').value = '';
-  document.getElementById('msgErroNovoResponsavel').textContent = '';
+
+  const msg = document.getElementById('msgErroNovoResponsavel');
+  msg.style.display = 'none';
+  msg.textContent = '';
+
   document.getElementById('modalNovoResponsavel').style.display = 'flex';
 }
 
@@ -934,16 +988,22 @@ function fecharModalNovoResponsavel() {
   document.getElementById('modalNovoResponsavel').style.display = 'none';
 }
 
+
+// ===================== SALVAR RESPONSÁVEL =====================
+// Envia os dados do novo responsável para a API.
+// Em caso de erro, mostra a mensagem no modal sem quebrar a tela.
 async function salvarResponsavel() {
   const nome = document.getElementById('novoNomeResponsavel').value.trim();
   const matricula = document.getElementById('novaMatriculaResponsavel').value.trim();
   const cargo = document.getElementById('novoCargoResponsavel').value.trim();
-  const msgErro = document.getElementById('msgErroNovoResponsavel');
+  const msg = document.getElementById('msgErroNovoResponsavel');
 
-  msgErro.textContent = '';
+  msg.style.display = 'none';
+  msg.textContent = '';
 
   if (!nome || !matricula || !cargo) {
-    msgErro.textContent = 'Preencha nome, matrícula e cargo.';
+    msg.textContent = 'Preencha nome, matrícula e cargo.';
+    msg.style.display = 'block';
     return;
   }
 
@@ -957,19 +1017,24 @@ async function salvarResponsavel() {
     const dados = await resposta.json();
 
     if (!resposta.ok || !dados.sucesso) {
-      msgErro.textContent = dados.mensagem || 'Erro ao salvar responsável.';
+      msg.textContent = dados.mensagem || 'Erro ao cadastrar responsável.';
+      msg.style.display = 'block';
       return;
     }
 
     fecharModalNovoResponsavel();
     await carregarResponsaveis();
+
   } catch (erro) {
-    msgErro.textContent = 'Erro ao conectar com o servidor.';
+    msg.textContent = 'Erro ao conectar com o servidor.';
+    msg.style.display = 'block';
+    console.error('Erro ao salvar responsável:', erro);
   }
 }
 
-/* ===================== EDIÇÃO ===================== */
 
+// ===================== MODAL EDITAR =====================
+// Carrega os dados do responsável selecionado no modal de edição.
 function abrirModalEditarResponsavel(id) {
   const responsavel = listaResponsaveis.find(item => item.id === id);
   if (!responsavel) return;
@@ -980,10 +1045,8 @@ function abrirModalEditarResponsavel(id) {
   document.getElementById('editarCargoResponsavel').value = responsavel.cargo;
 
   const msg = document.getElementById('msgErroEditarResponsavel');
-  if (msg) {
-    msg.style.display = 'none';
-    msg.textContent = '';
-  }
+  msg.style.display = 'none';
+  msg.textContent = '';
 
   document.getElementById('modalEditarResponsavel').style.display = 'flex';
 }
@@ -992,6 +1055,10 @@ function fecharModalEditarResponsavel() {
   document.getElementById('modalEditarResponsavel').style.display = 'none';
 }
 
+
+// ===================== ATUALIZAR RESPONSÁVEL =====================
+// Envia a atualização do responsável para a API.
+// Não existe edição de status nessa tela.
 async function atualizarResponsavel() {
   const id = document.getElementById('editarIdResponsavel').value;
   const nome = document.getElementById('editarNomeResponsavel').value.trim();
@@ -1025,14 +1092,17 @@ async function atualizarResponsavel() {
 
     fecharModalEditarResponsavel();
     await carregarResponsaveis();
+
   } catch (erro) {
     msg.textContent = 'Erro ao conectar com o servidor.';
     msg.style.display = 'block';
+    console.error('Erro ao atualizar responsável:', erro);
   }
 }
 
-/* ===================== EXCLUSÃO ===================== */
 
+// ===================== MODAL EXCLUIR =====================
+// Controla a confirmação de exclusão física do responsável.
 function abrirModalExcluirResponsavel(id) {
   idResponsavelParaExcluir = id;
   document.getElementById('modalExcluirResponsavel').style.display = 'flex';
@@ -1043,6 +1113,9 @@ function fecharModalExcluirResponsavel() {
   document.getElementById('modalExcluirResponsavel').style.display = 'none';
 }
 
+
+// ===================== EXCLUIR RESPONSÁVEL =====================
+// Chama a API para excluir o responsável e recarrega a tabela.
 async function confirmarExclusaoResponsavel() {
   if (!idResponsavelParaExcluir) return;
 
@@ -1060,10 +1133,13 @@ async function confirmarExclusaoResponsavel() {
 
     fecharModalExcluirResponsavel();
     await carregarResponsaveis();
+
   } catch (erro) {
     alert('Erro ao conectar com o servidor.');
+    console.error('Erro ao excluir responsável:', erro);
   }
 }
+
 
 
 

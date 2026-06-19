@@ -724,40 +724,38 @@ def excluir_categoria(id_categoria):
             'mensagem': str(e)
         }), 500
 
-# ===================== RESPONSÁVEL ===================== #
+# ===================== RESPONSÁVEIS =====================
+# Este bloco implementa o CRUD da tela de responsáveis.
+# Regra de negócio: a matrícula do responsável só precisa ser única
+# dentro da tabela Responsavel_Patrimonio, sem validar na tabela Usuario.
+# A exclusão é física e o responsável removido deixa de aparecer na tela.
 
-# ROTA PARA LISTAR TODOS OS RESPONSÁVEIS
 @app.route('/api/responsaveis', methods=['GET'])
 def listar_responsaveis():
-    """
-    Lista todos os responsáveis cadastrados.
-    O retorno já vem adaptado ao contrato esperado pelo frontend.
-    """
     try:
         with pool.connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("""
-                    SELECT Id_Responsavel_Patrimonio,
-                           Nome_Completo,
-                           Matricula,
-                           Cargo,
-                           Ativo
+                    SELECT
+                        Id_Responsavel_Patrimonio,
+                        Nome_Completo,
+                        Matricula,
+                        Cargo
                     FROM Responsavel_Patrimonio
                     ORDER BY Nome_Completo ASC;
                 """)
 
                 rows = cursor.fetchall()
 
-        responsaveis = [
-            {
-                "id": row[0],
-                "nome": row[1],
-                "matricula": row[2],
-                "cargo": row[3],
-                "ativo": row[4]
-            }
-            for row in rows
-        ]
+                responsaveis = [
+                    {
+                        "id": row[0],
+                        "nome": row[1],
+                        "matricula": row[2],
+                        "cargo": row[3]
+                    }
+                    for row in rows
+                ]
 
         return jsonify({
             "sucesso": True,
@@ -770,13 +768,12 @@ def listar_responsaveis():
             "mensagem": str(e)
         }), 500
 
-# ROTA PARA INCLUIR UM NOVO RESPONSÁVEL
+
+# ===================== INCLUIR RESPONSÁVEL =====================
+# Cadastra um novo responsável.
+# A validação de matrícula é feita somente na tabela de responsáveis.
 @app.route('/api/responsaveis', methods=['POST'])
 def incluir_responsavel():
-    """
-    Cadastra um novo responsável.
-    Valida preenchimento obrigatório e evita matrícula duplicada.
-    """
     dados = request.get_json(silent=True) or {}
 
     nome = (dados.get('nome') or '').strip()
@@ -806,8 +803,9 @@ def incluir_responsavel():
 
                 cursor.execute("""
                     INSERT INTO Responsavel_Patrimonio
-                    (Nome_Completo, Matricula, Cargo, Ativo)
-                    VALUES (%s, %s, %s, 'S');
+                        (Nome_Completo, Matricula, Cargo, Ativo)
+                    VALUES
+                        (%s, %s, %s, 'S');
                 """, (nome, matricula, cargo))
 
                 conn.commit()
@@ -823,30 +821,22 @@ def incluir_responsavel():
             "mensagem": str(e)
         }), 500
 
-# ROTA PARA EDITAR UM RESPONSÁVEL EXISTENTE
+
+# ===================== EDITAR RESPONSÁVEL =====================
+# Atualiza nome, matrícula e cargo do responsável.
+# Não existe edição de status nessa tela.
 @app.route('/api/responsaveis/<int:id_responsavel>', methods=['PUT'])
 def editar_responsavel(id_responsavel):
-    """
-    Atualiza os dados de um responsável existente.
-    Também valida duplicidade de matrícula em outro registro.
-    """
     dados = request.get_json(silent=True) or {}
 
     nome = (dados.get('nome') or '').strip()
     matricula = (dados.get('matricula') or '').strip()
     cargo = (dados.get('cargo') or '').strip()
-    ativo = (dados.get('ativo') or 'S').strip().upper()
 
     if not nome or not matricula or not cargo:
         return jsonify({
             "sucesso": False,
             "mensagem": "Preencha nome, matrícula e cargo."
-        }), 400
-
-    if ativo not in ('S', 'N'):
-        return jsonify({
-            "sucesso": False,
-            "mensagem": "Valor inválido para o campo ativo."
         }), 400
 
     try:
@@ -881,10 +871,9 @@ def editar_responsavel(id_responsavel):
                     UPDATE Responsavel_Patrimonio
                     SET Nome_Completo = %s,
                         Matricula = %s,
-                        Cargo = %s,
-                        Ativo = %s
+                        Cargo = %s
                     WHERE Id_Responsavel_Patrimonio = %s;
-                """, (nome, matricula, cargo, ativo, id_responsavel))
+                """, (nome, matricula, cargo, id_responsavel))
 
                 conn.commit()
 
@@ -899,21 +888,15 @@ def editar_responsavel(id_responsavel):
             "mensagem": str(e)
         }), 500
 
-# ROTA PARA EXCLUIR UM RESPONSÁVEL
+
+# ===================== EXCLUIR RESPONSÁVEL =====================
+# Remove fisicamente o responsável da tabela.
+# Após excluir, ele deixa de aparecer na listagem.
 @app.route('/api/responsaveis/<int:id_responsavel>', methods=['DELETE'])
 def excluir_responsavel(id_responsavel):
-    """
-    Exclui um responsável somente quando ele não estiver
-    vinculado a patrimônio ativo.
-
-    Regra de negócio:
-    - se existir qualquer patrimônio com Situacao_Atual = 'S'
-      usando este responsável, a exclusão deve ser bloqueada.
-    """
     try:
         with pool.connection() as conn:
             with conn.cursor() as cursor:
-                # Verifica se o responsável existe antes de tentar excluir
                 cursor.execute("""
                     SELECT 1
                     FROM Responsavel_Patrimonio
@@ -926,23 +909,6 @@ def excluir_responsavel(id_responsavel):
                         "mensagem": "Responsável não encontrado."
                     }), 404
 
-                # Regra de negócio:
-                # bloqueia exclusão se houver patrimônio ativo vinculado
-                cursor.execute("""
-                    SELECT 1
-                    FROM Patrimonio
-                    WHERE Id_Responsavel_Patrimonio = %s
-                      AND Situacao_Atual = 'S'
-                    LIMIT 1;
-                """, (id_responsavel,))
-
-                if cursor.fetchone():
-                    return jsonify({
-                        "sucesso": False,
-                        "mensagem": "Impossível excluir responsável vinculado a patrimônio ativo."
-                    }), 409
-
-                # Exclui fisicamente o responsável quando não houver bloqueio
                 cursor.execute("""
                     DELETE FROM Responsavel_Patrimonio
                     WHERE Id_Responsavel_Patrimonio = %s;
