@@ -934,7 +934,7 @@ def excluir_responsavel(id_responsavel):
 @app.route('/api/patrimonios', methods=['GET'])
 def listar_patrimonios():
     try:
-        with get_conn() as conn:
+        with pool.connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("""
                     SELECT
@@ -1030,7 +1030,7 @@ def cadastrar_patrimonio():
                 "mensagem": "Situação atual inválida."
             }), 400
 
-        with get_conn() as conn:
+        with pool.connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("""
                     SELECT 1
@@ -1113,7 +1113,7 @@ def editar_patrimonio(id_patrimonio):
                 "mensagem": "Situação atual inválida."
             }), 400
 
-        with get_conn() as conn:
+        with pool.connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("""
                     SELECT 1
@@ -1193,7 +1193,7 @@ def inativar_patrimonio(id_patrimonio):
                 "mensagem": "A inativação só pode ser feita com situação 'B' (Baixado) ou 'E' (Extraviado)."
             }), 400
 
-        with get_conn() as conn:
+        with pool.connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute("""
                     SELECT 1
