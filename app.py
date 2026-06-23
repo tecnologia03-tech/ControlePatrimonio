@@ -929,8 +929,7 @@ def excluir_responsavel(id_responsavel):
 
 
 # ===================== PATRIMÔNIOS - LISTAR =====================
-# Lista os patrimônios já trazendo os nomes de categoria, local e responsável
-# para facilitar a renderização da tabela no frontend.
+# Lista os patrimônios com categoria, local e responsável já resolvidos por JOIN.
 @app.route('/api/patrimonios', methods=['GET'])
 def listar_patrimonios():
     try:
@@ -948,8 +947,8 @@ def listar_patrimonios():
                         p.Id_Categoria,
                         p.Id_Local,
                         p.Id_Responsavel_Patrimonio,
-                        c.Nome AS Categoria,
-                        l.Nome AS Local,
+                        c.Nome_Categoria AS Categoria,
+                        l.Nome_Local AS Local,
                         r.Nome_Completo AS Responsavel
                     FROM Patrimonio p
                     LEFT JOIN Categoria c
@@ -999,7 +998,6 @@ def listar_patrimonios():
             "sucesso": False,
             "mensagem": f"Erro ao listar patrimônios: {str(e)}"
         }), 500
-
 
 # ===================== PATRIMÔNIOS - CADASTRAR =====================
 # Valida todos os campos obrigatórios e insere um novo patrimônio.
