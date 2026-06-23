@@ -928,6 +928,305 @@ def excluir_responsavel(id_responsavel):
         }), 500
 
 
+# ===================== PATRIMÔNIOS - LISTAR =====================
+# Lista os patrimônios já trazendo os nomes de categoria, local e responsável
+# para facilitar a renderização da tabela no frontend.
+@app.route('/api/patrimonios', methods=['GET'])
+def listar_patrimonios():
+    try:
+        with get_conn() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    SELECT
+                        p.Id_Patrimonio,
+                        p.Num_Patrimonio,
+                        p.Descricao,
+                        p.Dt_Compra,
+                        p.Vlr_Compra,
+                        p.Num_NFE,
+                        p.Situacao_Atual,
+                        p.Id_Categoria,
+                        p.Id_Local,
+                        p.Id_Responsavel_Patrimonio,
+                        c.Nome AS Categoria,
+                        l.Nome AS Local,
+                        r.Nome_Completo AS Responsavel
+                    FROM Patrimonio p
+                    LEFT JOIN Categoria c
+                        ON p.Id_Categoria = c.Id_Categoria
+                    LEFT JOIN Local l
+                        ON p.Id_Local = l.Id_Local
+                    LEFT JOIN Responsavel_Patrimonio r
+                        ON p.Id_Responsavel_Patrimonio = r.Id_Responsavel_Patrimonio
+                    ORDER BY
+                        CASE p.Situacao_Atual
+                            WHEN 'A' THEN 1
+                            WHEN 'M' THEN 2
+                            WHEN 'B' THEN 3
+                            WHEN 'E' THEN 4
+                            ELSE 5
+                        END,
+                        p.Descricao ASC;
+                """)
+
+                rows = cursor.fetchall()
+
+                patrimonios = []
+                for row in rows:
+                    patrimonios.append({
+                        "id": row[0],
+                        "num_patrimonio": row[1],
+                        "descricao": row[2],
+                        "dt_compra": row[3].isoformat() if row[3] else None,
+                        "vlr_compra": float(row[4]) if row[4] is not None else 0,
+                        "num_nfe": row[5],
+                        "situacao": row[6],
+                        "id_categoria": row[7],
+                        "id_local": row[8],
+                        "id_responsavel_patrimonio": row[9],
+                        "categoria": row[10],
+                        "local": row[11],
+                        "responsavel": row[12]
+                    })
+
+        return jsonify({
+            "sucesso": True,
+            "patrimonios": patrimonios
+        }), 200
+
+    except Exception as e:
+        return jsonify({
+            "sucesso": False,
+            "mensagem": f"Erro ao listar patrimônios: {str(e)}"
+        }), 500
+
+
+# ===================== PATRIMÔNIOS - CADASTRAR =====================
+# Valida todos os campos obrigatórios e insere um novo patrimônio.
+@app.route('/api/patrimonios', methods=['POST'])
+def cadastrar_patrimonio():
+    try:
+        dados = request.get_json(silent=True) or {}
+
+        num_patrimonio = str(dados.get('num_patrimonio', '')).strip()
+        num_nfe = str(dados.get('num_nfe', '')).strip()
+        descricao = str(dados.get('descricao', '')).strip()
+        dt_compra = str(dados.get('dt_compra', '')).strip()
+        vlr_compra = str(dados.get('vlr_compra', '')).strip()
+        id_categoria = str(dados.get('id_categoria', '')).strip()
+        id_local = str(dados.get('id_local', '')).strip()
+        id_responsavel_patrimonio = str(dados.get('id_responsavel_patrimonio', '')).strip()
+        situacao_atual = str(dados.get('situacao_atual', '')).strip().upper()
+
+        if not num_patrimonio or not num_nfe or not descricao or not dt_compra or not vlr_compra or not id_categoria or not id_local or not id_responsavel_patrimonio or not situacao_atual:
+            return jsonify({
+                "sucesso": False,
+                "mensagem": "Todos os campos são obrigatórios."
+            }), 400
+
+        if situacao_atual not in ['A', 'M', 'B', 'E']:
+            return jsonify({
+                "sucesso": False,
+                "mensagem": "Situação atual inválida."
+            }), 400
+
+        with get_conn() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    SELECT 1
+                    FROM Patrimonio
+                    WHERE Num_Patrimonio = %s;
+                """, (num_patrimonio,))
+
+                if cursor.fetchone():
+                    return jsonify({
+                        "sucesso": False,
+                        "mensagem": "Já existe um patrimônio com este número."
+                    }), 400
+
+                cursor.execute("""
+                    INSERT INTO Patrimonio (
+                        Num_Patrimonio,
+                        Descricao,
+                        Dt_Compra,
+                        Vlr_Compra,
+                        Num_NFE,
+                        Situacao_Atual,
+                        Id_Categoria,
+                        Id_Local,
+                        Id_Responsavel_Patrimonio
+                    )
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);
+                """, (
+                    int(num_patrimonio),
+                    descricao,
+                    dt_compra,
+                    vlr_compra,
+                    num_nfe,
+                    situacao_atual,
+                    int(id_categoria),
+                    int(id_local),
+                    int(id_responsavel_patrimonio)
+                ))
+
+                conn.commit()
+
+        return jsonify({
+            "sucesso": True,
+            "mensagem": "Patrimônio cadastrado com sucesso."
+        }), 201
+
+    except Exception as e:
+        return jsonify({
+            "sucesso": False,
+            "mensagem": f"Erro ao cadastrar patrimônio: {str(e)}"
+        }), 500
+
+
+# ===================== PATRIMÔNIOS - EDITAR =====================
+# Atualiza os dados do patrimônio mantendo a regra de inativação
+# apenas por situação Baixado ou Extraviado, sem exclusão física.
+@app.route('/api/patrimonios/<int:id_patrimonio>', methods=['PUT'])
+def editar_patrimonio(id_patrimonio):
+    try:
+        dados = request.get_json(silent=True) or {}
+
+        num_patrimonio = str(dados.get('num_patrimonio', '')).strip()
+        num_nfe = str(dados.get('num_nfe', '')).strip()
+        descricao = str(dados.get('descricao', '')).strip()
+        dt_compra = str(dados.get('dt_compra', '')).strip()
+        vlr_compra = str(dados.get('vlr_compra', '')).strip()
+        id_categoria = str(dados.get('id_categoria', '')).strip()
+        id_local = str(dados.get('id_local', '')).strip()
+        id_responsavel_patrimonio = str(dados.get('id_responsavel_patrimonio', '')).strip()
+        situacao_atual = str(dados.get('situacao_atual', '')).strip().upper()
+
+        if not num_patrimonio or not num_nfe or not descricao or not dt_compra or not vlr_compra or not id_categoria or not id_local or not id_responsavel_patrimonio or not situacao_atual:
+            return jsonify({
+                "sucesso": False,
+                "mensagem": "Todos os campos são obrigatórios."
+            }), 400
+
+        if situacao_atual not in ['A', 'M', 'B', 'E']:
+            return jsonify({
+                "sucesso": False,
+                "mensagem": "Situação atual inválida."
+            }), 400
+
+        with get_conn() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    SELECT 1
+                    FROM Patrimonio
+                    WHERE Id_Patrimonio = %s;
+                """, (id_patrimonio,))
+
+                if not cursor.fetchone():
+                    return jsonify({
+                        "sucesso": False,
+                        "mensagem": "Patrimônio não encontrado."
+                    }), 404
+
+                cursor.execute("""
+                    SELECT 1
+                    FROM Patrimonio
+                    WHERE Num_Patrimonio = %s
+                      AND Id_Patrimonio <> %s;
+                """, (num_patrimonio, id_patrimonio))
+
+                if cursor.fetchone():
+                    return jsonify({
+                        "sucesso": False,
+                        "mensagem": "Já existe outro patrimônio com este número."
+                    }), 400
+
+                cursor.execute("""
+                    UPDATE Patrimonio
+                    SET
+                        Num_Patrimonio = %s,
+                        Descricao = %s,
+                        Dt_Compra = %s,
+                        Vlr_Compra = %s,
+                        Num_NFE = %s,
+                        Situacao_Atual = %s,
+                        Id_Categoria = %s,
+                        Id_Local = %s,
+                        Id_Responsavel_Patrimonio = %s
+                    WHERE Id_Patrimonio = %s;
+                """, (
+                    int(num_patrimonio),
+                    descricao,
+                    dt_compra,
+                    vlr_compra,
+                    num_nfe,
+                    situacao_atual,
+                    int(id_categoria),
+                    int(id_local),
+                    int(id_responsavel_patrimonio),
+                    id_patrimonio
+                ))
+
+                conn.commit()
+
+        return jsonify({
+            "sucesso": True,
+            "mensagem": "Patrimônio atualizado com sucesso."
+        }), 200
+
+    except Exception as e:
+        return jsonify({
+            "sucesso": False,
+            "mensagem": f"Erro ao atualizar patrimônio: {str(e)}"
+        }), 500
+
+# ===================== PATRIMÔNIOS - INATIVAR =====================
+# Realiza a exclusão lógica do patrimônio, alterando apenas a situação.
+@app.route('/api/patrimonios/<int:id_patrimonio>', methods=['DELETE'])
+def inativar_patrimonio(id_patrimonio):
+    try:
+        dados = request.get_json(silent=True) or {}
+        situacao_atual = str(dados.get('situacao_atual', 'B')).strip().upper()
+
+        if situacao_atual not in ['B', 'E']:
+            return jsonify({
+                "sucesso": False,
+                "mensagem": "A inativação só pode ser feita com situação 'B' (Baixado) ou 'E' (Extraviado)."
+            }), 400
+
+        with get_conn() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    SELECT 1
+                    FROM Patrimonio
+                    WHERE Id_Patrimonio = %s;
+                """, (id_patrimonio,))
+
+                if not cursor.fetchone():
+                    return jsonify({
+                        "sucesso": False,
+                        "mensagem": "Patrimônio não encontrado."
+                    }), 404
+
+                cursor.execute("""
+                    UPDATE Patrimonio
+                    SET Situacao_Atual = %s
+                    WHERE Id_Patrimonio = %s;
+                """, (situacao_atual, id_patrimonio))
+
+                conn.commit()
+
+        return jsonify({
+            "sucesso": True,
+            "mensagem": "Patrimônio inativado com sucesso."
+        }), 200
+
+    except Exception as e:
+        return jsonify({
+            "sucesso": False,
+            "mensagem": f"Erro ao inativar patrimônio: {str(e)}"
+        }), 500
+
+
 # Inicializa a aplicação Flask em modo de desenvolvimento
 if __name__ == '__main__':
     app.run(debug=True)

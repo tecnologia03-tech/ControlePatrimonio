@@ -1141,6 +1141,532 @@ async function confirmarExclusaoResponsavel() {
 }
 
 
+// ===================== PATRIMÔNIOS - LISTAS GLOBAIS =====================
+// Mantém em memória a lista completa, a lista filtrada e o controle de paginação.
+let listaPatrimonios = [];
+let listaPatrimoniosFiltrada = [];
+let paginaAtualPatrimonios = 1;
+const itensPorPaginaPatrimonios = 15;
+
+let patrimonioPendenteInativacao = null;
+
+
+// ===================== PATRIMÔNIOS - APOIO =====================
+// Funções auxiliares para status, ordenação e formatação.
+function formatarDataPatrimonio(data) {
+  if (!data) return '-';
+
+  const partes = String(data).slice(0, 10).split('-');
+  if (partes.length !== 3) return '-';
+
+  return `${partes[2]}/${partes[1]}/${partes[0]}`;
+}
+
+function obterBadgeSituacaoPatrimonio(situacao) {
+  if (situacao === 'A') return '<span class="badge-ativo">Ativo</span>';
+  if (situacao === 'M') return '<span class="badge-manut">Manutenção</span>';
+  if (situacao === 'B') return '<span class="badge-baixado">Baixado</span>';
+  if (situacao === 'E') return '<span class="badge-extravio">Extraviado</span>';
+
+  return '<span class="badge-inativo">Não informado</span>';
+}
+
+function obterBadgeStatusPatrimonio(situacao) {
+  if (situacao === 'A' || situacao === 'M') {
+    return '<span class="badge-ativo">Ativo</span>';
+  }
+
+  return '<span class="badge-inativo">Inativo</span>';
+}
+
+function ordenarPatrimonios(lista) {
+  const ordemSituacao = {
+    'A': 1,
+    'M': 2,
+    'B': 3,
+    'E': 4
+  };
+
+  return [...lista].sort((a, b) => {
+    const ordemA = ordemSituacao[a.situacao] || 99;
+    const ordemB = ordemSituacao[b.situacao] || 99;
+
+    if (ordemA !== ordemB) {
+      return ordemA - ordemB;
+    }
+
+    const descricaoA = (a.descricao || '').toLowerCase();
+    const descricaoB = (b.descricao || '').toLowerCase();
+
+    return descricaoA.localeCompare(descricaoB, 'pt-BR');
+  });
+}
+
+
+// ===================== PATRIMÔNIOS - CARREGAR =====================
+// Busca os patrimônios no backend e prepara a tabela.
+async function carregarPatrimonios() {
+  const tbody = document.getElementById('tabelaPatrimonios');
+  if (!tbody) {
+    console.error('tbody tabelaPatrimonios não encontrado');
+    return;
+  }
+
+  tbody.innerHTML = `
+    <tr>
+      <td colspan="9" class="text-center text-muted py-4">
+        <i class="bi bi-arrow-repeat me-2"></i>Carregando patrimônios...
+      </td>
+    </tr>
+  `;
+
+  try {
+    const resposta = await fetch('https://controlepatrimonio.onrender.com/api/patrimonios');
+    const dados = await resposta.json();
+
+    if (!dados.sucesso) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="9" class="text-center text-danger py-4">
+            ${dados.mensagem || 'Erro ao carregar patrimônios.'}
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    listaPatrimonios = Array.isArray(dados.patrimonios) ? dados.patrimonios : [];
+    listaPatrimoniosFiltrada = ordenarPatrimonios(listaPatrimonios);
+    paginaAtualPatrimonios = 1;
+
+    renderizarPatrimonios(listaPatrimoniosFiltrada);
+    renderizarPaginacaoPatrimonios();
+  } catch (erro) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="9" class="text-center text-danger py-4">
+          Erro ao carregar patrimônios.
+        </td>
+      </tr>
+    `;
+  }
+}
+
+
+// ===================== PATRIMÔNIOS - RENDERIZAR =====================
+// Renderiza os itens da página atual.
+function renderizarPatrimonios(lista) {
+  const tbody = document.getElementById('tabelaPatrimonios');
+  if (!tbody) {
+    console.error('tbody tabelaPatrimonios não encontrado');
+    return;
+  }
+
+  if (!lista || lista.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted py-4">Nenhum patrimônio cadastrado.</td></tr>';
+    return;
+  }
+
+  const inicio = (paginaAtualPatrimonios - 1) * itensPorPaginaPatrimonios;
+  const fim = inicio + itensPorPaginaPatrimonios;
+  const pagina = lista.slice(inicio, fim);
+
+  tbody.innerHTML = pagina.map((patrimonio, index) => {
+    const situacao = obterBadgeSituacaoPatrimonio(patrimonio.situacao);
+    const status = obterBadgeStatusPatrimonio(patrimonio.situacao);
+
+    return `
+      <tr>
+        <td>${inicio + index + 1}</td>
+        <td>${patrimonio.num_patrimonio || '-'}</td>
+        <td>${patrimonio.descricao || '-'}</td>
+        <td>${patrimonio.categoria || '-'}</td>
+        <td>${patrimonio.local || '-'}</td>
+        <td>${patrimonio.responsavel || '-'}</td>
+        <td>${situacao}</td>
+        <td>${status}</td>
+        <td>
+          <button class="btn btn-sm btn-outline-primary me-1" onclick="abrirModalEditarPatrimonio(${patrimonio.id})">Editar</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+
+// ===================== PATRIMÔNIOS - PAGINAÇÃO =====================
+// Cria os botões de navegação da tabela.
+function renderizarPaginacaoPatrimonios() {
+  const container = document.getElementById('paginacaoPatrimonios');
+  if (!container) return;
+
+  const totalPaginas = Math.ceil(listaPatrimoniosFiltrada.length / itensPorPaginaPatrimonios);
+
+  if (totalPaginas <= 1) {
+    container.innerHTML = '';
+    return;
+  }
+
+  let html = '';
+
+  html += `
+    <button class="btn btn-sm btn-outline-secondary" ${paginaAtualPatrimonios === 1 ? 'disabled' : ''} onclick="irParaPaginaPatrimonios(${paginaAtualPatrimonios - 1})">
+      Anterior
+    </button>
+  `;
+
+  for (let i = 1; i <= totalPaginas; i++) {
+    html += `
+      <button class="btn btn-sm ${i === paginaAtualPatrimonios ? 'btn-primary' : 'btn-outline-primary'}" onclick="irParaPaginaPatrimonios(${i})">
+        ${i}
+      </button>
+    `;
+  }
+
+  html += `
+    <button class="btn btn-sm btn-outline-secondary" ${paginaAtualPatrimonios === totalPaginas ? 'disabled' : ''} onclick="irParaPaginaPatrimonios(${paginaAtualPatrimonios + 1})">
+      Próxima
+    </button>
+  `;
+
+  container.innerHTML = html;
+}
+
+function irParaPaginaPatrimonios(pagina) {
+  const totalPaginas = Math.ceil(listaPatrimoniosFiltrada.length / itensPorPaginaPatrimonios);
+
+  if (pagina < 1 || pagina > totalPaginas) return;
+
+  paginaAtualPatrimonios = pagina;
+  renderizarPatrimonios(listaPatrimoniosFiltrada);
+  renderizarPaginacaoPatrimonios();
+}
+
+
+// ===================== PATRIMÔNIOS - FILTRAR =====================
+// Filtra por descrição, categoria, local ou responsável.
+function filtrarPatrimonios() {
+  const termo = document.getElementById('campoBuscaPatrimonio').value.trim().toLowerCase();
+
+  if (!termo) {
+    listaPatrimoniosFiltrada = ordenarPatrimonios(listaPatrimonios);
+    paginaAtualPatrimonios = 1;
+    renderizarPatrimonios(listaPatrimoniosFiltrada);
+    renderizarPaginacaoPatrimonios();
+    return;
+  }
+
+  listaPatrimoniosFiltrada = ordenarPatrimonios(
+    listaPatrimonios.filter(p =>
+      (p.descricao && p.descricao.toLowerCase().includes(termo)) ||
+      (p.categoria && p.categoria.toLowerCase().includes(termo)) ||
+      (p.local && p.local.toLowerCase().includes(termo)) ||
+      (p.responsavel && p.responsavel.toLowerCase().includes(termo))
+    )
+  );
+
+  paginaAtualPatrimonios = 1;
+  renderizarPatrimonios(listaPatrimoniosFiltrada);
+  renderizarPaginacaoPatrimonios();
+}
+
+
+// ===================== PATRIMÔNIOS - SELECTS =====================
+// Carrega categorias, locais e responsáveis para os modais.
+async function carregarCategoriasPatrimonio() {
+  try {
+    const resposta = await fetch('https://controlepatrimonio.onrender.com/api/categorias');
+    const dados = await resposta.json();
+
+    if (!dados.sucesso) return;
+
+    const selectIncluir = document.getElementById('incluirCategoria');
+    const selectEditar = document.getElementById('editarCategoria');
+
+    if (selectIncluir) {
+      selectIncluir.innerHTML = '<option value="">Selecione...</option>' +
+        dados.categorias.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+    }
+
+    if (selectEditar) {
+      selectEditar.innerHTML = '<option value="">Selecione...</option>' +
+        dados.categorias.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+    }
+  } catch (erro) {
+    console.error('Erro ao carregar categorias:', erro);
+  }
+}
+
+async function carregarLocaisPatrimonio() {
+  try {
+    const resposta = await fetch('https://controlepatrimonio.onrender.com/api/locais');
+    const dados = await resposta.json();
+
+    if (!dados.sucesso) return;
+
+    const selectIncluir = document.getElementById('incluirLocal');
+    const selectEditar = document.getElementById('editarLocal');
+
+    if (selectIncluir) {
+      selectIncluir.innerHTML = '<option value="">Selecione...</option>' +
+        dados.locais.map(l => `<option value="${l.id}">${l.nome}</option>`).join('');
+    }
+
+    if (selectEditar) {
+      selectEditar.innerHTML = '<option value="">Selecione...</option>' +
+        dados.locais.map(l => `<option value="${l.id}">${l.nome}</option>`).join('');
+    }
+  } catch (erro) {
+    console.error('Erro ao carregar locais:', erro);
+  }
+}
+
+async function carregarResponsaveisPatrimonio() {
+  try {
+    const resposta = await fetch('https://controlepatrimonio.onrender.com/api/responsaveis');
+    const dados = await resposta.json();
+
+    if (!dados.sucesso) return;
+
+    const selectIncluir = document.getElementById('incluirResponsavel');
+    const selectEditar = document.getElementById('editarResponsavel');
+
+    if (selectIncluir) {
+      selectIncluir.innerHTML = '<option value="">Selecione...</option>' +
+        dados.responsaveis.map(r => `<option value="${r.id}">${r.nome}</option>`).join('');
+    }
+
+    if (selectEditar) {
+      selectEditar.innerHTML = '<option value="">Selecione...</option>' +
+        dados.responsaveis.map(r => `<option value="${r.id}">${r.nome}</option>`).join('');
+    }
+  } catch (erro) {
+    console.error('Erro ao carregar responsáveis:', erro);
+  }
+}
+
+async function carregarSelectsPatrimonio() {
+  await Promise.all([
+    carregarCategoriasPatrimonio(),
+    carregarLocaisPatrimonio(),
+    carregarResponsaveisPatrimonio()
+  ]);
+}
+
+
+// ===================== PATRIMÔNIOS - MODAL INCLUIR =====================
+// Abre o modal de inclusão e limpa os campos.
+async function abrirModalIncluirPatrimonio() {
+  await carregarSelectsPatrimonio();
+
+  document.getElementById('incluirNumPatrimonio').value = '';
+  document.getElementById('incluirNumNFE').value = '';
+  document.getElementById('incluirDescricao').value = '';
+  document.getElementById('incluirDtCompra').value = '';
+  document.getElementById('incluirVlrCompra').value = '';
+  document.getElementById('incluirCategoria').value = '';
+  document.getElementById('incluirLocal').value = '';
+  document.getElementById('incluirResponsavel').value = '';
+  document.getElementById('incluirSituacao').value = '';
+
+  document.getElementById('msgErroIncluirPatrimonio').textContent = '';
+  document.getElementById('msgErroIncluirPatrimonio').style.display = 'none';
+  document.getElementById('modalIncluirPatrimonio').style.display = 'flex';
+}
+
+function fecharModalIncluirPatrimonio() {
+  document.getElementById('modalIncluirPatrimonio').style.display = 'none';
+}
+
+
+// ===================== PATRIMÔNIOS - CADASTRAR =====================
+// Valida e envia os dados do novo patrimônio.
+async function salvarPatrimonio() {
+  const num_patrimonio = document.getElementById('incluirNumPatrimonio').value.trim();
+  const num_nfe = document.getElementById('incluirNumNFE').value.trim();
+  const descricao = document.getElementById('incluirDescricao').value.trim();
+  const dt_compra = document.getElementById('incluirDtCompra').value;
+  const vlr_compra = document.getElementById('incluirVlrCompra').value.trim();
+  const id_categoria = document.getElementById('incluirCategoria').value;
+  const id_local = document.getElementById('incluirLocal').value;
+  const id_responsavel_patrimonio = document.getElementById('incluirResponsavel').value;
+  const situacao_atual = document.getElementById('incluirSituacao').value;
+  const msg = document.getElementById('msgErroIncluirPatrimonio');
+
+  msg.textContent = '';
+  msg.style.display = 'none';
+
+  if (!num_patrimonio || !num_nfe || !descricao || !dt_compra || !vlr_compra || !id_categoria || !id_local || !id_responsavel_patrimonio || !situacao_atual) {
+    msg.textContent = 'Todos os campos são obrigatórios.';
+    msg.style.display = 'block';
+    return;
+  }
+
+  try {
+    const resposta = await fetch('https://controlepatrimonio.onrender.com/api/patrimonios', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        num_patrimonio,
+        num_nfe,
+        descricao,
+        dt_compra,
+        vlr_compra,
+        id_categoria,
+        id_local,
+        id_responsavel_patrimonio,
+        situacao_atual
+      })
+    });
+
+    const dados = await resposta.json();
+
+    if (dados.sucesso) {
+      fecharModalIncluirPatrimonio();
+      carregarPatrimonios();
+    } else {
+      msg.textContent = dados.mensagem || 'Erro ao cadastrar patrimônio.';
+      msg.style.display = 'block';
+    }
+  } catch (erro) {
+    msg.textContent = 'Erro ao cadastrar patrimônio.';
+    msg.style.display = 'block';
+  }
+}
+
+
+// ===================== PATRIMÔNIOS - MODAL EDITAR =====================
+// Abre o modal de edição preenchendo os dados atuais.
+async function abrirModalEditarPatrimonio(id) {
+  const patrimonio = listaPatrimonios.find(p => p.id === id);
+  if (!patrimonio) return;
+
+  await carregarSelectsPatrimonio();
+
+  document.getElementById('editarIdPatrimonio').value = patrimonio.id;
+  document.getElementById('editarNumPatrimonio').value = patrimonio.num_patrimonio || '';
+  document.getElementById('editarNumNFE').value = patrimonio.num_nfe || '';
+  document.getElementById('editarDescricao').value = patrimonio.descricao || '';
+  document.getElementById('editarDtCompra').value = patrimonio.dt_compra ? String(patrimonio.dt_compra).slice(0, 10) : '';
+  document.getElementById('editarVlrCompra').value = patrimonio.vlr_compra || '';
+  document.getElementById('editarCategoria').value = patrimonio.id_categoria || '';
+  document.getElementById('editarLocal').value = patrimonio.id_local || '';
+  document.getElementById('editarResponsavel').value = patrimonio.id_responsavel_patrimonio || '';
+  document.getElementById('editarSituacao').value = patrimonio.situacao || '';
+
+  document.getElementById('msgErroEditarPatrimonio').textContent = '';
+  document.getElementById('msgErroEditarPatrimonio').style.display = 'none';
+  document.getElementById('modalEditarPatrimonio').style.display = 'flex';
+}
+
+function fecharModalEditarPatrimonio() {
+  document.getElementById('modalEditarPatrimonio').style.display = 'none';
+}
+
+
+// ===================== PATRIMÔNIOS - EDITAR =====================
+// Atualiza normalmente ou prepara a inativação quando a situação for B ou E.
+async function atualizarPatrimonio() {
+  const id = document.getElementById('editarIdPatrimonio').value;
+  const num_patrimonio = document.getElementById('editarNumPatrimonio').value.trim();
+  const num_nfe = document.getElementById('editarNumNFE').value.trim();
+  const descricao = document.getElementById('editarDescricao').value.trim();
+  const dt_compra = document.getElementById('editarDtCompra').value;
+  const vlr_compra = document.getElementById('editarVlrCompra').value.trim();
+  const id_categoria = document.getElementById('editarCategoria').value;
+  const id_local = document.getElementById('editarLocal').value;
+  const id_responsavel_patrimonio = document.getElementById('editarResponsavel').value;
+  const situacao_atual = document.getElementById('editarSituacao').value;
+  const msg = document.getElementById('msgErroEditarPatrimonio');
+
+  msg.textContent = '';
+  msg.style.display = 'none';
+
+  if (!num_patrimonio || !num_nfe || !descricao || !dt_compra || !vlr_compra || !id_categoria || !id_local || !id_responsavel_patrimonio || !situacao_atual) {
+    msg.textContent = 'Todos os campos são obrigatórios.';
+    msg.style.display = 'block';
+    return;
+  }
+
+  if (situacao_atual === 'B' || situacao_atual === 'E') {
+    patrimonioPendenteInativacao = {
+      id,
+      situacao_atual
+    };
+
+    document.getElementById('modalConfirmarInativacaoPatrimonio').style.display = 'flex';
+    return;
+  }
+
+  try {
+    const resposta = await fetch(`https://controlepatrimonio.onrender.com/api/patrimonios/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        num_patrimonio,
+        num_nfe,
+        descricao,
+        dt_compra,
+        vlr_compra,
+        id_categoria,
+        id_local,
+        id_responsavel_patrimonio,
+        situacao_atual
+      })
+    });
+
+    const dados = await resposta.json();
+
+    if (dados.sucesso) {
+      fecharModalEditarPatrimonio();
+      carregarPatrimonios();
+    } else {
+      msg.textContent = dados.mensagem || 'Erro ao salvar alterações.';
+      msg.style.display = 'block';
+    }
+  } catch (erro) {
+    msg.textContent = 'Erro ao salvar alterações do patrimônio.';
+    msg.style.display = 'block';
+  }
+}
+
+
+// ===================== PATRIMÔNIOS - INATIVAÇÃO =====================
+// Realiza a exclusão lógica via DELETE, alterando apenas a situação no banco.
+function fecharModalInativacaoPatrimonio() {
+  document.getElementById('modalConfirmarInativacaoPatrimonio').style.display = 'none';
+  patrimonioPendenteInativacao = null;
+}
+
+async function confirmarInativacaoPatrimonio() {
+  if (!patrimonioPendenteInativacao) return;
+
+  const msg = document.getElementById('msgErroEditarPatrimonio');
+
+  try {
+    const resposta = await fetch(`https://controlepatrimonio.onrender.com/api/patrimonios/${patrimonioPendenteInativacao.id}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        situacao_atual: patrimonioPendenteInativacao.situacao_atual
+      })
+    });
+
+    const dados = await resposta.json();
+
+    if (dados.sucesso) {
+      fecharModalInativacaoPatrimonio();
+      fecharModalEditarPatrimonio();
+      carregarPatrimonios();
+    } else {
+      msg.textContent = dados.mensagem || 'Erro ao inativar patrimônio.';
+      msg.style.display = 'block';
+    }
+  } catch (erro) {
+    msg.textContent = 'Erro ao inativar patrimônio.';
+    msg.style.display = 'block';
+  }
+}
 
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -1193,6 +1719,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (paginaAtual === 'responsavel.html') {
     carregarResponsaveis();
+  }
+
+  if (paginaAtual === 'patrimonio.html') {
+    carregarPatrimonios();
   }
 
 });
