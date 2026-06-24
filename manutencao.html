@@ -40,17 +40,20 @@
   <!-- CONTENT -->
   <div class="content">
 
-    <!-- TOPBAR -->
-    <header class="topbar">
-    <button class="btn-menu-toggle" onclick="toggleSidebar()" aria-label="Abrir menu">
-    <i class="bi bi-list"></i>
-    </button>
-    <span class="topbar-titulo">Histórico de Manutenção</span>
-    <div class="topbar-usuario">
-    <div class="avatar"><i class="bi bi-person-fill"></i></div>
-    <span id="nomeUsuarioTopbar">Usuário</span>
-  </div>
-    </header>
+  <div class="topbar">
+        <button class="btn-menu-toggle" onclick="toggleMenu()">
+          <i class="bi bi-list"></i>
+        </button>
+
+        <span class="topbar-titulo">Gestão de Usuários</span>
+
+        <div class="topbar-usuario">
+          <div class="avatar">
+            <i class="bi bi-person-fill"></i>
+          </div>
+          <span id="nomeUsuarioTopbar">Usuário</span>
+        </div>
+      </div>
 
     <!-- Conteúdo principal -->
     <div class="main-content">
@@ -294,7 +297,7 @@
 
  <script src="script.js"></script>
 
- 
+
  <script>
     document.addEventListener('DOMContentLoaded', function () {
       const nome = sessionStorage.getItem('nomeUsuario') || 'Usuário';
