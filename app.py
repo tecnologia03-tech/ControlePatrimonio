@@ -1224,6 +1224,339 @@ def inativar_patrimonio(id_patrimonio):
             "mensagem": f"Erro ao inativar patrimônio: {str(e)}"
         }), 500
 
+# ===================== MANUTENÇÃO - FUNÇÃO AUXILIAR =====================
+# Normaliza o campo Resolvido para garantir somente S ou N.
+def normalizar_resolvido(valor, padrao='N'):
+    if valor is None:
+        return padrao
+
+    valor = str(valor).strip().upper()
+
+    if valor not in ('S', 'N'):
+        return padrao
+
+    return valor
+
+
+# ===================== PATRIMÔNIOS EM MANUTENÇÃO - SELECT AUXILIAR =====================
+# Retorna apenas patrimônios cuja situação atual esteja marcada como M.
+@app.route('/api/patrimonios/manutencao', methods=['GET'])
+def listar_patrimonios_em_manutencao():
+    try:
+        with pool.connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    SELECT
+                        Id_Patrimonio,
+                        Num_Patrimonio,
+                        Descricao
+                    FROM Patrimonio
+                    WHERE Situacao_Atual = 'M'
+                    ORDER BY Descricao ASC;
+                """)
+
+                rows = cursor.fetchall()
+
+                patrimonios = []
+                for row in rows:
+                    patrimonios.append({
+                        "id": row[0],
+                        "num_patrimonio": row[1],
+                        "descricao": row[2]
+                    })
+
+        return jsonify({
+            "sucesso": True,
+            "patrimonios": patrimonios
+        }), 200
+
+    except Exception as e:
+        return jsonify({
+            "sucesso": False,
+            "mensagem": f"Erro ao carregar patrimônios em manutenção: {str(e)}"
+        }), 500
+
+
+# ===================== MANUTENÇÃO - LISTAR =====================
+# Lista os históricos de manutenção com joins de patrimônio e usuário.
+# Registros não resolvidos ficam no topo.
+@app.route('/api/manutencoes', methods=['GET'])
+def listar_manutencoes():
+    try:
+        with pool.connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    SELECT
+                        hm.Id_Manutencao,
+                        hm.Problema_Identificado,
+                        hm.Dt_Envio_Manutencao,
+                        hm.Dt_Volta_Manutencao,
+                        hm.Fornecedor_Tecnico,
+                        hm.Descricao_Servico_Realizado,
+                        hm.Resolvido,
+                        hm.Vlr_Gasto,
+                        hm.Id_Patrimonio,
+                        hm.Id_Usuario,
+                        p.Num_Patrimonio,
+                        p.Descricao,
+                        u.Nome
+                    FROM Historico_Manutencao hm
+                    LEFT JOIN Patrimonio p
+                        ON hm.Id_Patrimonio = p.Id_Patrimonio
+                    LEFT JOIN Usuario u
+                        ON hm.Id_Usuario = u.Id_Usuario
+                    ORDER BY
+                        CASE hm.Resolvido
+                            WHEN 'N' THEN 0
+                            WHEN 'S' THEN 1
+                            ELSE 2
+                        END,
+                        hm.Dt_Envio_Manutencao DESC,
+                        hm.Id_Manutencao DESC;
+                """)
+
+                rows = cursor.fetchall()
+
+                manutencoes = []
+                for row in rows:
+                    patrimonio_label = '-'
+                    if row[10] or row[11]:
+                        num_patrimonio = row[10] or ''
+                        descricao = row[11] or ''
+                        patrimonio_label = f"{num_patrimonio} - {descricao}".strip(' -')
+
+                    manutencoes.append({
+                        "id": row[0],
+                        "problema_identificado": row[1],
+                        "dt_envio_manutencao": row[2].isoformat() if row[2] else None,
+                        "dt_volta_manutencao": row[3].isoformat() if row[3] else None,
+                        "fornecedor_tecnico": row[4],
+                        "descricao_servico_realizado": row[5],
+                        "resolvido": row[6],
+                        "vlr_gasto": float(row[7]) if row[7] is not None else 0,
+                        "id_patrimonio": row[8],
+                        "id_usuario": row[9],
+                        "patrimonio": patrimonio_label,
+                        "usuario": row[12]
+                    })
+
+        return jsonify({
+            "sucesso": True,
+            "manutencoes": manutencoes
+        }), 200
+
+    except Exception as e:
+        return jsonify({
+            "sucesso": False,
+            "mensagem": f"Erro ao listar manutenções: {str(e)}"
+        }), 500
+
+
+# ===================== MANUTENÇÃO - INCLUIR =====================
+# Cadastra um novo histórico de manutenção.
+@app.route('/api/manutencoes', methods=['POST'])
+def incluir_manutencao():
+    try:
+        dados = request.get_json() or {}
+
+        problema_identificado = dados.get('problema_identificado', '').strip()
+        dt_envio_manutencao = dados.get('dt_envio_manutencao')
+        dt_volta_manutencao = dados.get('dt_volta_manutencao') or None
+        fornecedor_tecnico = dados.get('fornecedor_tecnico', '').strip()
+        descricao_servico_realizado = dados.get('descricao_servico_realizado', '').strip()
+        resolvido = normalizar_resolvido(dados.get('resolvido'), 'N')
+        vlr_gasto = dados.get('vlr_gasto') if dados.get('vlr_gasto') not in ('', None) else None
+        id_patrimonio = dados.get('id_patrimonio')
+        id_usuario = dados.get('id_usuario')
+
+        if not problema_identificado or not dt_envio_manutencao or not fornecedor_tecnico or not id_patrimonio or not id_usuario:
+            return jsonify({
+                "sucesso": False,
+                "mensagem": "Preencha todos os campos obrigatórios."
+            }), 400
+
+        with pool.connection() as conn:
+            with conn.cursor() as cursor:
+                # Valida se o patrimônio existe e está em manutenção.
+                cursor.execute("""
+                    SELECT 1
+                    FROM Patrimonio
+                    WHERE Id_Patrimonio = %s
+                      AND Situacao_Atual = 'M';
+                """, (id_patrimonio,))
+                patrimonio_ok = cursor.fetchone()
+
+                if not patrimonio_ok:
+                    return jsonify({
+                        "sucesso": False,
+                        "mensagem": "O patrimônio informado não está disponível para manutenção."
+                    }), 400
+
+                # Valida se o usuário existe e está ativo.
+                cursor.execute("""
+                    SELECT 1
+                    FROM Usuario
+                    WHERE Id_Usuario = %s
+                      AND Ativo = 'S';
+                """, (id_usuario,))
+                usuario_ok = cursor.fetchone()
+
+                if not usuario_ok:
+                    return jsonify({
+                        "sucesso": False,
+                        "mensagem": "O usuário informado não está ativo ou não existe."
+                    }), 400
+
+                cursor.execute("""
+                    INSERT INTO Historico_Manutencao (
+                        Problema_Identificado,
+                        Dt_Envio_Manutencao,
+                        Dt_Volta_Manutencao,
+                        Fornecedor_Tecnico,
+                        Descricao_Servico_Realizado,
+                        Resolvido,
+                        Vlr_Gasto,
+                        Id_Patrimonio,
+                        Id_Usuario
+                    )
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    RETURNING Id_Manutencao;
+                """, (
+                    problema_identificado,
+                    dt_envio_manutencao,
+                    dt_volta_manutencao,
+                    fornecedor_tecnico,
+                    descricao_servico_realizado,
+                    resolvido,
+                    vlr_gasto,
+                    id_patrimonio,
+                    id_usuario
+                ))
+
+                novo_id = cursor.fetchone()[0]
+                conn.commit()
+
+        return jsonify({
+            "sucesso": True,
+            "mensagem": "Manutenção cadastrada com sucesso!",
+            "id": novo_id
+        }), 201
+
+    except Exception as e:
+        return jsonify({
+            "sucesso": False,
+            "mensagem": f"Erro ao cadastrar manutenção: {str(e)}"
+        }), 500
+
+
+# ===================== MANUTENÇÃO - EDITAR =====================
+# Atualiza um histórico de manutenção existente.
+@app.route('/api/manutencoes/<int:id_manutencao>', methods=['PUT'])
+def editar_manutencao(id_manutencao):
+    try:
+        dados = request.get_json() or {}
+
+        problema_identificado = dados.get('problema_identificado', '').strip()
+        dt_envio_manutencao = dados.get('dt_envio_manutencao')
+        dt_volta_manutencao = dados.get('dt_volta_manutencao') or None
+        fornecedor_tecnico = dados.get('fornecedor_tecnico', '').strip()
+        descricao_servico_realizado = dados.get('descricao_servico_realizado', '').strip()
+        resolvido = normalizar_resolvido(dados.get('resolvido'), 'N')
+        vlr_gasto = dados.get('vlr_gasto') if dados.get('vlr_gasto') not in ('', None) else None
+        id_patrimonio = dados.get('id_patrimonio')
+        id_usuario = dados.get('id_usuario')
+
+        if not problema_identificado or not dt_envio_manutencao or not fornecedor_tecnico or not id_patrimonio or not id_usuario:
+            return jsonify({
+                "sucesso": False,
+                "mensagem": "Preencha todos os campos obrigatórios."
+            }), 400
+
+        with pool.connection() as conn:
+            with conn.cursor() as cursor:
+                # Valida existência do registro.
+                cursor.execute("""
+                    SELECT 1
+                    FROM Historico_Manutencao
+                    WHERE Id_Manutencao = %s;
+                """, (id_manutencao,))
+                registro_ok = cursor.fetchone()
+
+                if not registro_ok:
+                    return jsonify({
+                        "sucesso": False,
+                        "mensagem": "Registro de manutenção não encontrado."
+                    }), 404
+
+                # Valida patrimônio em manutenção.
+                cursor.execute("""
+                    SELECT 1
+                    FROM Patrimonio
+                    WHERE Id_Patrimonio = %s
+                      AND Situacao_Atual = 'M';
+                """, (id_patrimonio,))
+                patrimonio_ok = cursor.fetchone()
+
+                if not patrimonio_ok:
+                    return jsonify({
+                        "sucesso": False,
+                        "mensagem": "O patrimônio informado não está disponível para manutenção."
+                    }), 400
+
+                # Valida usuário ativo.
+                cursor.execute("""
+                    SELECT 1
+                    FROM Usuario
+                    WHERE Id_Usuario = %s
+                      AND Ativo = 'S';
+                """, (id_usuario,))
+                usuario_ok = cursor.fetchone()
+
+                if not usuario_ok:
+                    return jsonify({
+                        "sucesso": False,
+                        "mensagem": "O usuário informado não está ativo ou não existe."
+                    }), 400
+
+                cursor.execute("""
+                    UPDATE Historico_Manutencao
+                    SET
+                        Problema_Identificado = %s,
+                        Dt_Envio_Manutencao = %s,
+                        Dt_Volta_Manutencao = %s,
+                        Fornecedor_Tecnico = %s,
+                        Descricao_Servico_Realizado = %s,
+                        Resolvido = %s,
+                        Vlr_Gasto = %s,
+                        Id_Patrimonio = %s,
+                        Id_Usuario = %s
+                    WHERE Id_Manutencao = %s;
+                """, (
+                    problema_identificado,
+                    dt_envio_manutencao,
+                    dt_volta_manutencao,
+                    fornecedor_tecnico,
+                    descricao_servico_realizado,
+                    resolvido,
+                    vlr_gasto,
+                    id_patrimonio,
+                    id_usuario,
+                    id_manutencao
+                ))
+
+                conn.commit()
+
+        return jsonify({
+            "sucesso": True,
+            "mensagem": "Manutenção atualizada com sucesso!"
+        }), 200
+
+    except Exception as e:
+        return jsonify({
+            "sucesso": False,
+            "mensagem": f"Erro ao atualizar manutenção: {str(e)}"
+        }), 500
+    
 
 # Inicializa a aplicação Flask em modo de desenvolvimento
 if __name__ == '__main__':

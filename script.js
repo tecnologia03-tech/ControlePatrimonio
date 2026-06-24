@@ -1668,6 +1668,502 @@ async function confirmarInativacaoPatrimonio() {
   }
 }
 
+// ===================== MANUTENÇÃO - LISTAS GLOBAIS =====================
+// Mantém em memória a lista completa, lista filtrada e paginação da tela.
+let listaManutencoes = [];
+let listaManutencoesFiltrada = [];
+let paginaAtualManutencoes = 1;
+const itensPorPaginaManutencoes = 15;
+
+// Guarda o último valor confirmado do campo "Resolvido" durante a edição.
+let valorResolvidoAnteriorManutencao = 'N';
+
+// Controla se a mudança para "S" já foi confirmada pelo usuário.
+let resolucaoConfirmadaManutencao = false;
+
+
+// ===================== MANUTENÇÃO - FUNÇÕES AUXILIARES =====================
+// Funções de apoio para máscara visual, ordenação e formatação.
+function formatarDataManutencao(data) {
+  if (!data) return '-';
+
+  const partes = String(data).slice(0, 10).split('-');
+  if (partes.length !== 3) return '-';
+
+  return `${partes[2]}/${partes[1]}/${partes[0]}`;
+}
+
+function formatarValorMoedaManutencao(valor) {
+  const numero = Number(valor || 0);
+  return numero.toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+  });
+}
+
+function obterBadgeResolvidoManutencao(resolvido) {
+  if (resolvido === 'S') {
+    return '<span class="badge-ativo">Sim</span>';
+  }
+
+  return '<span class="badge-inativo">Não</span>';
+}
+
+function ordenarManutencoes(lista) {
+  return [...lista].sort((a, b) => {
+    const pesoA = a.resolvido === 'N' ? 0 : 1;
+    const pesoB = b.resolvido === 'N' ? 0 : 1;
+
+    if (pesoA !== pesoB) {
+      return pesoA - pesoB;
+    }
+
+    const dataA = a.dt_envio_manutencao ? new Date(a.dt_envio_manutencao) : new Date(0);
+    const dataB = b.dt_envio_manutencao ? new Date(b.dt_envio_manutencao) : new Date(0);
+
+    return dataB - dataA;
+  });
+}
+
+
+// ===================== MANUTENÇÃO - CARREGAR LISTAGEM =====================
+// Busca os registros no backend e prepara a renderização.
+async function carregarManutencoes() {
+  const tbody = document.getElementById('tabelaManutencoes');
+  if (!tbody) {
+    console.error('tbody tabelaManutencoes não encontrado');
+    return;
+  }
+
+  tbody.innerHTML = `
+    <tr>
+      <td colspan="10" class="text-center text-muted py-4">
+        <i class="bi bi-arrow-repeat me-2"></i>Carregando registros de manutenção...
+      </td>
+    </tr>
+  `;
+
+  try {
+    const resposta = await fetch('https://controlepatrimonio.onrender.com/api/manutencoes');
+    const dados = await resposta.json();
+
+    if (!dados.sucesso) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="10" class="text-center text-danger py-4">
+            ${dados.mensagem || 'Erro ao carregar registros de manutenção.'}
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    listaManutencoes = Array.isArray(dados.manutencoes) ? dados.manutencoes : [];
+    listaManutencoesFiltrada = ordenarManutencoes(listaManutencoes);
+    paginaAtualManutencoes = 1;
+
+    renderizarManutencoes(listaManutencoesFiltrada);
+    renderizarPaginacaoManutencoes();
+  } catch (erro) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="10" class="text-center text-danger py-4">
+          Erro ao carregar registros de manutenção.
+        </td>
+      </tr>
+    `;
+  }
+}
+
+
+// ===================== MANUTENÇÃO - RENDERIZAÇÃO =====================
+// Renderiza somente os itens da página atual.
+function renderizarManutencoes(lista) {
+  const tbody = document.getElementById('tabelaManutencoes');
+  if (!tbody) {
+    console.error('tbody tabelaManutencoes não encontrado');
+    return;
+  }
+
+  if (!lista || lista.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="10" class="text-center text-muted py-4">
+          Nenhum histórico de manutenção cadastrado.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  const inicio = (paginaAtualManutencoes - 1) * itensPorPaginaManutencoes;
+  const fim = inicio + itensPorPaginaManutencoes;
+  const pagina = lista.slice(inicio, fim);
+
+  tbody.innerHTML = pagina.map((manutencao, index) => `
+    <tr>
+      <td>${inicio + index + 1}</td>
+      <td>${manutencao.patrimonio || '-'}</td>
+      <td>${manutencao.problema_identificado || '-'}</td>
+      <td>${manutencao.fornecedor_tecnico || '-'}</td>
+      <td>${formatarDataManutencao(manutencao.dt_envio_manutencao)}</td>
+      <td>${formatarDataManutencao(manutencao.dt_volta_manutencao)}</td>
+      <td>${obterBadgeResolvidoManutencao(manutencao.resolvido)}</td>
+      <td>${formatarValorMoedaManutencao(manutencao.vlr_gasto)}</td>
+      <td>${manutencao.usuario || '-'}</td>
+      <td>
+        <button class="btn btn-sm btn-outline-primary" onclick="abrirModalEditarManutencao(${manutencao.id})">
+          Editar
+        </button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+
+// ===================== MANUTENÇÃO - PAGINAÇÃO =====================
+// Cria os botões da paginação quando houver mais de 15 registros.
+function renderizarPaginacaoManutencoes() {
+  const container = document.getElementById('paginacaoManutencoes');
+  if (!container) return;
+
+  const totalPaginas = Math.ceil(listaManutencoesFiltrada.length / itensPorPaginaManutencoes);
+
+  if (totalPaginas <= 1) {
+    container.innerHTML = '';
+    return;
+  }
+
+  let html = '';
+
+  html += `
+    <button class="btn btn-sm btn-outline-secondary" ${paginaAtualManutencoes === 1 ? 'disabled' : ''} onclick="irParaPaginaManutencoes(${paginaAtualManutencoes - 1})">
+      Anterior
+    </button>
+  `;
+
+  for (let i = 1; i <= totalPaginas; i++) {
+    html += `
+      <button class="btn btn-sm ${i === paginaAtualManutencoes ? 'btn-primary' : 'btn-outline-primary'}" onclick="irParaPaginaManutencoes(${i})">
+        ${i}
+      </button>
+    `;
+  }
+
+  html += `
+    <button class="btn btn-sm btn-outline-secondary" ${paginaAtualManutencoes === totalPaginas ? 'disabled' : ''} onclick="irParaPaginaManutencoes(${paginaAtualManutencoes + 1})">
+      Próxima
+    </button>
+  `;
+
+  container.innerHTML = html;
+}
+
+function irParaPaginaManutencoes(pagina) {
+  const totalPaginas = Math.ceil(listaManutencoesFiltrada.length / itensPorPaginaManutencoes);
+
+  if (pagina < 1 || pagina > totalPaginas) return;
+
+  paginaAtualManutencoes = pagina;
+  renderizarManutencoes(listaManutencoesFiltrada);
+  renderizarPaginacaoManutencoes();
+}
+
+
+// ===================== MANUTENÇÃO - FILTRO =====================
+// Filtra por patrimônio, problema ou fornecedor/técnico.
+function filtrarManutencoes() {
+  const campo = document.getElementById('campoBuscaManutencao');
+  if (!campo) return;
+
+  const termo = campo.value.trim().toLowerCase();
+
+  if (!termo) {
+    listaManutencoesFiltrada = ordenarManutencoes(listaManutencoes);
+    paginaAtualManutencoes = 1;
+    renderizarManutencoes(listaManutencoesFiltrada);
+    renderizarPaginacaoManutencoes();
+    return;
+  }
+
+  listaManutencoesFiltrada = ordenarManutencoes(
+    listaManutencoes.filter(m =>
+      (m.patrimonio && m.patrimonio.toLowerCase().includes(termo)) ||
+      (m.problema_identificado && m.problema_identificado.toLowerCase().includes(termo)) ||
+      (m.fornecedor_tecnico && m.fornecedor_tecnico.toLowerCase().includes(termo))
+    )
+  );
+
+  paginaAtualManutencoes = 1;
+  renderizarManutencoes(listaManutencoesFiltrada);
+  renderizarPaginacaoManutencoes();
+}
+
+
+// ===================== MANUTENÇÃO - CARREGAR SELECTS =====================
+// Carrega patrimônios em manutenção e usuários cadastrados.
+async function carregarPatrimoniosManutencao() {
+  try {
+    const resposta = await fetch('https://controlepatrimonio.onrender.com/api/patrimonios/manutencao');
+    const dados = await resposta.json();
+
+    if (!dados.sucesso) return;
+
+    const selectIncluir = document.getElementById('incluirPatrimonioManutencao');
+    const selectEditar = document.getElementById('editarPatrimonioManutencao');
+
+    const options = '<option value="">Selecione...</option>' +
+      dados.patrimonios.map(p => `<option value="${p.id}">${p.num_patrimonio} - ${p.descricao}</option>`).join('');
+
+    if (selectIncluir) selectIncluir.innerHTML = options;
+    if (selectEditar) selectEditar.innerHTML = options;
+  } catch (erro) {
+    console.error('Erro ao carregar patrimônios da manutenção:', erro);
+  }
+}
+
+async function carregarUsuariosManutencao() {
+  try {
+    const resposta = await fetch('https://controlepatrimonio.onrender.com/api/usuarios');
+    const dados = await resposta.json();
+
+    if (!dados.sucesso) return;
+
+    const selectIncluir = document.getElementById('incluirUsuarioManutencao');
+    const selectEditar = document.getElementById('editarUsuarioManutencao');
+
+    const options = '<option value="">Selecione...</option>' +
+      dados.usuarios
+        .filter(u => u.ativo === 'S')
+        .map(u => `<option value="${u.id}">${u.nome}</option>`)
+        .join('');
+
+    if (selectIncluir) selectIncluir.innerHTML = options;
+    if (selectEditar) selectEditar.innerHTML = options;
+  } catch (erro) {
+    console.error('Erro ao carregar usuários da manutenção:', erro);
+  }
+}
+
+async function carregarSelectsManutencao() {
+  await Promise.all([
+    carregarPatrimoniosManutencao(),
+    carregarUsuariosManutencao()
+  ]);
+}
+
+
+// ===================== MANUTENÇÃO - MODAL INCLUIR =====================
+// Abre modal e prepara os campos vazios.
+async function abrirModalIncluirManutencao() {
+  await carregarSelectsManutencao();
+
+  document.getElementById('incluirPatrimonioManutencao').value = '';
+  document.getElementById('incluirUsuarioManutencao').value = '';
+  document.getElementById('incluirProblemaManutencao').value = '';
+  document.getElementById('incluirDtEnvioManutencao').value = '';
+  document.getElementById('incluirDtVoltaManutencao').value = '';
+  document.getElementById('incluirFornecedorManutencao').value = '';
+  document.getElementById('incluirServicoRealizadoManutencao').value = '';
+  document.getElementById('incluirResolvidoManutencao').value = 'N';
+  document.getElementById('incluirVlrGastoManutencao').value = '';
+
+  const msg = document.getElementById('msgErroIncluirManutencao');
+  msg.textContent = '';
+  msg.style.display = 'none';
+
+  document.getElementById('modalIncluirManutencao').style.display = 'flex';
+}
+
+function fecharModalIncluirManutencao() {
+  document.getElementById('modalIncluirManutencao').style.display = 'none';
+}
+
+
+// ===================== MANUTENÇÃO - INCLUIR =====================
+// Valida e envia um novo histórico de manutenção.
+async function salvarManutencao() {
+  const id_patrimonio = document.getElementById('incluirPatrimonioManutencao').value;
+  const id_usuario = document.getElementById('incluirUsuarioManutencao').value;
+  const problema_identificado = document.getElementById('incluirProblemaManutencao').value.trim();
+  const dt_envio_manutencao = document.getElementById('incluirDtEnvioManutencao').value;
+  const dt_volta_manutencao = document.getElementById('incluirDtVoltaManutencao').value;
+  const fornecedor_tecnico = document.getElementById('incluirFornecedorManutencao').value.trim();
+  const descricao_servico_realizado = document.getElementById('incluirServicoRealizadoManutencao').value.trim();
+  const resolvido = document.getElementById('incluirResolvidoManutencao').value;
+  const vlr_gasto = document.getElementById('incluirVlrGastoManutencao').value.trim();
+  const msg = document.getElementById('msgErroIncluirManutencao');
+
+  msg.textContent = '';
+  msg.style.display = 'none';
+
+  if (!id_patrimonio || !id_usuario || !problema_identificado || !dt_envio_manutencao || !fornecedor_tecnico || !resolvido) {
+    msg.textContent = 'Preencha todos os campos obrigatórios.';
+    msg.style.display = 'block';
+    return;
+  }
+
+  try {
+    const resposta = await fetch('https://controlepatrimonio.onrender.com/api/manutencoes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id_patrimonio,
+        id_usuario,
+        problema_identificado,
+        dt_envio_manutencao,
+        dt_volta_manutencao,
+        fornecedor_tecnico,
+        descricao_servico_realizado,
+        resolvido,
+        vlr_gasto
+      })
+    });
+
+    const dados = await resposta.json();
+
+    if (dados.sucesso) {
+      fecharModalIncluirManutencao();
+      carregarManutencoes();
+    } else {
+      msg.textContent = dados.mensagem || 'Erro ao registrar manutenção.';
+      msg.style.display = 'block';
+    }
+  } catch (erro) {
+    msg.textContent = 'Erro ao registrar manutenção.';
+    msg.style.display = 'block';
+  }
+}
+
+
+// ===================== MANUTENÇÃO - MODAL EDITAR =====================
+// Abre o modal preenchendo os dados atuais do registro.
+async function abrirModalEditarManutencao(id) {
+  const manutencao = listaManutencoes.find(m => m.id === id);
+  if (!manutencao) return;
+
+  await carregarSelectsManutencao();
+
+  document.getElementById('editarIdManutencao').value = manutencao.id;
+  document.getElementById('editarPatrimonioManutencao').value = manutencao.id_patrimonio || '';
+  document.getElementById('editarUsuarioManutencao').value = manutencao.id_usuario || '';
+  document.getElementById('editarProblemaManutencao').value = manutencao.problema_identificado || '';
+  document.getElementById('editarDtEnvioManutencao').value = manutencao.dt_envio_manutencao ? String(manutencao.dt_envio_manutencao).slice(0, 10) : '';
+  document.getElementById('editarDtVoltaManutencao').value = manutencao.dt_volta_manutencao ? String(manutencao.dt_volta_manutencao).slice(0, 10) : '';
+  document.getElementById('editarFornecedorManutencao').value = manutencao.fornecedor_tecnico || '';
+  document.getElementById('editarServicoRealizadoManutencao').value = manutencao.descricao_servico_realizado || '';
+  document.getElementById('editarResolvidoManutencao').value = manutencao.resolvido || 'N';
+  document.getElementById('editarVlrGastoManutencao').value = manutencao.vlr_gasto ?? '';
+
+  valorResolvidoAnteriorManutencao = manutencao.resolvido || 'N';
+  resolucaoConfirmadaManutencao = false;
+
+  const msg = document.getElementById('msgErroEditarManutencao');
+  msg.textContent = '';
+  msg.style.display = 'none';
+
+  document.getElementById('modalEditarManutencao').style.display = 'flex';
+}
+
+function fecharModalEditarManutencao() {
+  document.getElementById('modalEditarManutencao').style.display = 'none';
+}
+
+
+// ===================== MANUTENÇÃO - CONFIRMAÇÃO DE RESOLUÇÃO =====================
+// Ao trocar para "S", abre confirmação antes de manter o valor.
+function prepararConfirmacaoResolucaoManutencao() {
+  const select = document.getElementById('editarResolvidoManutencao');
+  if (!select) return;
+
+  const novoValor = select.value;
+
+  if (novoValor === 'S' && valorResolvidoAnteriorManutencao !== 'S' && !resolucaoConfirmadaManutencao) {
+    document.getElementById('modalConfirmarResolucaoManutencao').style.display = 'flex';
+    return;
+  }
+
+  valorResolvidoAnteriorManutencao = novoValor;
+}
+
+function cancelarConfirmacaoResolucaoManutencao() {
+  const select = document.getElementById('editarResolvidoManutencao');
+  if (select) {
+    select.value = valorResolvidoAnteriorManutencao || 'N';
+  }
+
+  resolucaoConfirmadaManutencao = false;
+  document.getElementById('modalConfirmarResolucaoManutencao').style.display = 'none';
+}
+
+function confirmarResolucaoManutencao() {
+  const select = document.getElementById('editarResolvidoManutencao');
+  if (select) {
+    select.value = 'S';
+  }
+
+  valorResolvidoAnteriorManutencao = 'S';
+  resolucaoConfirmadaManutencao = true;
+  document.getElementById('modalConfirmarResolucaoManutencao').style.display = 'none';
+}
+
+
+// ===================== MANUTENÇÃO - EDITAR =====================
+// Atualiza o histórico de manutenção selecionado.
+async function atualizarManutencao() {
+  const id = document.getElementById('editarIdManutencao').value;
+  const id_patrimonio = document.getElementById('editarPatrimonioManutencao').value;
+  const id_usuario = document.getElementById('editarUsuarioManutencao').value;
+  const problema_identificado = document.getElementById('editarProblemaManutencao').value.trim();
+  const dt_envio_manutencao = document.getElementById('editarDtEnvioManutencao').value;
+  const dt_volta_manutencao = document.getElementById('editarDtVoltaManutencao').value;
+  const fornecedor_tecnico = document.getElementById('editarFornecedorManutencao').value.trim();
+  const descricao_servico_realizado = document.getElementById('editarServicoRealizadoManutencao').value.trim();
+  const resolvido = document.getElementById('editarResolvidoManutencao').value;
+  const vlr_gasto = document.getElementById('editarVlrGastoManutencao').value.trim();
+  const msg = document.getElementById('msgErroEditarManutencao');
+
+  msg.textContent = '';
+  msg.style.display = 'none';
+
+  if (!id_patrimonio || !id_usuario || !problema_identificado || !dt_envio_manutencao || !fornecedor_tecnico || !resolvido) {
+    msg.textContent = 'Preencha todos os campos obrigatórios.';
+    msg.style.display = 'block';
+    return;
+  }
+
+  try {
+    const resposta = await fetch(`https://controlepatrimonio.onrender.com/api/manutencoes/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id_patrimonio,
+        id_usuario,
+        problema_identificado,
+        dt_envio_manutencao,
+        dt_volta_manutencao,
+        fornecedor_tecnico,
+        descricao_servico_realizado,
+        resolvido,
+        vlr_gasto
+      })
+    });
+
+    const dados = await resposta.json();
+
+    if (dados.sucesso) {
+      fecharModalEditarManutencao();
+      carregarManutencoes();
+    } else {
+      msg.textContent = dados.mensagem || 'Erro ao atualizar manutenção.';
+      msg.style.display = 'block';
+    }
+  } catch (erro) {
+    msg.textContent = 'Erro ao atualizar manutenção.';
+    msg.style.display = 'block';
+  }
+}
+
 
 document.addEventListener('DOMContentLoaded', () => {
   const caminho = window.location.pathname;
@@ -1723,6 +2219,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (paginaAtual === 'patrimonio.html') {
     carregarPatrimonios();
+  }
+
+  if (paginaAtual === 'manutencao.html') {
+    carregarManutencoes();
   }
 
 });
