@@ -10,10 +10,9 @@
 </head>
 <body>
 
-<div class="wrapper">
+  <div class="wrapper">
 
-<!-- SIDEBAR -->
-  <aside class="sidebar" id="sidebar">
+    <aside class="sidebar" id="sidebar">
       <div class="sidebar-header">
         <img src="Logo.jpeg" alt="Logo Salesianos">
         <span>Controle de Patrimônio</span>
@@ -37,15 +36,14 @@
       </div>
     </aside>
 
-  <!-- CONTENT -->
-  <div class="content">
+    <div class="content">
 
-  <div class="topbar">
+      <div class="topbar">
         <button class="btn-menu-toggle" onclick="toggleMenu()">
           <i class="bi bi-list"></i>
         </button>
 
-        <span class="topbar-titulo">Gestão de Usuários</span>
+        <span class="topbar-titulo">Histórico de Manutenção</span>
 
         <div class="topbar-usuario">
           <div class="avatar">
@@ -55,76 +53,63 @@
         </div>
       </div>
 
-    <!-- Conteúdo principal -->
-    <div class="main-content">
+      <div class="main-content">
 
-      <!-- Conteúdo da página -->
-      <main class="content">
-        <div class="page-header">
-          <h1>Manutenção</h1>
-        </div>
+        <div class="usuarios-toolbar">
+          <input
+            type="text"
+            id="campoBuscaManutencao"
+            class="input-busca-usuario"
+            placeholder="Pesquisar por patrimônio, problema ou fornecedor..."
+            oninput="filtrarManutencoes()"
+          >
 
-        <!-- Barra de ações -->
-        <div class="toolbar">
-          <div class="search-box">
-            <i class="bi bi-search"></i>
-            <input
-              type="text"
-              id="campoBuscaManutencao"
-              placeholder="Pesquisar por patrimônio, problema ou fornecedor"
-              oninput="filtrarManutencoes()"
-            >
-          </div>
-
-          <button class="btn-primary" onclick="abrirModalIncluirManutencao()">
-            <i class="bi bi-plus-circle-fill"></i>
-            Registrar Manutenção
+          <button class="btn btn-incluir-usuario" onclick="abrirModalIncluirManutencao()">
+            <i class="bi bi-tools"></i> Registrar Manutenção
           </button>
         </div>
 
-        <!-- Card principal -->
-        <section class="card-listagem">
-          <div class="card-header">
-            <h3><i class="bi bi-tools"></i> Histórico de Manutenções</h3>
+        <div class="usuarios-card">
+          <div class="usuarios-card-header">
+            <i class="bi bi-tools"></i>
+            <span>Histórico de Manutenções</span>
           </div>
 
-          <div class="card-body">
-            <div class="table-responsive">
-              <table class="tabela-padrao">
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Patrimônio</th>
-                    <th>Problema</th>
-                    <th>Fornecedor / Técnico</th>
-                    <th>Envio</th>
-                    <th>Retorno</th>
-                    <th>Resolvido</th>
-                    <th>Valor Gasto</th>
-                    <th>Usuário</th>
-                    <th>Ações</th>
-                  </tr>
-                </thead>
-                <tbody id="tabelaManutencoes">
-                  <tr>
-                    <td colspan="10" class="text-center text-muted py-4">
-                      <i class="bi bi-arrow-repeat me-2"></i>Carregando registros de manutenção...
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <!-- Paginação -->
-            <div class="paginacao-container" id="paginacaoManutencoes"></div>
+          <div class="table-responsive">
+            <table class="table tabela-usuarios mb-0">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Patrimônio</th>
+                  <th>Problema</th>
+                  <th>Fornecedor / Técnico</th>
+                  <th>Envio</th>
+                  <th>Retorno</th>
+                  <th>Resolvido</th>
+                  <th>Valor Gasto</th>
+                  <th>Usuário</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="tabelaManutencoes">
+                <tr>
+                  <td colspan="10" class="text-center py-3 text-muted">
+                    <i class="bi bi-arrow-repeat me-2"></i>Carregando registros de manutenção...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
-        </section>
-      </main>
 
-      <!-- Rodapé padrão -->
-      <footer class="footer">
-        <p>© 2026 - Sistema de Controle Patrimonial</p>
-      </footer>
+          <div class="paginacao-container" id="paginacaoManutencoes"></div>
+        </div>
+
+      </div>
+
+      <div class="rodape">
+        Sistema de Controle de Patrimônio © 2026
+      </div>
+
     </div>
   </div>
 
@@ -192,7 +177,6 @@
           </div>
         </div>
 
-        <!-- Mensagem de erro exibida dinamicamente pelo JavaScript -->
         <p id="msgErroIncluirManutencao" class="text-danger mt-2" style="display:none;"></p>
       </div>
 
@@ -269,7 +253,6 @@
           </div>
         </div>
 
-        <!-- Mensagem de erro exibida dinamicamente pelo JavaScript -->
         <p id="msgErroEditarManutencao" class="text-danger mt-2" style="display:none;"></p>
       </div>
 
@@ -295,17 +278,16 @@
     </div>
   </div>
 
- <script src="script.js"></script>
+  <script src="script.js"></script>
 
-
- <script>
+  <script>
     document.addEventListener('DOMContentLoaded', function () {
       const nome = sessionStorage.getItem('nomeUsuario') || 'Usuário';
       const el = document.getElementById('nomeUsuarioTopbar');
       if (el) el.textContent = nome;
 
-      if (typeof carregarUsuarios === 'function') {
-        carregarResponsaveis();
+      if (typeof carregarManutencoes === 'function') {
+        carregarManutencoes();
       }
     });
   </script>
