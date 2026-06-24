@@ -292,23 +292,20 @@
     </div>
   </div>
 
+ <script src="script.js"></script>
+
+ 
  <script>
-  document.addEventListener('DOMContentLoaded', function () {
-    const nomeUsuario = sessionStorage.getItem('nome_usuario');
-    if (nomeUsuario) {
-      document.getElementById('nomeUsuarioTopbar').textContent = nomeUsuario;
-    }
+    document.addEventListener('DOMContentLoaded', function () {
+      const nome = sessionStorage.getItem('nomeUsuario') || 'Usuário';
+      const el = document.getElementById('nomeUsuarioTopbar');
+      if (el) el.textContent = nome;
 
-    if (document.getElementById('tabelaManutencoes')) {
-      carregarManutencoes();
-    }
-  });
+      if (typeof carregarUsuarios === 'function') {
+        carregarResponsaveis();
+      }
+    });
+  </script>
 
-  function toggleSidebar() {
-    document.getElementById('sidebar').classList.toggle('show');
-  }
-</script>
-
-  <script src="script.js"></script>
 </body>
 </html>
