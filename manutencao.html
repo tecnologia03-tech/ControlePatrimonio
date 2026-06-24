@@ -42,14 +42,14 @@
 
     <!-- TOPBAR -->
     <header class="topbar">
-      <button class="btn-menu-toggle" onclick="toggleMenu()" aria-label="Abrir menu">
-        <i class="bi bi-list"></i>
-      </button>
-      <span class="topbar-titulo">Histórico de Manutenção</span>
-      <div class="topbar-usuario">
-        <div class="avatar"><i class="bi bi-person-fill"></i></div>
-        <span id="nomeUsuarioTopbar">Usuário</span>
-      </div>
+    <button class="btn-menu-toggle" onclick="toggleSidebar()" aria-label="Abrir menu">
+    <i class="bi bi-list"></i>
+    </button>
+    <span class="topbar-titulo">Histórico de Manutenção</span>
+    <div class="topbar-usuario">
+    <div class="avatar"><i class="bi bi-person-fill"></i></div>
+    <span id="nomeUsuarioTopbar">Usuário</span>
+  </div>
     </header>
 
     <!-- Conteúdo principal -->
@@ -292,25 +292,22 @@
     </div>
   </div>
 
-  <script>
-    // Exibe o nome do usuário logado na topbar, se existir no storage da sessão.
-    document.addEventListener('DOMContentLoaded', function () {
-      const nomeUsuario = sessionStorage.getItem('nome_usuario');
-      if (nomeUsuario) {
-        document.getElementById('nomeUsuarioLogado').textContent = nomeUsuario;
-      }
-
-      // Carrega automaticamente as manutenções quando a página abrir.
-      if (document.getElementById('tabelaManutencoes')) {
-        carregarManutencoes();
-      }
-    });
-
-    // Abre e fecha a sidebar em telas menores.
-    function toggleSidebar() {
-      document.getElementById('sidebar').classList.toggle('show');
+ <script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const nomeUsuario = sessionStorage.getItem('nome_usuario');
+    if (nomeUsuario) {
+      document.getElementById('nomeUsuarioTopbar').textContent = nomeUsuario;
     }
-  </script>
+
+    if (document.getElementById('tabelaManutencoes')) {
+      carregarManutencoes();
+    }
+  });
+
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('show');
+  }
+</script>
 
   <script src="script.js"></script>
 </body>
