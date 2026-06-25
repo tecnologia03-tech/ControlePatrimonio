@@ -1556,7 +1556,475 @@ def editar_manutencao(id_manutencao):
             "sucesso": False,
             "mensagem": f"Erro ao atualizar manutenção: {str(e)}"
         }), 500
-    
+
+# ===================== RESPONSÁVEIS - BUSCA PARA MOVIMENTAÇÃO ===================== #
+
+# ROTA PARA LISTAR TODOS OS RESPONSÁVEIS
+@app.route('/api/responsaveis', methods=['GET'])
+def listar_responsaveis():
+    try:
+        with pool.connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    SELECT Id_Responsavel_Patrimonio, Nome
+                    FROM Responsavel_Patrimonio
+                    ORDER BY Nome ASC;
+                """)
+
+                rows = cursor.fetchall()
+
+                responsaveis = [
+                    {
+                        'id': row[0],
+                        'nome': row[1]
+                    }
+                    for row in rows
+                ]
+
+                return jsonify({
+                    'sucesso': True,
+                    'responsaveis': responsaveis
+                }), 200
+
+    except Exception as e:
+        return jsonify({
+            'sucesso': False,
+            'mensagem': str(e)
+        }), 500
+
+
+# ===================== PATRIMÔNIOS - BUSCA PARA MOVIMENTAÇÃO ===================== #
+
+# ROTA PARA PESQUISAR PATRIMÔNIOS ATIVOS PELO NOME OU TOMBO
+@app.route('/api/patrimonios/busca', methods=['GET'])
+def buscar_patrimonios_movimentacao():
+    termo = (request.args.get('termo') or '').strip()
+
+    if len(termo) < 2:
+        return jsonify({
+            'sucesso': True,
+            'patrimonios': []
+        }), 200
+
+    try:
+        with pool.connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    SELECT
+                        Id_Patrimonio,
+                        NomePatrimonio,
+                        NumeroTombo
+                    FROM Patrimonio
+                    WHERE Situacao_Atual = 'A'
+                      AND (
+                        UPPER(NomePatrimonio) LIKE UPPER(%s)
+                        OR CAST(NumeroTombo AS TEXT) LIKE %s
+                      )
+                    ORDER BY NomePatrimonio ASC
+                    LIMIT 20;
+                """, (f'%{termo}%', f'%{termo}%'))
+
+                rows = cursor.fetchall()
+
+                patrimonios = [
+                    {
+                        'id': row[0],
+                        'nome': f'{row[1]} - Tombo: {row[2]}' if row[2] is not None else row[1]
+                    }
+                    for row in rows
+                ]
+
+                return jsonify({
+                    'sucesso': True,
+                    'patrimonios': patrimonios
+                }), 200
+
+    except Exception as e:
+        return jsonify({
+            'sucesso': False,
+            'mensagem': str(e)
+        }), 500
+
+
+# ===================== MOVIMENTAÇÕES ===================== #
+
+# ROTA PARA LISTAR TODAS AS MOVIMENTAÇÕES
+@app.route('/api/movimentacoes', methods=['GET'])
+def listar_movimentacoes():
+    try:
+        with pool.connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    SELECT
+                        hm.Id_Historico_Movimentacao,
+                        hm.Id_Patrimonio,
+                        p.NomePatrimonio,
+                        hm.Id_Local_Origem,
+                        lo.Nome_Local,
+                        hm.Id_Local_Destino,
+                        ld.Nome_Local,
+                        hm.Id_Responsavel_Patrimonio,
+                        rp.Nome,
+                        hm.Id_Usuario,
+                        u.Nome,
+                        hm.Dt_Transferencia,
+                        hm.Observacoes
+                    FROM Historico_Movimentacao hm
+                    INNER JOIN Patrimonio p
+                        ON p.Id_Patrimonio = hm.Id_Patrimonio
+                    INNER JOIN Local lo
+                        ON lo.Id_Local = hm.Id_Local_Origem
+                    INNER JOIN Local ld
+                        ON ld.Id_Local = hm.Id_Local_Destino
+                    INNER JOIN Responsavel_Patrimonio rp
+                        ON rp.Id_Responsavel_Patrimonio = hm.Id_Responsavel_Patrimonio
+                    INNER JOIN Usuario u
+                        ON u.Id_Usuario = hm.Id_Usuario
+                    ORDER BY hm.Id_Historico_Movimentacao DESC;
+                """)
+
+                rows = cursor.fetchall()
+
+                movimentacoes = [
+                    {
+                        'id': row[0],
+                        'id_patrimonio': row[1],
+                        'patrimonio_nome': row[2],
+                        'id_local_origem': row[3],
+                        'local_origem_nome': row[4],
+                        'id_local_destino': row[5],
+                        'local_destino_nome': row[6],
+                        'id_responsavel_patrimonio': row[7],
+                        'responsavel_nome': row[8],
+                        'id_usuario': row[9],
+                        'usuario_nome': row[10],
+                        'data_transferencia': row[11].isoformat() if row[11] else None,
+                        'observacoes': row[12]
+                    }
+                    for row in rows
+                ]
+
+                return jsonify({
+                    'sucesso': True,
+                    'movimentacoes': movimentacoes
+                }), 200
+
+    except Exception as e:
+        return jsonify({
+            'sucesso': False,
+            'mensagem': str(e)
+        }), 500
+
+
+# ROTA PARA CADASTRAR UMA NOVA MOVIMENTAÇÃO
+@app.route('/api/movimentacoes', methods=['POST'])
+def incluir_movimentacao():
+    dados = request.get_json(silent=True) or {}
+
+    id_patrimonio = dados.get('id_patrimonio')
+    id_usuario = dados.get('id_usuario')
+    id_local_origem = dados.get('id_local_origem')
+    id_local_destino = dados.get('id_local_destino')
+    id_responsavel_patrimonio = dados.get('id_responsavel_patrimonio')
+    dt_transferencia = (dados.get('dt_transferencia') or '').strip()
+    observacoes = (dados.get('observacoes') or '').strip()
+
+    if not id_patrimonio or not id_usuario or not id_local_origem or not id_local_destino or not id_responsavel_patrimonio or not dt_transferencia:
+        return jsonify({
+            'sucesso': False,
+            'mensagem': 'Preencha todos os campos obrigatórios.'
+        }), 400
+
+    try:
+        with pool.connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    SELECT 1
+                    FROM Patrimonio
+                    WHERE Id_Patrimonio = %s
+                      AND Situacao_Atual = 'A';
+                """, (id_patrimonio,))
+
+                if not cursor.fetchone():
+                    return jsonify({
+                        'sucesso': False,
+                        'mensagem': 'Patrimônio ativo não encontrado.'
+                    }), 404
+
+                cursor.execute("""
+                    SELECT 1
+                    FROM Usuario
+                    WHERE Id_Usuario = %s
+                      AND Ativo = 'S';
+                """, (id_usuario,))
+
+                if not cursor.fetchone():
+                    return jsonify({
+                        'sucesso': False,
+                        'mensagem': 'Usuário não encontrado.'
+                    }), 404
+
+                cursor.execute("""
+                    SELECT 1
+                    FROM Local
+                    WHERE Id_Local = %s;
+                """, (id_local_origem,))
+
+                if not cursor.fetchone():
+                    return jsonify({
+                        'sucesso': False,
+                        'mensagem': 'Local de origem não encontrado.'
+                    }), 404
+
+                cursor.execute("""
+                    SELECT 1
+                    FROM Local
+                    WHERE Id_Local = %s;
+                """, (id_local_destino,))
+
+                if not cursor.fetchone():
+                    return jsonify({
+                        'sucesso': False,
+                        'mensagem': 'Local de destino não encontrado.'
+                    }), 404
+
+                cursor.execute("""
+                    SELECT 1
+                    FROM Responsavel_Patrimonio
+                    WHERE Id_Responsavel_Patrimonio = %s;
+                """, (id_responsavel_patrimonio,))
+
+                if not cursor.fetchone():
+                    return jsonify({
+                        'sucesso': False,
+                        'mensagem': 'Responsável não encontrado.'
+                    }), 404
+
+                cursor.execute("""
+                    INSERT INTO Historico_Movimentacao (
+                        Id_Patrimonio,
+                        Id_Local_Origem,
+                        Id_Local_Destino,
+                        Id_Responsavel_Patrimonio,
+                        Id_Usuario,
+                        Dt_Transferencia,
+                        Observacoes
+                    )
+                    VALUES (%s, %s, %s, %s, %s, %s, %s);
+                """, (
+                    id_patrimonio,
+                    id_local_origem,
+                    id_local_destino,
+                    id_responsavel_patrimonio,
+                    id_usuario,
+                    dt_transferencia,
+                    observacoes if observacoes else None
+                ))
+
+                cursor.execute("""
+                    UPDATE Patrimonio
+                    SET Id_Local = %s,
+                        Id_Responsavel_Patrimonio = %s
+                    WHERE Id_Patrimonio = %s;
+                """, (
+                    id_local_destino,
+                    id_responsavel_patrimonio,
+                    id_patrimonio
+                ))
+
+                conn.commit()
+
+                return jsonify({
+                    'sucesso': True,
+                    'mensagem': 'Movimentação cadastrada com sucesso!'
+                }), 201
+
+    except Exception as e:
+        return jsonify({
+            'sucesso': False,
+            'mensagem': str(e)
+        }), 500
+
+
+# ROTA PARA EDITAR UMA MOVIMENTAÇÃO EXISTENTE
+@app.route('/api/movimentacoes/<int:id_movimentacao>', methods=['PUT'])
+def editar_movimentacao(id_movimentacao):
+    dados = request.get_json(silent=True) or {}
+
+    id_patrimonio = dados.get('id_patrimonio')
+    id_usuario = dados.get('id_usuario')
+    id_local_origem = dados.get('id_local_origem')
+    id_local_destino = dados.get('id_local_destino')
+    id_responsavel_patrimonio = dados.get('id_responsavel_patrimonio')
+    dt_transferencia = (dados.get('dt_transferencia') or '').strip()
+    observacoes = (dados.get('observacoes') or '').strip()
+
+    if not id_patrimonio or not id_usuario or not id_local_origem or not id_local_destino or not id_responsavel_patrimonio or not dt_transferencia:
+        return jsonify({
+            'sucesso': False,
+            'mensagem': 'Preencha todos os campos obrigatórios.'
+        }), 400
+
+    try:
+        with pool.connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    SELECT 1
+                    FROM Historico_Movimentacao
+                    WHERE Id_Historico_Movimentacao = %s;
+                """, (id_movimentacao,))
+
+                if not cursor.fetchone():
+                    return jsonify({
+                        'sucesso': False,
+                        'mensagem': 'Movimentação não encontrada.'
+                    }), 404
+
+                cursor.execute("""
+                    SELECT 1
+                    FROM Patrimonio
+                    WHERE Id_Patrimonio = %s
+                      AND Situacao_Atual = 'A';
+                """, (id_patrimonio,))
+
+                if not cursor.fetchone():
+                    return jsonify({
+                        'sucesso': False,
+                        'mensagem': 'Patrimônio ativo não encontrado.'
+                    }), 404
+
+                cursor.execute("""
+                    SELECT 1
+                    FROM Usuario
+                    WHERE Id_Usuario = %s
+                      AND Ativo = 'S';
+                """, (id_usuario,))
+
+                if not cursor.fetchone():
+                    return jsonify({
+                        'sucesso': False,
+                        'mensagem': 'Usuário não encontrado.'
+                    }), 404
+
+                cursor.execute("""
+                    SELECT 1
+                    FROM Local
+                    WHERE Id_Local = %s;
+                """, (id_local_origem,))
+
+                if not cursor.fetchone():
+                    return jsonify({
+                        'sucesso': False,
+                        'mensagem': 'Local de origem não encontrado.'
+                    }), 404
+
+                cursor.execute("""
+                    SELECT 1
+                    FROM Local
+                    WHERE Id_Local = %s;
+                """, (id_local_destino,))
+
+                if not cursor.fetchone():
+                    return jsonify({
+                        'sucesso': False,
+                        'mensagem': 'Local de destino não encontrado.'
+                    }), 404
+
+                cursor.execute("""
+                    SELECT 1
+                    FROM Responsavel_Patrimonio
+                    WHERE Id_Responsavel_Patrimonio = %s;
+                """, (id_responsavel_patrimonio,))
+
+                if not cursor.fetchone():
+                    return jsonify({
+                        'sucesso': False,
+                        'mensagem': 'Responsável não encontrado.'
+                    }), 404
+
+                cursor.execute("""
+                    UPDATE Historico_Movimentacao
+                    SET Id_Patrimonio = %s,
+                        Id_Local_Origem = %s,
+                        Id_Local_Destino = %s,
+                        Id_Responsavel_Patrimonio = %s,
+                        Id_Usuario = %s,
+                        Dt_Transferencia = %s,
+                        Observacoes = %s
+                    WHERE Id_Historico_Movimentacao = %s;
+                """, (
+                    id_patrimonio,
+                    id_local_origem,
+                    id_local_destino,
+                    id_responsavel_patrimonio,
+                    id_usuario,
+                    dt_transferencia,
+                    observacoes if observacoes else None,
+                    id_movimentacao
+                ))
+
+                cursor.execute("""
+                    UPDATE Patrimonio
+                    SET Id_Local = %s,
+                        Id_Responsavel_Patrimonio = %s
+                    WHERE Id_Patrimonio = %s;
+                """, (
+                    id_local_destino,
+                    id_responsavel_patrimonio,
+                    id_patrimonio
+                ))
+
+                conn.commit()
+
+                return jsonify({
+                    'sucesso': True,
+                    'mensagem': 'Movimentação atualizada com sucesso!'
+                }), 200
+
+    except Exception as e:
+        return jsonify({
+            'sucesso': False,
+            'mensagem': str(e)
+        }), 500
+
+
+# ROTA PARA EXCLUIR UMA MOVIMENTAÇÃO
+@app.route('/api/movimentacoes/<int:id_movimentacao>', methods=['DELETE'])
+def excluir_movimentacao(id_movimentacao):
+    try:
+        with pool.connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    SELECT Id_Patrimonio
+                    FROM Historico_Movimentacao
+                    WHERE Id_Historico_Movimentacao = %s;
+                """, (id_movimentacao,))
+
+                row = cursor.fetchone()
+
+                if not row:
+                    return jsonify({
+                        'sucesso': False,
+                        'mensagem': 'Movimentação não encontrada.'
+                    }), 404
+
+                cursor.execute("""
+                    DELETE FROM Historico_Movimentacao
+                    WHERE Id_Historico_Movimentacao = %s;
+                """, (id_movimentacao,))
+
+                conn.commit()
+
+                return jsonify({
+                    'sucesso': True,
+                    'mensagem': 'Movimentação excluída com sucesso!'
+                }), 200
+
+    except Exception as e:
+        return jsonify({
+            'sucesso': False,
+            'mensagem': str(e)
+        }), 500
 
 # Inicializa a aplicação Flask em modo de desenvolvimento
 if __name__ == '__main__':

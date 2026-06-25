@@ -2164,6 +2164,489 @@ async function atualizarManutencao() {
   }
 }
 
+// ===================== MOVIMENTAÇÕES - VARIÁVEIS GLOBAIS =====================
+// Armazena os registros carregados, listas auxiliares e o ID pendente de exclusão.
+let listaMovimentacoes = [];
+let listaMovimentacoesFiltrada = [];
+let listaUsuariosMovimentacao = [];
+let listaLocaisMovimentacao = [];
+let listaResponsaveisMovimentacao = [];
+let listaPatrimoniosMovimentacao = [];
+let idMovimentacaoParaExcluir = null;
+
+// ===================== MOVIMENTAÇÕES - FUNÇÕES AUXILIARES =====================
+// Formata a data no padrão brasileiro para exibição na tabela.
+function formatarDataMovimentacao(data) {
+  if (!data) return '-';
+
+  const partes = String(data).split('-');
+  if (partes.length !== 3) return data;
+
+  return `${partes[2]}/${partes[1]}/${partes[0]}`;
+}
+
+// Escapa caracteres especiais antes de inserir conteúdo no HTML.
+function escaparHtmlMovimentacao(texto) {
+  if (texto === null || texto === undefined) return '';
+
+  return String(texto)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+// Exibe ou oculta mensagens de erro nos modais da página.
+function exibirMensagemErroMovimentacao(idElemento, mensagem = '') {
+  const elemento = document.getElementById(idElemento);
+  if (!elemento) return;
+
+  elemento.textContent = mensagem;
+  elemento.style.display = mensagem ? 'block' : 'none';
+}
+
+// Preenche os selects auxiliares com os dados vindos da API.
+function preencherSelectMovimentacao(idSelect, lista, placeholder = 'Selecione...') {
+  const select = document.getElementById(idSelect);
+  if (!select) return;
+
+  select.innerHTML = `<option value="">${placeholder}</option>`;
+
+  lista.forEach(item => {
+    const option = document.createElement('option');
+    option.value = item.id;
+    option.textContent = item.nome;
+    select.appendChild(option);
+  });
+}
+
+// ===================== MOVIMENTAÇÕES - CARREGAR LISTAGEM =====================
+// Busca as movimentações cadastradas e renderiza na tabela principal.
+async function carregarMovimentacoes() {
+  const tbody = document.getElementById('tabelaMovimentacoes');
+  if (!tbody) return;
+
+  tbody.innerHTML = `
+    <tr>
+      <td colspan="9" class="text-center text-muted py-4">
+        <i class="bi bi-arrow-repeat me-2"></i>Carregando registros de movimentação...
+      </td>
+    </tr>
+  `;
+
+  try {
+    const resposta = await fetch('https://controlepatrimonio.onrender.com/api/movimentacoes');
+    const dados = await resposta.json();
+
+    if (!resposta.ok || !dados.sucesso) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="9" class="text-center text-danger py-4">
+            ${escaparHtmlMovimentacao(dados.mensagem || 'Erro ao carregar movimentações.')}
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    listaMovimentacoes = Array.isArray(dados.movimentacoes) ? dados.movimentacoes : [];
+    listaMovimentacoesFiltrada = [...listaMovimentacoes];
+    renderizarMovimentacoes(listaMovimentacoesFiltrada);
+  } catch (erro) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="9" class="text-center text-danger py-4">
+          <i class="bi bi-wifi-off me-2"></i>Erro ao conectar com o servidor.
+        </td>
+      </tr>
+    `;
+  }
+}
+
+// ===================== MOVIMENTAÇÕES - RENDERIZAR TABELA =====================
+// Monta as linhas da tabela com os dados da lista filtrada.
+function renderizarMovimentacoes(lista) {
+  const tbody = document.getElementById('tabelaMovimentacoes');
+  if (!tbody) return;
+
+  if (!lista || lista.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="9" class="text-center text-muted py-4">
+          Nenhum registro de movimentação encontrado.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = lista.map(item => `
+    <tr>
+      <td>${escaparHtmlMovimentacao(item.id)}</td>
+      <td>${escaparHtmlMovimentacao(item.patrimonio_nome || '-')}</td>
+      <td>${escaparHtmlMovimentacao(item.local_origem_nome || '-')}</td>
+      <td>${escaparHtmlMovimentacao(item.local_destino_nome || '-')}</td>
+      <td>${escaparHtmlMovimentacao(item.responsavel_nome || '-')}</td>
+      <td>${escaparHtmlMovimentacao(item.usuario_nome || '-')}</td>
+      <td>${escaparHtmlMovimentacao(formatarDataMovimentacao(item.data_transferencia))}</td>
+      <td>${escaparHtmlMovimentacao(item.observacoes || '-')}</td>
+      <td>
+        <div class="d-flex gap-2">
+          <button class="btn btn-sm btn-outline-primary" onclick="abrirModalEditarMovimentacao(${item.id})">
+            Editar
+          </button>
+          <button class="btn btn-sm btn-outline-danger" onclick="abrirModalExclusaoMovimentacao(${item.id})">
+            Excluir
+          </button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+// ===================== MOVIMENTAÇÕES - FILTRAR =====================
+// Filtra a lista por patrimônio, locais, responsável, usuário ou observações.
+function filtrarMovimentacoes() {
+  const termo = document.getElementById('campoBuscaMovimentacao').value.trim().toLowerCase();
+
+  if (!termo) {
+    listaMovimentacoesFiltrada = [...listaMovimentacoes];
+    renderizarMovimentacoes(listaMovimentacoesFiltrada);
+    return;
+  }
+
+  listaMovimentacoesFiltrada = listaMovimentacoes.filter(item =>
+    String(item.id || '').toLowerCase().includes(termo) ||
+    String(item.patrimonio_nome || '').toLowerCase().includes(termo) ||
+    String(item.local_origem_nome || '').toLowerCase().includes(termo) ||
+    String(item.local_destino_nome || '').toLowerCase().includes(termo) ||
+    String(item.responsavel_nome || '').toLowerCase().includes(termo) ||
+    String(item.usuario_nome || '').toLowerCase().includes(termo) ||
+    String(item.observacoes || '').toLowerCase().includes(termo)
+  );
+
+  renderizarMovimentacoes(listaMovimentacoesFiltrada);
+}
+
+// ===================== MOVIMENTAÇÕES - CARREGAR DADOS AUXILIARES =====================
+// Busca usuários, locais e responsáveis para preencher os campos dos modais.
+async function carregarDadosAuxiliaresMovimentacao() {
+  try {
+    const [respostaUsuarios, respostaLocais, respostaResponsaveis] = await Promise.all([
+      fetch('https://controlepatrimonio.onrender.com/api/usuarios'),
+      fetch('https://controlepatrimonio.onrender.com/api/locais'),
+      fetch('https://controlepatrimonio.onrender.com/api/responsaveis')
+    ]);
+
+    const dadosUsuarios = await respostaUsuarios.json();
+    const dadosLocais = await respostaLocais.json();
+    const dadosResponsaveis = await respostaResponsaveis.json();
+
+    listaUsuariosMovimentacao = Array.isArray(dadosUsuarios.usuarios)
+      ? dadosUsuarios.usuarios
+          .filter(usuario => usuario.ativo === 'S')
+          .map(usuario => ({ id: usuario.id, nome: usuario.nome }))
+      : [];
+
+    listaLocaisMovimentacao = Array.isArray(dadosLocais.locais)
+      ? dadosLocais.locais.map(local => ({ id: local.id, nome: local.nome }))
+      : [];
+
+    listaResponsaveisMovimentacao = Array.isArray(dadosResponsaveis.responsaveis)
+      ? dadosResponsaveis.responsaveis.map(responsavel => ({ id: responsavel.id, nome: responsavel.nome }))
+      : [];
+
+    preencherSelectMovimentacao('incluirUsuarioMovimentacao', listaUsuariosMovimentacao);
+    preencherSelectMovimentacao('editarUsuarioMovimentacao', listaUsuariosMovimentacao);
+
+    preencherSelectMovimentacao('incluirLocalOrigemMovimentacao', listaLocaisMovimentacao);
+    preencherSelectMovimentacao('editarLocalOrigemMovimentacao', listaLocaisMovimentacao);
+
+    preencherSelectMovimentacao('incluirLocalDestinoMovimentacao', listaLocaisMovimentacao);
+    preencherSelectMovimentacao('editarLocalDestinoMovimentacao', listaLocaisMovimentacao);
+
+    preencherSelectMovimentacao('incluirResponsavelMovimentacao', listaResponsaveisMovimentacao);
+    preencherSelectMovimentacao('editarResponsavelMovimentacao', listaResponsaveisMovimentacao);
+  } catch (erro) {
+    console.error('Erro ao carregar dados auxiliares de movimentação:', erro);
+  }
+}
+
+// ===================== MOVIMENTAÇÕES - PESQUISAR PATRIMÔNIO =====================
+// Pesquisa patrimônios ativos conforme o usuário digita no campo.
+async function pesquisarPatrimonioMovimentacao(termo, modo) {
+  const valor = termo.trim();
+  const idListaResultado = modo === 'editar'
+    ? 'resultadosBuscaPatrimonioEditar'
+    : 'resultadosBuscaPatrimonioIncluir';
+
+  const listaResultado = document.getElementById(idListaResultado);
+  if (!listaResultado) return;
+
+  if (valor.length < 2) {
+    listaResultado.innerHTML = '';
+    return;
+  }
+
+  try {
+    const resposta = await fetch(`https://controlepatrimonio.onrender.com/api/patrimonios/busca?termo=${encodeURIComponent(valor)}`);
+    const dados = await resposta.json();
+
+    if (!resposta.ok || !dados.sucesso) {
+      listaResultado.innerHTML = '';
+      return;
+    }
+
+    listaPatrimoniosMovimentacao = Array.isArray(dados.patrimonios) ? dados.patrimonios : [];
+
+    if (listaPatrimoniosMovimentacao.length === 0) {
+      listaResultado.innerHTML = `
+        <button type="button" class="list-group-item list-group-item-action disabled">
+          Nenhum patrimônio ativo encontrado.
+        </button>
+      `;
+      return;
+    }
+
+    listaResultado.innerHTML = listaPatrimoniosMovimentacao.map(item => `
+      <button
+        type="button"
+        class="list-group-item list-group-item-action"
+        onclick="selecionarPatrimonioMovimentacao(${item.id}, '${String(item.nome || '').replace(/'/g, "\\'")}', '${modo}')"
+      >
+        ${escaparHtmlMovimentacao(item.nome)}
+      </button>
+    `).join('');
+  } catch (erro) {
+    listaResultado.innerHTML = '';
+  }
+}
+
+// Define o patrimônio selecionado na pesquisa dinâmica.
+function selecionarPatrimonioMovimentacao(id, nome, modo) {
+  if (modo === 'editar') {
+    document.getElementById('editarPatrimonioMovimentacao').value = id;
+    document.getElementById('buscaPatrimonioEditarMovimentacao').value = nome;
+    document.getElementById('resultadosBuscaPatrimonioEditar').innerHTML = '';
+    return;
+  }
+
+  document.getElementById('incluirPatrimonioMovimentacao').value = id;
+  document.getElementById('buscaPatrimonioMovimentacao').value = nome;
+  document.getElementById('resultadosBuscaPatrimonioIncluir').innerHTML = '';
+}
+
+// ===================== MOVIMENTAÇÕES - MODAL INCLUIR =====================
+// Abre o modal de cadastro e limpa os campos antes do preenchimento.
+async function abrirModalIncluirMovimentacao() {
+  exibirMensagemErroMovimentacao('msgErroIncluirMovimentacao', '');
+  await carregarDadosAuxiliaresMovimentacao();
+
+  document.getElementById('incluirPatrimonioMovimentacao').value = '';
+  document.getElementById('buscaPatrimonioMovimentacao').value = '';
+  document.getElementById('resultadosBuscaPatrimonioIncluir').innerHTML = '';
+  document.getElementById('incluirUsuarioMovimentacao').value = '';
+  document.getElementById('incluirResponsavelMovimentacao').value = '';
+  document.getElementById('incluirLocalOrigemMovimentacao').value = '';
+  document.getElementById('incluirLocalDestinoMovimentacao').value = '';
+  document.getElementById('incluirDtTransferenciaMovimentacao').value = '';
+  document.getElementById('incluirObservacoesMovimentacao').value = '';
+
+  document.getElementById('modalIncluirMovimentacao').style.display = 'flex';
+}
+
+// Fecha o modal de cadastro de movimentação.
+function fecharModalIncluirMovimentacao() {
+  document.getElementById('modalIncluirMovimentacao').style.display = 'none';
+}
+
+// ===================== MOVIMENTAÇÕES - CADASTRAR =====================
+// Valida os campos obrigatórios e envia o novo registro para a API.
+async function salvarMovimentacao() {
+  const id_patrimonio = document.getElementById('incluirPatrimonioMovimentacao').value;
+  const id_usuario = document.getElementById('incluirUsuarioMovimentacao').value;
+  const id_responsavel_patrimonio = document.getElementById('incluirResponsavelMovimentacao').value;
+  const id_local_origem = document.getElementById('incluirLocalOrigemMovimentacao').value;
+  const id_local_destino = document.getElementById('incluirLocalDestinoMovimentacao').value;
+  const dt_transferencia = document.getElementById('incluirDtTransferenciaMovimentacao').value;
+  const observacoes = document.getElementById('incluirObservacoesMovimentacao').value.trim();
+
+  exibirMensagemErroMovimentacao('msgErroIncluirMovimentacao', '');
+
+  if (!id_patrimonio || !id_usuario || !id_responsavel_patrimonio || !id_local_origem || !id_local_destino || !dt_transferencia) {
+    exibirMensagemErroMovimentacao('msgErroIncluirMovimentacao', 'Preencha todos os campos obrigatórios.');
+    return;
+  }
+
+  try {
+    const resposta = await fetch('https://controlepatrimonio.onrender.com/api/movimentacoes', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        id_patrimonio,
+        id_usuario,
+        id_local_origem,
+        id_local_destino,
+        id_responsavel_patrimonio,
+        dt_transferencia,
+        observacoes
+      })
+    });
+
+    const dados = await resposta.json();
+
+    if (!resposta.ok || !dados.sucesso) {
+      exibirMensagemErroMovimentacao('msgErroIncluirMovimentacao', dados.mensagem || 'Erro ao salvar movimentação.');
+      return;
+    }
+
+    fecharModalIncluirMovimentacao();
+    await carregarMovimentacoes();
+  } catch (erro) {
+    exibirMensagemErroMovimentacao('msgErroIncluirMovimentacao', 'Erro ao conectar com o servidor.');
+  }
+}
+
+// ===================== MOVIMENTAÇÕES - MODAL EDITAR =====================
+// Abre o modal de edição com os dados da movimentação selecionada.
+async function abrirModalEditarMovimentacao(id) {
+  const movimentacao = listaMovimentacoes.find(item => Number(item.id) === Number(id));
+  if (!movimentacao) return;
+
+  await carregarDadosAuxiliaresMovimentacao();
+  exibirMensagemErroMovimentacao('msgErroEditarMovimentacao', '');
+
+  document.getElementById('editarIdMovimentacao').value = movimentacao.id;
+  document.getElementById('editarPatrimonioMovimentacao').value = movimentacao.id_patrimonio || '';
+  document.getElementById('buscaPatrimonioEditarMovimentacao').value = movimentacao.patrimonio_nome || '';
+  document.getElementById('resultadosBuscaPatrimonioEditar').innerHTML = '';
+  document.getElementById('editarUsuarioMovimentacao').value = movimentacao.id_usuario || '';
+  document.getElementById('editarResponsavelMovimentacao').value = movimentacao.id_responsavel_patrimonio || '';
+  document.getElementById('editarLocalOrigemMovimentacao').value = movimentacao.id_local_origem || '';
+  document.getElementById('editarLocalDestinoMovimentacao').value = movimentacao.id_local_destino || '';
+  document.getElementById('editarDtTransferenciaMovimentacao').value = movimentacao.data_transferencia || '';
+  document.getElementById('editarObservacoesMovimentacao').value = movimentacao.observacoes || '';
+
+  document.getElementById('modalEditarMovimentacao').style.display = 'flex';
+}
+
+// Fecha o modal de edição de movimentação.
+function fecharModalEditarMovimentacao() {
+  document.getElementById('modalEditarMovimentacao').style.display = 'none';
+}
+
+// ===================== MOVIMENTAÇÕES - ATUALIZAR =====================
+// Envia para a API os dados alterados no modal de edição.
+async function atualizarMovimentacao() {
+  const id = document.getElementById('editarIdMovimentacao').value;
+  const id_patrimonio = document.getElementById('editarPatrimonioMovimentacao').value;
+  const id_usuario = document.getElementById('editarUsuarioMovimentacao').value;
+  const id_responsavel_patrimonio = document.getElementById('editarResponsavelMovimentacao').value;
+  const id_local_origem = document.getElementById('editarLocalOrigemMovimentacao').value;
+  const id_local_destino = document.getElementById('editarLocalDestinoMovimentacao').value;
+  const dt_transferencia = document.getElementById('editarDtTransferenciaMovimentacao').value;
+  const observacoes = document.getElementById('editarObservacoesMovimentacao').value.trim();
+
+  exibirMensagemErroMovimentacao('msgErroEditarMovimentacao', '');
+
+  if (!id || !id_patrimonio || !id_usuario || !id_responsavel_patrimonio || !id_local_origem || !id_local_destino || !dt_transferencia) {
+    exibirMensagemErroMovimentacao('msgErroEditarMovimentacao', 'Preencha todos os campos obrigatórios.');
+    return;
+  }
+
+  try {
+    const resposta = await fetch(`https://controlepatrimonio.onrender.com/api/movimentacoes/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        id_patrimonio,
+        id_usuario,
+        id_local_origem,
+        id_local_destino,
+        id_responsavel_patrimonio,
+        dt_transferencia,
+        observacoes
+      })
+    });
+
+    const dados = await resposta.json();
+
+    if (!resposta.ok || !dados.sucesso) {
+      exibirMensagemErroMovimentacao('msgErroEditarMovimentacao', dados.mensagem || 'Erro ao atualizar movimentação.');
+      return;
+    }
+
+    fecharModalEditarMovimentacao();
+    await carregarMovimentacoes();
+  } catch (erro) {
+    exibirMensagemErroMovimentacao('msgErroEditarMovimentacao', 'Erro ao conectar com o servidor.');
+  }
+}
+
+// ===================== MOVIMENTAÇÕES - EXCLUSÃO =====================
+// Abre o modal de confirmação e guarda o ID da movimentação selecionada.
+function abrirModalExclusaoMovimentacao(id) {
+  idMovimentacaoParaExcluir = id;
+  document.getElementById('modalConfirmarExclusaoMovimentacao').style.display = 'flex';
+}
+
+// Fecha o modal de confirmação de exclusão.
+function fecharModalExclusaoMovimentacao() {
+  idMovimentacaoParaExcluir = null;
+  document.getElementById('modalConfirmarExclusaoMovimentacao').style.display = 'none';
+}
+
+// Exclui o registro fisicamente após confirmação do usuário.
+async function confirmarExclusaoMovimentacao() {
+  if (!idMovimentacaoParaExcluir) return;
+
+  try {
+    const resposta = await fetch(`https://controlepatrimonio.onrender.com/api/movimentacoes/${idMovimentacaoParaExcluir}`, {
+      method: 'DELETE'
+    });
+
+    const dados = await resposta.json();
+    fecharModalExclusaoMovimentacao();
+
+    if (!resposta.ok || !dados.sucesso) {
+      alert(dados.mensagem || 'Erro ao excluir movimentação.');
+      return;
+    }
+
+    await carregarMovimentacoes();
+  } catch (erro) {
+    fecharModalExclusaoMovimentacao();
+    alert('Erro ao conectar com o servidor.');
+  }
+}
+
+// ===================== MOVIMENTAÇÕES - FECHAR LISTAS DE PESQUISA =====================
+// Fecha as listas de resultado da pesquisa de patrimônio ao clicar fora do campo.
+document.addEventListener('click', function (event) {
+  const campoIncluir = document.getElementById('buscaPatrimonioMovimentacao');
+  const listaIncluir = document.getElementById('resultadosBuscaPatrimonioIncluir');
+
+  const campoEditar = document.getElementById('buscaPatrimonioEditarMovimentacao');
+  const listaEditar = document.getElementById('resultadosBuscaPatrimonioEditar');
+
+  if (campoIncluir && listaIncluir) {
+    if (!campoIncluir.contains(event.target) && !listaIncluir.contains(event.target)) {
+      listaIncluir.innerHTML = '';
+    }
+  }
+
+  if (campoEditar && listaEditar) {
+    if (!campoEditar.contains(event.target) && !listaEditar.contains(event.target)) {
+      listaEditar.innerHTML = '';
+    }
+  }
+});
+
 
 document.addEventListener('DOMContentLoaded', () => {
   const caminho = window.location.pathname;
@@ -2223,6 +2706,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (paginaAtual === 'manutencao.html') {
     carregarManutencoes();
+  }
+
+  if (paginaAtual === 'movimentacao.html') {
+    carregarMovimentacoes();
   }
 
 });

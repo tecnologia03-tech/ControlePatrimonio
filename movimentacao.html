@@ -37,214 +37,271 @@
       </div>
     </aside>
 
-  <!-- CONTENT -->
-  <div class="content">
+   <div class="content">
 
-    <!-- TOPBAR -->
-    <header class="topbar">
-      <button class="btn-menu-toggle" onclick="toggleMenu()" aria-label="Abrir menu">
-        <i class="bi bi-list"></i>
-      </button>
-      <span class="topbar-titulo">Histórico de Movimentações</span>
-      <div class="topbar-usuario">
-        <div class="avatar"><i class="bi bi-person-fill"></i></div>
-        <span id="nomeUsuarioTopbar">Usuário</span>
+      <div class="topbar">
+        <button class="btn-menu-toggle" onclick="toggleMenu()" aria-label="Abrir menu">
+          <i class="bi bi-list"></i>
+        </button>
+
+        <span class="topbar-titulo">Histórico de Movimentações</span>
+
+        <div class="topbar-usuario">
+          <div class="avatar">
+            <i class="bi bi-person-fill"></i>
+          </div>
+          <span id="nomeUsuarioTopbar">Usuário</span>
+        </div>
       </div>
-    </header>
 
-    <!-- MAIN -->
-    <main class="main-content">
+      <div class="main-content">
 
-      <!-- TOOLBAR -->
-      <div class="usuarios-toolbar">
-        <input
-          type="text"
-          id="campoBuscaMovimentacao"
-          class="input-busca-usuario"
-          placeholder="Pesquisar por patrimônio ou responsável..."
-          oninput="filtrarMovimentacoes(this.value)"
-        />
-        <button class="btn btn-incluir-usuario" onclick="abrirModalIncluirMovimentacao()">
-          <i class="bi bi-arrow-left-right me-1"></i> Registrar Movimentação
+        <div class="usuarios-toolbar">
+          <input
+            type="text"
+            id="campoBuscaMovimentacao"
+            class="input-busca-usuario"
+            placeholder="Pesquisar por patrimônio, responsável ou local..."
+            oninput="filtrarMovimentacoes()"
+          >
+
+          <button class="btn btn-incluir-usuario" onclick="abrirModalIncluirMovimentacao()">
+            <i class="bi bi-arrow-left-right"></i> Registrar Movimentação
+          </button>
+        </div>
+
+        <div class="usuarios-card">
+          <div class="usuarios-card-header">
+            <i class="bi bi-arrow-left-right"></i>
+            <span>Histórico de Movimentações</span>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table tabela-usuarios mb-0">
+              <thead>
+                <tr>
+                  <th style="width: 60px;">ID</th>
+                  <th>Patrimônio</th>
+                  <th>Local de Origem</th>
+                  <th>Local de Destino</th>
+                  <th>Responsável</th>
+                  <th>Usuário</th>
+                  <th>Data</th>
+                  <th>Observações</th>
+                  <th style="width: 130px;">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="tabelaMovimentacoes">
+                <tr>
+                  <td colspan="9" class="text-center text-muted py-4">
+                    <i class="bi bi-arrow-repeat me-2"></i>Carregando registros de movimentação...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="rodape">
+        Sistema de Controle de Patrimônio © 2026
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODAL INCLUIR MOVIMENTAÇÃO -->
+  <div class="modal-overlay" id="modalIncluirMovimentacao" style="display: none;">
+    <div class="modal-box" style="max-width: 760px;">
+      <div class="modal-header-custom">
+        <h5><i class="bi bi-arrow-left-right me-2"></i>Registrar Movimentação</h5>
+        <button class="btn-fechar-modal" onclick="fecharModalIncluirMovimentacao()">&times;</button>
+      </div>
+
+      <div class="modal-body-custom">
+        <p id="msgErroIncluirMovimentacao" class="text-danger mb-3" style="display:none;"></p>
+
+        <div class="row g-3">
+          <div class="col-12 position-relative">
+            <label for="buscaPatrimonioMovimentacao" class="form-label fw-semibold">Patrimônio</label>
+            <input
+              type="text"
+              id="buscaPatrimonioMovimentacao"
+              class="form-control"
+              placeholder="Digite para pesquisar o patrimônio ativo..."
+              autocomplete="off"
+              oninput="pesquisarPatrimonioMovimentacao(this.value, 'incluir')"
+            >
+            <input type="hidden" id="incluirPatrimonioMovimentacao">
+            <div id="resultadosBuscaPatrimonioIncluir" class="list-group position-absolute w-100 shadow-sm" style="z-index: 20;"></div>
+          </div>
+
+          <div class="col-md-6">
+            <label for="incluirUsuarioMovimentacao" class="form-label fw-semibold">Usuário</label>
+            <select id="incluirUsuarioMovimentacao" class="form-select">
+              <option value="">Selecione...</option>
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label for="incluirResponsavelMovimentacao" class="form-label fw-semibold">Responsável</label>
+            <select id="incluirResponsavelMovimentacao" class="form-select">
+              <option value="">Selecione...</option>
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label for="incluirLocalOrigemMovimentacao" class="form-label fw-semibold">Local de origem</label>
+            <select id="incluirLocalOrigemMovimentacao" class="form-select">
+              <option value="">Selecione...</option>
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label for="incluirLocalDestinoMovimentacao" class="form-label fw-semibold">Local de destino</label>
+            <select id="incluirLocalDestinoMovimentacao" class="form-select">
+              <option value="">Selecione...</option>
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label for="incluirDtTransferenciaMovimentacao" class="form-label fw-semibold">Data da transferência</label>
+            <input type="date" id="incluirDtTransferenciaMovimentacao" class="form-control">
+          </div>
+
+          <div class="col-12">
+            <label for="incluirObservacoesMovimentacao" class="form-label fw-semibold">Observações</label>
+            <textarea
+              id="incluirObservacoesMovimentacao"
+              class="form-control"
+              rows="3"
+              maxlength="200"
+              placeholder="Descreva a observação da movimentação..."
+            ></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer-custom">
+        <button class="btn btn-secondary btn-sm" onclick="fecharModalIncluirMovimentacao()">Cancelar</button>
+        <button class="btn btn-primary btn-sm" onclick="salvarMovimentacao()">
+          <i class="bi bi-check-lg"></i> Salvar Movimentação
         </button>
       </div>
+    </div>
+  </div>
 
-      <!-- CARD DA TABELA -->
-      <div class="usuarios-card">
-        <div class="usuarios-card-header">
-          <i class="bi bi-arrow-left-right"></i>
-          Registros de Movimentações
-        </div>
-        <div class="table-responsive">
-          <table class="table tabela-usuarios mb-0">
-            <thead>
-              <tr>
-                <th style="width:50px;">#</th>
-                <th>Patrimônio</th>
-                <th>Setor Origem</th>
-                <th>Setor Destino</th>
-                <th>Responsável</th>
-                <th>Data</th>
-                <th>Observações</th>
-                <th style="width:100px;">Ações</th>
-              </tr>
-            </thead>
-            <tbody id="tabelaMovimentacoes">
-              <tr>
-                <td colspan="8" class="text-center text-muted py-4">
-                  <i class="bi bi-arrow-repeat me-2"></i>Carregando registros de movimentações...
-                </td>
-              </tr>
-            </tbody>
-          </table>
+  <!-- MODAL EDITAR MOVIMENTAÇÃO -->
+  <div class="modal-overlay" id="modalEditarMovimentacao" style="display: none;">
+    <div class="modal-box" style="max-width: 760px;">
+      <div class="modal-header-custom">
+        <h5><i class="bi bi-pencil-square me-2"></i>Editar Movimentação</h5>
+        <button class="btn-fechar-modal" onclick="fecharModalEditarMovimentacao()">&times;</button>
+      </div>
+
+      <div class="modal-body-custom">
+        <input type="hidden" id="editarIdMovimentacao">
+        <p id="msgErroEditarMovimentacao" class="text-danger mb-3" style="display:none;"></p>
+
+        <div class="row g-3">
+          <div class="col-12 position-relative">
+            <label for="buscaPatrimonioEditarMovimentacao" class="form-label fw-semibold">Patrimônio</label>
+            <input
+              type="text"
+              id="buscaPatrimonioEditarMovimentacao"
+              class="form-control"
+              placeholder="Digite para pesquisar o patrimônio ativo..."
+              autocomplete="off"
+              oninput="pesquisarPatrimonioMovimentacao(this.value, 'editar')"
+            >
+            <input type="hidden" id="editarPatrimonioMovimentacao">
+            <div id="resultadosBuscaPatrimonioEditar" class="list-group position-absolute w-100 shadow-sm" style="z-index: 20;"></div>
+          </div>
+
+          <div class="col-md-6">
+            <label for="editarUsuarioMovimentacao" class="form-label fw-semibold">Usuário</label>
+            <select id="editarUsuarioMovimentacao" class="form-select">
+              <option value="">Selecione...</option>
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label for="editarResponsavelMovimentacao" class="form-label fw-semibold">Responsável</label>
+            <select id="editarResponsavelMovimentacao" class="form-select">
+              <option value="">Selecione...</option>
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label for="editarLocalOrigemMovimentacao" class="form-label fw-semibold">Local de origem</label>
+            <select id="editarLocalOrigemMovimentacao" class="form-select">
+              <option value="">Selecione...</option>
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label for="editarLocalDestinoMovimentacao" class="form-label fw-semibold">Local de destino</label>
+            <select id="editarLocalDestinoMovimentacao" class="form-select">
+              <option value="">Selecione...</option>
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label for="editarDtTransferenciaMovimentacao" class="form-label fw-semibold">Data da transferência</label>
+            <input type="date" id="editarDtTransferenciaMovimentacao" class="form-control">
+          </div>
+
+          <div class="col-12">
+            <label for="editarObservacoesMovimentacao" class="form-label fw-semibold">Observações</label>
+            <textarea
+              id="editarObservacoesMovimentacao"
+              class="form-control"
+              rows="3"
+              maxlength="200"
+              placeholder="Descreva a observação da movimentação..."
+            ></textarea>
+          </div>
         </div>
       </div>
 
-    </main>
-
-    <!-- RODAPÉ -->
-    <footer class="rodape">
-      Sistema de Controle de Patrimônio © 2025
-    </footer>
-
-  </div>
-</div>
-
-
-<!-- ===================== MODAL: REGISTRAR MOVIMENTAÇÃO ===================== -->
-<div id="modalIncluirMovimentacao" class="modal-overlay" style="display:none;">
-  <div class="modal-box" style="max-width:620px;">
-    <div class="modal-header-custom">
-      <h5><i class="bi bi-arrow-left-right me-2"></i>Registrar Movimentação</h5>
-      <button class="btn-fechar-modal" onclick="fecharModalIncluirMovimentacao()">&times;</button>
-    </div>
-    <div class="modal-body-custom">
-      <div id="msgErroIncluirMovimentacao" class="alert alert-danger py-2 mb-3" style="display:none;"></div>
-      <div class="row g-3">
-        <div class="col-12">
-          <label class="form-label fw-semibold">Patrimônio</label>
-          <select id="incluirPatrimonioMovimentacao" class="form-select">
-            <option value="">Selecione...</option>
-          </select>
-        </div>
-        <div class="col-md-6">
-          <label class="form-label fw-semibold">Setor de Origem</label>
-          <select id="incluirLocalOrigemMovimentacao" class="form-select">
-            <option value="">Selecione...</option>
-          </select>
-        </div>
-        <div class="col-md-6">
-          <label class="form-label fw-semibold">Setor de Destino</label>
-          <select id="incluirLocalDestinoMovimentacao" class="form-select">
-            <option value="">Selecione...</option>
-          </select>
-        </div>
-        <div class="col-md-6">
-          <label class="form-label fw-semibold">Responsável</label>
-          <select id="incluirResponsavelMovimentacao" class="form-select">
-            <option value="">Selecione...</option>
-          </select>
-        </div>
-        <div class="col-md-6">
-          <label class="form-label fw-semibold">Data da Transferência</label>
-          <input type="date" id="incluirDtTransferenciaMovimentacao" class="form-control"/>
-        </div>
-        <div class="col-12">
-          <label class="form-label fw-semibold">Observações</label>
-          <textarea id="incluirObservacoesMovimentacao" class="form-control" rows="2"
-            placeholder="Ex: Transferência solicitada pelo gestor..."></textarea>
-        </div>
+      <div class="modal-footer-custom">
+        <button class="btn btn-secondary btn-sm" onclick="fecharModalEditarMovimentacao()">Cancelar</button>
+        <button class="btn btn-primary btn-sm" onclick="atualizarMovimentacao()">
+          <i class="bi bi-check-lg"></i> Salvar Alterações
+        </button>
       </div>
     </div>
-    <div class="modal-footer-custom">
-      <button class="btn btn-outline-secondary" onclick="fecharModalIncluirMovimentacao()">Cancelar</button>
-      <button class="btn btn-primary" onclick="salvarMovimentacao()">
-        <i class="bi bi-check-lg me-1"></i>Salvar Registro
-      </button>
-    </div>
   </div>
-</div>
 
-
-<!-- ===================== MODAL: EDITAR MOVIMENTAÇÃO ===================== -->
-<div id="modalEditarMovimentacao" class="modal-overlay" style="display:none;">
-  <div class="modal-box" style="max-width:620px;">
-    <div class="modal-header-custom">
-      <h5><i class="bi bi-pencil-fill me-2"></i>Editar Movimentação</h5>
-      <button class="btn-fechar-modal" onclick="fecharModalEditarMovimentacao()">&times;</button>
-    </div>
-    <div class="modal-body-custom">
-      <div id="msgErroEditarMovimentacao" class="alert alert-danger py-2 mb-3" style="display:none;"></div>
-      <input type="hidden" id="editarIdMovimentacao"/>
-      <div class="row g-3">
-        <div class="col-12">
-          <label class="form-label fw-semibold">Patrimônio</label>
-          <select id="editarPatrimonioMovimentacao" class="form-select">
-            <option value="">Selecione...</option>
-          </select>
-        </div>
-        <div class="col-md-6">
-          <label class="form-label fw-semibold">Setor de Origem</label>
-          <select id="editarLocalOrigemMovimentacao" class="form-select">
-            <option value="">Selecione...</option>
-          </select>
-        </div>
-        <div class="col-md-6">
-          <label class="form-label fw-semibold">Setor de Destino</label>
-          <select id="editarLocalDestinoMovimentacao" class="form-select">
-            <option value="">Selecione...</option>
-          </select>
-        </div>
-        <div class="col-md-6">
-          <label class="form-label fw-semibold">Responsável</label>
-          <select id="editarResponsavelMovimentacao" class="form-select">
-            <option value="">Selecione...</option>
-          </select>
-        </div>
-        <div class="col-md-6">
-          <label class="form-label fw-semibold">Data da Transferência</label>
-          <input type="date" id="editarDtTransferenciaMovimentacao" class="form-control"/>
-        </div>
-        <div class="col-12">
-          <label class="form-label fw-semibold">Observações</label>
-          <textarea id="editarObservacoesMovimentacao" class="form-control" rows="2"></textarea>
-        </div>
+  <!-- MODAL CONFIRMAÇÃO DE EXCLUSÃO -->
+  <div class="modal-overlay-confirmacao" id="modalConfirmarExclusaoMovimentacao" style="display: none;">
+    <div class="modal-confirmacao-container">
+      <div class="modal-icone-alerta">
+        <i class="bi bi-exclamation-triangle-fill" style="font-size: 28px;"></i>
+      </div>
+      <h5 class="modal-titulo-confirmacao">Confirmar Exclusão</h5>
+      <p class="modal-texto-confirmacao">
+        Deseja realmente excluir este registro de movimentação? Esta ação não pode ser desfeita.
+      </p>
+      <div class="modal-botoes-confirmacao">
+        <button class="btn-cancelar-confirmacao" onclick="fecharModalExclusaoMovimentacao()">Cancelar</button>
+        <button class="btn-inativar-confirmacao" onclick="confirmarExclusaoMovimentacao()">Excluir Registro</button>
       </div>
     </div>
-    <div class="modal-footer-custom">
-      <button class="btn btn-outline-secondary" onclick="fecharModalEditarMovimentacao()">Cancelar</button>
-      <button class="btn btn-primary" onclick="atualizarMovimentacao()">
-        <i class="bi bi-check-lg me-1"></i>Salvar Alterações
-      </button>
-    </div>
   </div>
-</div>
 
+  <script src="script.js"></script>
 
-<!-- ===================== MODAL: CONFIRMAR EXCLUSÃO ===================== -->
-<div id="modalConfirmarExclusaoMovimentacao" class="modal-overlay-confirmacao" style="display:none;">
-  <div class="modal-confirmacao-container">
-    <div class="modal-icone-alerta">
-      <i class="bi bi-exclamation-triangle-fill" style="font-size:28px;"></i>
-    </div>
-    <h5 class="modal-titulo-confirmacao">Confirmar Exclusão</h5>
-    <p class="modal-texto-confirmacao">Deseja realmente excluir este registro de movimentação? Esta ação não pode ser desfeita.</p>
-    <div class="modal-botoes-confirmacao">
-      <button class="btn-cancelar-confirmacao" onclick="fecharModalExclusaoMovimentacao()">Cancelar</button>
-      <button class="btn-inativar-confirmacao" onclick="confirmarExclusaoMovimentacao()">Excluir Registro</button>
-    </div>
-  </div>
-</div>
-
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="script.js"></script>
-
-<script>
+  <script>
     document.addEventListener('DOMContentLoaded', function () {
       const nome = sessionStorage.getItem('nomeUsuario') || 'Usuário';
       const el = document.getElementById('nomeUsuarioTopbar');
       if (el) el.textContent = nome;
+
+      if (typeof carregarMovimentacoes === 'function') {
+        carregarMovimentacoes();
+      }
     });
   </script>
 
