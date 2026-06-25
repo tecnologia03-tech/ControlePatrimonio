@@ -190,80 +190,82 @@
 </div>
 
   <!-- Modal editar manutenção -->
-  <div class="modal-overlay" id="modalEditarManutencao" style="display: none;">
-    <div class="modal-container modal-lg">
-      <div class="modal-header-custom">
-        <h3><i class="bi bi-pencil-square"></i> Editar Manutenção</h3>
-        <button class="btn-close-custom" onclick="fecharModalEditarManutencao()">×</button>
-      </div>
+<div class="modal-overlay" id="modalEditarManutencao" style="display: none;">
+  <div class="modal-box" style="max-width: 720px;">
+    <div class="modal-header-custom">
+      <h5><i class="bi bi-pencil-square me-2"></i>Editar Manutenção</h5>
+      <button class="btn-fechar-modal" onclick="fecharModalEditarManutencao()">&times;</button>
+    </div>
 
-      <div class="modal-body-custom">
-        <input type="hidden" id="editarIdManutencao">
+    <div class="modal-body-custom">
+      <input type="hidden" id="editarIdManutencao">
 
-        <div class="form-grid">
-          <div class="form-group">
-            <label for="editarPatrimonioManutencao">Patrimônio</label>
-            <select id="editarPatrimonioManutencao">
-              <option value="">Selecione...</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label for="editarUsuarioManutencao">Usuário</label>
-            <select id="editarUsuarioManutencao">
-              <option value="">Selecione...</option>
-            </select>
-          </div>
-
-          <div class="form-group full-width">
-            <label for="editarProblemaManutencao">Problema identificado</label>
-            <textarea id="editarProblemaManutencao" rows="3"></textarea>
-          </div>
-
-          <div class="form-group">
-            <label for="editarDtEnvioManutencao">Data de envio</label>
-            <input type="date" id="editarDtEnvioManutencao">
-          </div>
-
-          <div class="form-group">
-            <label for="editarDtVoltaManutencao">Data de retorno</label>
-            <input type="date" id="editarDtVoltaManutencao">
-          </div>
-
-          <div class="form-group">
-            <label for="editarFornecedorManutencao">Fornecedor / Técnico</label>
-            <input type="text" id="editarFornecedorManutencao">
-          </div>
-
-          <div class="form-group">
-            <label for="editarVlrGastoManutencao">Valor gasto</label>
-            <input type="number" step="0.01" id="editarVlrGastoManutencao">
-          </div>
-
-          <div class="form-group full-width">
-            <label for="editarServicoRealizadoManutencao">Descrição do serviço realizado</label>
-            <textarea id="editarServicoRealizadoManutencao" rows="3"></textarea>
-          </div>
-
-          <div class="form-group">
-            <label for="editarResolvidoManutencao">Resolvido</label>
-            <select id="editarResolvidoManutencao" onchange="prepararConfirmacaoResolucaoManutencao()">
-              <option value="">Selecione...</option>
-              <option value="N">Não</option>
-              <option value="S">Sim</option>
-            </select>
-          </div>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label for="editarPatrimonioManutencao" class="form-label">Patrimônio</label>
+          <select id="editarPatrimonioManutencao" class="form-select">
+            <option value="">Selecione...</option>
+          </select>
         </div>
 
-        <p id="msgErroEditarManutencao" class="text-danger mt-2" style="display:none;"></p>
+        <div class="col-md-6">
+          <label for="editarUsuarioManutencao" class="form-label">Usuário</label>
+          <select id="editarUsuarioManutencao" class="form-select">
+            <option value="">Selecione...</option>
+          </select>
+        </div>
+
+        <div class="col-12">
+          <label for="editarProblemaManutencao" class="form-label">Problema identificado</label>
+          <textarea id="editarProblemaManutencao" rows="3" class="form-control"></textarea>
+        </div>
+
+        <div class="col-md-6">
+          <label for="editarDtEnvioManutencao" class="form-label">Data de envio</label>
+          <input type="date" id="editarDtEnvioManutencao" class="form-control">
+        </div>
+
+        <div class="col-md-6">
+          <label for="editarDtVoltaManutencao" class="form-label">Data de retorno</label>
+          <input type="date" id="editarDtVoltaManutencao" class="form-control">
+        </div>
+
+        <div class="col-md-6">
+          <label for="editarFornecedorManutencao" class="form-label">Fornecedor / Técnico</label>
+          <input type="text" id="editarFornecedorManutencao" class="form-control">
+        </div>
+
+        <div class="col-md-6">
+          <label for="editarVlrGastoManutencao" class="form-label">Valor gasto</label>
+          <input type="number" step="0.01" id="editarVlrGastoManutencao" class="form-control">
+        </div>
+
+        <div class="col-12">
+          <label for="editarServicoRealizadoManutencao" class="form-label">Descrição do serviço realizado</label>
+          <textarea id="editarServicoRealizadoManutencao" rows="3" class="form-control"></textarea>
+        </div>
+
+        <div class="col-md-6">
+          <label for="editarResolvidoManutencao" class="form-label">Resolvido</label>
+          <select id="editarResolvidoManutencao" class="form-select" onchange="prepararConfirmacaoResolucaoManutencao()">
+            <option value="">Selecione...</option>
+            <option value="N">Não</option>
+            <option value="S">Sim</option>
+          </select>
+        </div>
       </div>
 
-      <div class="modal-footer-custom">
-        <button class="btn-secondary" onclick="fecharModalEditarManutencao()">Cancelar</button>
-        <button class="btn-primary" onclick="atualizarManutencao()">Salvar Alterações</button>
-      </div>
+      <p id="msgErroEditarManutencao" class="text-danger mt-3 mb-0" style="display:none;"></p>
+    </div>
+
+    <div class="modal-footer-custom">
+      <button class="btn btn-secondary btn-sm" onclick="fecharModalEditarManutencao()">Cancelar</button>
+      <button class="btn btn-primary btn-sm" onclick="atualizarManutencao()">
+        <i class="bi bi-check-lg"></i> Salvar Alterações
+      </button>
     </div>
   </div>
+</div>
 
   <!-- Modal confirmação de resolução -->
   <div class="modal-overlay-confirmacao" id="modalConfirmarResolucaoManutencao" style="display: none;">
