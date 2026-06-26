@@ -1640,6 +1640,43 @@ def editar_manutencao(id_manutencao):
             "mensagem": f"Erro ao atualizar manutenção: {str(e)}"
         }), 500
 
+    # ===================== MANUTENÇÕES - EXCLUSÃO ===================== #
+
+@app.route('/api/manutencoes/<int:id_manutencao>', methods=['DELETE'])
+def excluir_manutencao(id_manutencao):
+    try:
+        with pool.connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    SELECT 1
+                    FROM Historico_Manutencao
+                    WHERE Id_Manutencao = %s;
+                """, (id_manutencao,))
+
+                if not cursor.fetchone():
+                    return jsonify({
+                        'sucesso': False,
+                        'mensagem': 'Registro de manutenção não encontrado.'
+                    }), 404
+
+                cursor.execute("""
+                    DELETE FROM Historico_Manutencao
+                    WHERE Id_Manutencao = %s;
+                """, (id_manutencao,))
+
+                conn.commit()
+
+                return jsonify({
+                    'sucesso': True,
+                    'mensagem': 'Registro de manutenção excluído com sucesso!'
+                }), 200
+
+    except Exception as e:
+        return jsonify({
+            'sucesso': False,
+            'mensagem': str(e)
+        }), 500
+
 # ===================== RESPONSÁVEIS - BUSCA PARA MOVIMENTAÇÃO ===================== #
 
 # ROTA PARA LISTAR TODOS OS RESPONSÁVEIS

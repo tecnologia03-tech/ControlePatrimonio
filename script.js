@@ -2271,6 +2271,47 @@ async function atualizarManutencao() {
   }
 }
 
+// ===================== MANUTENÇÃO - EXCLUSÃO ===================== //
+let idManutencaoParaExcluir = null;
+
+function abrirModalExclusaoManutencao(id) {
+  idManutencaoParaExcluir = id;
+  const modal = document.getElementById('modalConfirmarExclusaoManutencao');
+  if (modal) {
+    modal.style.display = 'flex';
+  }
+}
+
+function fecharModalExclusaoManutencao() {
+  idManutencaoParaExcluir = null;
+  const modal = document.getElementById('modalConfirmarExclusaoManutencao');
+  if (modal) {
+    modal.style.display = 'none';
+  }
+}
+
+async function confirmarExclusaoManutencao() {
+  if (!idManutencaoParaExcluir) return;
+
+  try {
+    const resposta = await fetch(`https://controlepatrimonio.onrender.com/api/manutencoes/${idManutencaoParaExcluir}`, {
+      method: 'DELETE'
+    });
+
+    const dados = await resposta.json();
+
+    if (dados.sucesso) {
+      fecharModalExclusaoManutencao();
+      carregarManutencoes();
+    } else {
+      alert(dados.mensagem || 'Erro ao excluir manutenção.');
+    }
+  } catch (erro) {
+    alert('Erro ao conectar com o servidor.');
+  }
+}
+
+
 // ===================== MOVIMENTAÇÕES - VARIÁVEIS GLOBAIS =====================
 // Armazena os registros carregados, listas auxiliares e o ID pendente de exclusão.
 let listaMovimentacoes = [];
