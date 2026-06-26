@@ -1561,7 +1561,7 @@ def editar_manutencao(id_manutencao):
 
 # ROTA PARA LISTAR TODOS OS RESPONSÁVEIS
 @app.route('/api/responsaveis', methods=['GET'])
-def listar_responsaveis():
+def listar_responsaveis_movimentacao():
     try:
         with pool.connection() as conn:
             with conn.cursor() as cursor:
