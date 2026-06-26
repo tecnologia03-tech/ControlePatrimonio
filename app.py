@@ -1656,7 +1656,7 @@ def listar_movimentacoes():
             with conn.cursor() as cursor:
                 cursor.execute("""
                     SELECT
-                        hm.Id_Historico_Movimentacao,
+                        hm.Id_Movimentacao,
                         hm.Id_Patrimonio,
                         p.NomePatrimonio,
                         hm.Id_Local_Origem,
@@ -1680,7 +1680,7 @@ def listar_movimentacoes():
                         ON rp.Id_Responsavel_Patrimonio = hm.Id_Responsavel_Patrimonio
                     INNER JOIN Usuario u
                         ON u.Id_Usuario = hm.Id_Usuario
-                    ORDER BY hm.Id_Historico_Movimentacao DESC;
+                    ORDER BY hm.Id_Movimentacao DESC;
                 """)
 
                 rows = cursor.fetchall()
