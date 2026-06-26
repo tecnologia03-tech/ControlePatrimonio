@@ -83,9 +83,9 @@ function mostrarConteudo(idConteudo, elementoMenu) {
   }
 }
 
-// ===================== GRÁFICO =====================
-// Renderiza o gráfico do dashboard.
-function renderizarGrafico() {
+// ===================== GRÁFICO ===================== //
+// Renderiza o gráfico do dashboard com dados reais.
+function renderizarGrafico(labels = [], valores = []) {
   const canvas = document.getElementById('graficoCategoria');
   if (!canvas) return;
 
@@ -98,16 +98,11 @@ function renderizarGrafico() {
   window.myChart = new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: [
-        'Computadores',
-        'Impressoras',
-        'Câmeras de Segurança',
-        'Instrumentos Musicais'
-      ],
+      labels: labels,
       datasets: [{
         label: 'Valor (R$)',
-        data: [80000, 20000, 15000, 5000],
-        backgroundColor: ['#0058b7', '#c8102e', '#009bd8', '#003f80'],
+        data: valores,
+        backgroundColor: ['#0058b7', '#c8102e', '#009bd8', '#003f80', '#28a745', '#fd7e14'],
         borderRadius: 8,
         borderSkipped: false
       }]
@@ -122,12 +117,124 @@ function renderizarGrafico() {
         y: {
           beginAtZero: true,
           ticks: {
-            callback: value => 'R$ ' + value.toLocaleString('pt-BR')
+            callback: value => 'R$ ' + Number(value).toLocaleString('pt-BR')
           }
         }
       }
     }
   });
+}
+
+// ===================== DASHBOARD - FORMATAÇÕES ===================== //
+function formatarMoedaBR(valor) {
+  return Number(valor || 0).toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+  });
+}
+
+function traduzirSituacaoPatrimonio(situacao) {
+  switch (situacao) {
+    case 'A':
+      return { texto: 'Ativo', classe: 'badge-ativo' };
+    case 'M':
+      return { texto: 'Em Manutenção', classe: 'badge-manut' };
+    case 'E':
+      return { texto: 'Extraviado', classe: 'badge-extravio' };
+    case 'B':
+      return { texto: 'Baixado', classe: 'badge-extravio' };
+    default:
+      return { texto: situacao || '-', classe: 'badge-extravio' };
+  }
+}
+
+// ===================== DASHBOARD - INDICADORES ===================== //
+function preencherIndicadoresDashboard(indicadores) {
+  const elValorTotal = document.getElementById('indicadorValorTotal');
+  const elAtivos = document.getElementById('indicadorAtivos');
+  const elManutencao = document.getElementById('indicadorManutencao');
+  const elBaixadosExtraviados = document.getElementById('indicadorBaixadosExtraviados');
+
+  if (elValorTotal) {
+    elValorTotal.textContent = formatarMoedaBR(indicadores.valor_total_patrimonial);
+  }
+
+  if (elAtivos) {
+    elAtivos.textContent = `${indicadores.patrimonios_ativos || 0} itens`;
+  }
+
+  if (elManutencao) {
+    elManutencao.textContent = `${indicadores.em_manutencao || 0} itens`;
+  }
+
+  if (elBaixadosExtraviados) {
+    elBaixadosExtraviados.textContent = `${indicadores.baixados_extraviados || 0} itens`;
+  }
+}
+
+// ===================== DASHBOARD - TABELA ===================== //
+function preencherTabelaUltimosPatrimonios(lista) {
+  const tbody = document.getElementById('tabelaUltimosPatrimonios');
+  if (!tbody) return;
+
+  if (!lista || lista.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="4" class="text-center text-muted py-4">
+          Nenhum patrimônio cadastrado.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = lista.map(item => {
+    const situacao = traduzirSituacaoPatrimonio(item.situacao);
+
+    return `
+      <tr>
+        <td><strong>${item.codigo_selo ?? '-'}</strong></td>
+        <td>${item.descricao ?? '-'}</td>
+        <td>${item.setor ?? '-'}</td>
+        <td><span class="${situacao.classe}">${situacao.texto}</span></td>
+      </tr>
+    `;
+  }).join('');
+}
+
+// ===================== DASHBOARD - CARGA GERAL ===================== //
+async function carregarDashboard() {
+  try {
+    const resposta = await fetch('https://controlepatrimonio.onrender.com/api/dashboard');
+    const dados = await resposta.json();
+
+    if (dados.sucesso) {
+      preencherIndicadoresDashboard(dados.indicadores || {});
+
+      const categorias = dados.categorias_mais_valiosas || [];
+      renderizarGrafico(
+        categorias.map(item => item.categoria),
+        categorias.map(item => item.valor_total)
+      );
+
+      preencherTabelaUltimosPatrimonios(dados.ultimos_patrimonios || []);
+    } else {
+      console.error(dados.mensagem || 'Erro ao carregar dashboard.');
+    }
+  } catch (erro) {
+    console.error('Erro ao conectar com o servidor.', erro);
+
+    const tbody = document.getElementById('tabelaUltimosPatrimonios');
+    if (tbody) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="4" class="text-center text-danger py-4">
+            Erro ao carregar dados do dashboard.
+          </td>
+        </tr>
+      `;
+    }
+  }
 }
 
 // ===================== USUÁRIOS - VARIÁVEL GLOBAL =====================

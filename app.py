@@ -116,6 +116,89 @@ def login():
             "mensagem": str(e)
         }), 500
 
+# ===================== DASHBOARD ===================== #
+
+@app.route('/api/dashboard', methods=['GET'])
+def obter_dashboard():
+    try:
+        with pool.connection() as conn:
+            with conn.cursor() as cursor:
+
+                # Indicadores do topo
+                cursor.execute("""
+                    SELECT
+                        COALESCE(SUM(COALESCE(Vlr_Compra, 0)), 0) AS valor_total_patrimonial,
+                        COALESCE(SUM(CASE WHEN Situacao_Atual = 'A' THEN 1 ELSE 0 END), 0) AS patrimonios_ativos,
+                        COALESCE(SUM(CASE WHEN Situacao_Atual = 'M' THEN 1 ELSE 0 END), 0) AS em_manutencao,
+                        COALESCE(SUM(CASE WHEN Situacao_Atual IN ('B', 'E') THEN 1 ELSE 0 END), 0) AS baixados_extraviados
+                    FROM Patrimonio;
+                """)
+                indicador = cursor.fetchone()
+
+                # Categorias mais valiosas
+                cursor.execute("""
+                    SELECT
+                        c.Nome_Categoria,
+                        COALESCE(SUM(COALESCE(p.Vlr_Compra, 0)), 0) AS valor_total
+                    FROM Patrimonio p
+                    INNER JOIN Categoria c
+                        ON c.Id_Categoria = p.Id_Categoria
+                    GROUP BY c.Id_Categoria, c.Nome_Categoria
+                    ORDER BY valor_total DESC, c.Nome_Categoria ASC
+                    LIMIT 6;
+                """)
+                rows_categorias = cursor.fetchall()
+
+                categorias_mais_valiosas = [
+                    {
+                        'categoria': row[0],
+                        'valor_total': float(row[1] or 0)
+                    }
+                    for row in rows_categorias
+                ]
+
+                # Últimos patrimônios cadastrados
+                cursor.execute("""
+                    SELECT
+                        p.Num_Patrimonio,
+                        p.Descricao,
+                        l.Nome_Local,
+                        p.Situacao_Atual
+                    FROM Patrimonio p
+                    LEFT JOIN Local l
+                        ON l.Id_Local = p.Id_Local
+                    ORDER BY p.Id_Patrimonio DESC
+                    LIMIT 6;
+                """)
+                rows_patrimonios = cursor.fetchall()
+
+                ultimos_patrimonios = [
+                    {
+                        'codigo_selo': row[0],
+                        'descricao': row[1],
+                        'setor': row[2] if row[2] else '-',
+                        'situacao': row[3]
+                    }
+                    for row in rows_patrimonios
+                ]
+
+                return jsonify({
+                    'sucesso': True,
+                    'indicadores': {
+                        'valor_total_patrimonial': float(indicador[0] or 0),
+                        'patrimonios_ativos': int(indicador[1] or 0),
+                        'em_manutencao': int(indicador[2] or 0),
+                        'baixados_extraviados': int(indicador[3] or 0)
+                    },
+                    'categorias_mais_valiosas': categorias_mais_valiosas,
+                    'ultimos_patrimonios': ultimos_patrimonios
+                }), 200
+
+    except Exception as e:
+        return jsonify({
+            'sucesso': False,
+            'mensagem': str(e)
+        }), 500
 
 # Inclui um novo usuário no sistema
 @app.route('/api/usuarios', methods=['POST'])
