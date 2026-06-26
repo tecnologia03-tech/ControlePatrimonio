@@ -1665,7 +1665,7 @@ def listar_movimentacoes():
                         hm.Id_Local_Destino,
                         ld.Nome_Local,
                         hm.Id_Responsavel_Patrimonio,
-                        rp.Nome,
+                        rp.Nome_Completo,
                         hm.Id_Usuario,
                         u.Nome,
                         hm.Dt_Transferencia,
