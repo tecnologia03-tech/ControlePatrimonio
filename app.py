@@ -1595,7 +1595,7 @@ def listar_responsaveis_movimentacao():
 
 # ===================== PATRIMÔNIOS - BUSCA PARA MOVIMENTAÇÃO ===================== #
 
-# ROTA PARA PESQUISAR PATRIMÔNIOS ATIVOS PELO NOME OU TOMBO
+# ROTA PARA PESQUISAR PATRIMÔNIOS ATIVOS PELO NÚMERO OU DESCRIÇÃO
 @app.route('/api/patrimonios/busca', methods=['GET'])
 def buscar_patrimonios_movimentacao():
     termo = (request.args.get('termo') or '').strip()
@@ -1612,15 +1612,15 @@ def buscar_patrimonios_movimentacao():
                 cursor.execute("""
                     SELECT
                         Id_Patrimonio,
-                        NomePatrimonio,
-                        NumeroTombo
+                        Num_Patrimonio,
+                        Descricao
                     FROM Patrimonio
                     WHERE Situacao_Atual = 'A'
                       AND (
-                        UPPER(NomePatrimonio) LIKE UPPER(%s)
-                        OR CAST(NumeroTombo AS TEXT) LIKE %s
+                        UPPER(Descricao) LIKE UPPER(%s)
+                        OR CAST(Num_Patrimonio AS TEXT) LIKE %s
                       )
-                    ORDER BY NomePatrimonio ASC
+                    ORDER BY Descricao ASC
                     LIMIT 20;
                 """, (f'%{termo}%', f'%{termo}%'))
 
@@ -1629,7 +1629,7 @@ def buscar_patrimonios_movimentacao():
                 patrimonios = [
                     {
                         'id': row[0],
-                        'nome': f'{row[1]} - Tombo: {row[2]}' if row[2] is not None else row[1]
+                        'nome': f'{row[2]} - Patrimônio: {row[1]}' if row[1] is not None else row[2]
                     }
                     for row in rows
                 ]
@@ -1658,7 +1658,8 @@ def listar_movimentacoes():
                     SELECT
                         hm.Id_Movimentacao,
                         hm.Id_Patrimonio,
-                        p.NomePatrimonio,
+                        p.Descricao,
+                        p.Num_Patrimonio,
                         hm.Id_Local_Origem,
                         lo.Nome_Local,
                         hm.Id_Local_Destino,
@@ -1689,17 +1690,17 @@ def listar_movimentacoes():
                     {
                         'id': row[0],
                         'id_patrimonio': row[1],
-                        'patrimonio_nome': row[2],
-                        'id_local_origem': row[3],
-                        'local_origem_nome': row[4],
-                        'id_local_destino': row[5],
-                        'local_destino_nome': row[6],
-                        'id_responsavel_patrimonio': row[7],
-                        'responsavel_nome': row[8],
-                        'id_usuario': row[9],
-                        'usuario_nome': row[10],
-                        'data_transferencia': row[11].isoformat() if row[11] else None,
-                        'observacoes': row[12]
+                        'patrimonio_nome': f'{row[2]} - Patrimônio: {row[3]}' if row[3] is not None else row[2],
+                        'id_local_origem': row[4],
+                        'local_origem_nome': row[5],
+                        'id_local_destino': row[6],
+                        'local_destino_nome': row[7],
+                        'id_responsavel_patrimonio': row[8],
+                        'responsavel_nome': row[9],
+                        'id_usuario': row[10],
+                        'usuario_nome': row[11],
+                        'data_transferencia': row[12].isoformat() if row[12] else None,
+                        'observacoes': row[13]
                     }
                     for row in rows
                 ]
@@ -1714,7 +1715,6 @@ def listar_movimentacoes():
             'sucesso': False,
             'mensagem': str(e)
         }), 500
-
 
 # ROTA PARA CADASTRAR UMA NOVA MOVIMENTAÇÃO
 @app.route('/api/movimentacoes', methods=['POST'])
@@ -1871,7 +1871,7 @@ def editar_movimentacao(id_movimentacao):
                 cursor.execute("""
                     SELECT 1
                     FROM Historico_Movimentacao
-                    WHERE Id_Historico_Movimentacao = %s;
+                    WHERE Id_Movimentacao = %s;
                 """, (id_movimentacao,))
 
                 if not cursor.fetchone():
@@ -1951,7 +1951,7 @@ def editar_movimentacao(id_movimentacao):
                         Id_Usuario = %s,
                         Dt_Transferencia = %s,
                         Observacoes = %s
-                    WHERE Id_Historico_Movimentacao = %s;
+                    WHERE Id_Movimentacao = %s;
                 """, (
                     id_patrimonio,
                     id_local_origem,
@@ -1997,7 +1997,7 @@ def excluir_movimentacao(id_movimentacao):
                 cursor.execute("""
                     SELECT Id_Patrimonio
                     FROM Historico_Movimentacao
-                    WHERE Id_Historico_Movimentacao = %s;
+                    WHERE Id_Movimentacao = %s;
                 """, (id_movimentacao,))
 
                 row = cursor.fetchone()
@@ -2010,7 +2010,7 @@ def excluir_movimentacao(id_movimentacao):
 
                 cursor.execute("""
                     DELETE FROM Historico_Movimentacao
-                    WHERE Id_Historico_Movimentacao = %s;
+                    WHERE Id_Movimentacao = %s;
                 """, (id_movimentacao,))
 
                 conn.commit()
