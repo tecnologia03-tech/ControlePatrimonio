@@ -1908,23 +1908,26 @@ function renderizarManutencoes(lista) {
   const pagina = lista.slice(inicio, fim);
 
   tbody.innerHTML = pagina.map((manutencao, index) => `
-    <tr>
-      <td>${inicio + index + 1}</td>
-      <td>${manutencao.patrimonio || '-'}</td>
-      <td>${manutencao.problema_identificado || '-'}</td>
-      <td>${manutencao.fornecedor_tecnico || '-'}</td>
-      <td>${formatarDataManutencao(manutencao.dt_envio_manutencao)}</td>
-      <td>${formatarDataManutencao(manutencao.dt_volta_manutencao)}</td>
-      <td>${obterBadgeResolvidoManutencao(manutencao.resolvido)}</td>
-      <td>${formatarValorMoedaManutencao(manutencao.vlr_gasto)}</td>
-      <td>${manutencao.usuario || '-'}</td>
-      <td>
-        <button class="btn btn-sm btn-outline-primary" onclick="abrirModalEditarManutencao(${manutencao.id})">
-          Editar
-        </button>
-      </td>
-    </tr>
-  `).join('');
+  <tr>
+    <td>${inicio + index + 1}</td>
+    <td>${manutencao.patrimonio || '-'}</td>
+    <td>${manutencao.problema_identificado || '-'}</td>
+    <td>${manutencao.fornecedor_tecnico || '-'}</td>
+    <td>${formatarDataManutencao(manutencao.dt_envio_manutencao)}</td>
+    <td>${formatarDataManutencao(manutencao.dt_volta_manutencao)}</td>
+    <td>${obterBadgeResolvidoManutencao(manutencao.resolvido)}</td>
+    <td>${formatarValorMoedaManutencao(manutencao.vlr_gasto)}</td>
+    <td>${manutencao.usuario || '-'}</td>
+    <td>
+      <button class="btn btn-sm btn-outline-primary me-1" onclick="abrirModalEditarManutencao(${manutencao.id})">
+        Editar
+      </button>
+      <button class="btn btn-sm btn-outline-danger" onclick="abrirModalExclusaoManutencao(${manutencao.id})">
+        Excluir
+      </button>
+    </td>
+  </tr>
+`).join('');
 }
 
 
