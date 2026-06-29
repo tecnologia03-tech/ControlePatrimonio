@@ -42,6 +42,34 @@ function fazerLogout() {
   window.location.href = 'index.html';
 }
 
+// ===================== USUÁRIO LOGADO / REQUISIÇÕES ===================== //
+
+function obterMatriculaUsuarioLogado() {
+  return sessionStorage.getItem('matriculaUsuario') || '';
+}
+
+function obterHeadersComMatricula(headersExtras = {}) {
+  const matricula = obterMatriculaUsuarioLogado();
+
+  return {
+    'Content-Type': 'application/json',
+    'X-Usuario-Matricula': matricula,
+    ...headersExtras
+  };
+}
+
+async function fetchComMatricula(url, options = {}) {
+  const headersOriginais = options.headers || {};
+
+  const optionsFinal = {
+    ...options,
+    headers: obterHeadersComMatricula(headersOriginais)
+  };
+
+  return fetch(url, optionsFinal);
+}
+
+
 // ===================== TOGGLE SIDEBAR =====================
 // Responsável por abrir e fechar o menu lateral.
 function toggleMenu() {
