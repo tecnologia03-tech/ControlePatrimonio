@@ -82,7 +82,7 @@ def login():
         with pool.connection() as conn:
             with conn.cursor() as cursor:
                 cursor.execute(
-                    """
+                  """
                     SELECT Nome, Tp_Usuario
                     FROM Usuario
                     WHERE Login_Matricula = %s
@@ -100,7 +100,8 @@ def login():
                     return jsonify({
                         "sucesso": True,
                         "nome": usuario[0],
-                        "perfil": usuario[1]
+                        "perfil": usuario[1],
+                        "matricula": usuario[2]
                     }), 200
 
         # Retorna erro de autenticação se não encontrar o usuário

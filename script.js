@@ -20,6 +20,7 @@ async function fazerLogin(e) {
       sessionStorage.setItem('usuarioLogado', 'true');
       sessionStorage.setItem('nomeUsuario', dados.nome || '');
       sessionStorage.setItem('perfilUsuario', dados.perfil || '');
+      sessionStorage.setItem('matriculaUsuario', dados.matricula || '');
 
       window.location.href = 'dashboard.html';
     } else {
@@ -36,6 +37,7 @@ function fazerLogout() {
   sessionStorage.removeItem('usuarioLogado');
   sessionStorage.removeItem('nomeUsuario');
   sessionStorage.removeItem('perfilUsuario');
+  sessionStorage.removeItem('matriculaUsuario');
 
   window.location.href = 'index.html';
 }
