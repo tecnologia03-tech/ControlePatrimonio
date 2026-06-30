@@ -12,229 +12,240 @@
 
     <div class="wrapper">
 
-    <aside class="sidebar" id="sidebar">
-      <div class="sidebar-header">
-        <img src="Logo.jpeg" alt="Logo Salesianos">
-        <span>Controle de Patrimônio</span>      
-      </div>
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <img src="Logo.jpeg" alt="Logo Salesianos">
+                <span>Controle de Patrimônio</span>
+            </div>
 
-      <ul class="sidebar-menu">
-        <li><a href="dashboard.html"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
-        <li class="ativo"><a href="usuario.html"><i class="bi bi-people"></i> Usuários</a></li>
-        <li><a href="local.html"><i class="bi bi-diagram-3"></i> Locais</a></li>
-        <li><a href="categoria.html"><i class="bi bi-tags"></i> Categorias</a></li>
-        <li><a href="responsavel.html"><i class="bi bi-person-badge"></i> Responsáveis</a></li>
-        <li><a href="patrimonio.html"><i class="bi bi-box-seam"></i> Patrimônios</a></li>
-        <li><a href="manutencao.html"><i class="bi bi-tools"></i> Manutenção</a></li>
-        <li><a href="movimentacao.html"><i class="bi bi-arrow-left-right"></i> Movimentação</a></li>
-      </ul>
+            <ul class="sidebar-menu">
+                <li><a href="dashboard.html"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+                <li class="ativo"><a href="usuario.html"><i class="bi bi-people"></i> Usuários</a></li>
+                <li><a href="local.html"><i class="bi bi-diagram-3"></i> Locais</a></li>
+                <li><a href="categoria.html"><i class="bi bi-tags"></i> Categorias</a></li>
+                <li><a href="responsavel.html"><i class="bi bi-person-badge"></i> Responsáveis</a></li>
+                <li><a href="patrimonio.html"><i class="bi bi-box-seam"></i> Patrimônios</a></li>
+                <li><a href="manutencao.html"><i class="bi bi-tools"></i> Manutenção</a></li>
+                <li><a href="movimentacao.html"><i class="bi bi-arrow-left-right"></i> Movimentação</a></li>
+            </ul>
 
-      <div class="sidebar-sair">
-        <a href="#" onclick="fazerLogout()">
-          <i class="bi bi-box-arrow-left"></i> Sair
-        </a>
-      </div>
-    </aside>
+            <div class="sidebar-sair">
+                <a href="#" onclick="fazerLogout()">
+                    <i class="bi bi-box-arrow-left"></i> Sair
+                </a>
+            </div>
+        </aside>
 
-    <div class="content">
+        <div class="content">
 
-      <div class="topbar">
-        <button class="btn-menu-toggle" onclick="toggleMenu()">
-          <i class="bi bi-list"></i>
-        </button>
+            <div class="topbar">
+                <button class="btn-menu-toggle" onclick="toggleMenu()">
+                    <i class="bi bi-list"></i>
+                </button>
 
-        <span class="topbar-titulo">Gestão de Usuários</span>
+                <span class="topbar-titulo">Gestão de Usuários</span>
 
-        <div class="topbar-usuario">
-          <div class="avatar">
-            <i class="bi bi-person-fill"></i>
-          </div>
-          <span id="nomeUsuarioTopbar">Usuário</span>
+                <div class="topbar-usuario">
+                    <div class="avatar">
+                        <i class="bi bi-person-fill"></i>
+                    </div>
+                    <span id="nomeUsuarioTopbar">Usuário</span>
+                </div>
+            </div>
+
+            <div class="main-content">
+
+                <div class="usuarios-toolbar">
+                    <input
+                        type="text"
+                        id="buscaUsuario"
+                        class="input-busca-usuario"
+                        placeholder="Pesquisar por nome ou matrícula..."
+                        oninput="filtrarUsuarios()"
+                    >
+
+                    <button
+                        id="btnIncluirUsuario"
+                        class="btn btn-incluir-usuario"
+                        onclick="abrirModalIncluirUsuario()"
+                    >
+                        <i class="bi bi-person-plus-fill"></i> Incluir Usuário
+                    </button>
+                </div>
+
+                <div class="usuarios-card">
+                    <div class="usuarios-card-header">
+                        <i class="bi bi-people-fill"></i>
+                        <span>Usuários Cadastrados</span>
+                    </div>
+
+                    <table class="table tabela-usuarios">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Matrícula</th>
+                                <th>Perfil</th>
+                                <th>Status</th>
+                                <th id="colunaAcoesUsuarios">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaUsuarios">
+                            <tr>
+                                <td colspan="5" class="text-center py-3 text-muted">
+                                    Carregando usuários...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+
+            <div class="rodape">
+                Sistema de Controle de Patrimônio © 2025
+            </div>
+
         </div>
-      </div>
-
-      <div class="main-content">
-
-        <div class="usuarios-toolbar">
-          <input
-            type="text"
-            id="buscaUsuario"
-            class="input-busca-usuario"
-            placeholder="Pesquisar por nome ou matrícula..."
-            oninput="filtrarUsuarios()"
-          >
-
-          <button class="btn btn-incluir-usuario" onclick="abrirModalIncluirUsuario()">
-            <i class="bi bi-person-plus-fill"></i> Incluir Usuário
-          </button>
-        </div>
-
-        <div class="usuarios-card">
-          <div class="usuarios-card-header">
-            <i class="bi bi-people-fill"></i>
-            <span>Usuários Cadastrados</span>
-          </div>
-
-          <table class="table tabela-usuarios">
-            <thead>
-              <tr>
-                <th>Nome</th>
-                <th>Matrícula</th>
-                <th>Perfil</th>
-                <th>Status</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody id="tabelaUsuarios">
-              <tr>
-                <td colspan="5" class="text-center py-3 text-muted">
-                  Carregando usuários...
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-      </div>
-
-      <div class="rodape">
-        Sistema de Controle de Patrimônio © 2025
-      </div>
-
     </div>
-  </div>
 
-  <!-- Modal de inclusão de usuário -->
-  <div class="modal-overlay" id="modalIncluirUsuario" style="display: none;">
-    <div class="modal-box">
-      <div class="modal-header-custom">
-        <h5>Incluir Novo Usuário</h5>
-        <button class="btn-fechar-modal" onclick="fecharModalIncluirUsuario()">&times;</button>
-      </div>
+    <!-- Modal de inclusão de usuário -->
+    <div class="modal-overlay" id="modalIncluirUsuario" style="display: none;">
+        <div class="modal-box">
+            <div class="modal-header-custom">
+                <h5>Incluir Novo Usuário</h5>
+                <button class="btn-fechar-modal" onclick="fecharModalIncluirUsuario()">&times;</button>
+            </div>
 
-      <div class="modal-body-custom">
-        <!-- Formulário de inclusão de usuário -->
-        <form id="formIncluirUsuario">
-        <div class="mb-3">
-          <label class="form-label">Nome Completo</label>
-          <input type="text" id="nomeUsuario" class="form-control" placeholder="Nome completo">
+            <div class="modal-body-custom">
+                <form id="formIncluirUsuario">
+                    <div class="mb-3">
+                        <label class="form-label">Nome Completo</label>
+                        <input type="text" id="nomeUsuario" class="form-control" placeholder="Nome completo">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Matrícula</label>
+                        <input type="text" id="matriculaUsuario" class="form-control" placeholder="Matrícula">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Senha</label>
+                        <input type="password" id="senhaUsuario" class="form-control" placeholder="Senha">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Perfil</label>
+                        <select id="perfilUsuario" class="form-select">
+                            <option value="">Selecione...</option>
+                            <option value="A">Administrador</option>
+                            <option value="O">Operador</option>
+                            <option value="V">Visualizador</option>
+                        </select>
+                    </div>
+
+                    <p id="msgIncluirUsuario" class="text-danger mt-2 mb-0"></p>
+                </form>
+            </div>
+
+            <div class="modal-footer-custom">
+                <button class="btn btn-secondary btn-sm" onclick="fecharModalIncluirUsuario()">Cancelar</button>
+                <button class="btn btn-primary btn-sm" onclick="salvarUsuario()">
+                    <i class="bi bi-check-lg"></i> Salvar Usuário
+                </button>
+            </div>
         </div>
-
-        <div class="mb-3">
-          <label class="form-label">Matrícula</label>
-          <input type="text" id="matriculaUsuario" class="form-control" placeholder="Matrícula">
-        </div>
-
-        <div class="mb-3">
-          <label class="form-label">Senha</label>
-          <input type="password" id="senhaUsuario" class="form-control" placeholder="Senha">
-        </div>
-
-        <div class="mb-3">
-          <label class="form-label">Perfil</label>
-          <select id="perfilUsuario" class="form-select">
-            <option value="">Selecione...</option>
-            <option value="A">Administrador</option>
-            <option value="O">Operador</option>
-            <option value="V">Visualizador</option>
-          </select>
-        </div>
-
-        <!-- Mensagem de erro exibida dinamicamente pelo JavaScript -->
-        <p id="msgIncluirUsuario" class="text-danger mt-2 mb-0"></p>
-        </form>
-      </div>
-
-      <div class="modal-footer-custom">
-        <button class="btn btn-secondary btn-sm" onclick="fecharModalIncluirUsuario()">Cancelar</button>
-        <button class="btn btn-primary btn-sm" onclick="salvarUsuario()">
-          <i class="bi bi-check-lg"></i> Salvar Usuário
-        </button>
-      </div>
     </div>
-  </div>
 
-  <!-- Modal de edição de usuário -->
-  <div class="modal-overlay" id="modalEditarUsuario" style="display: none;">
-    <div class="modal-box">
-      <div class="modal-header-custom">
-        <h5>Editar Usuário</h5>
-        <button class="btn-fechar-modal" onclick="fecharModalEditarUsuario()">&times;</button>
-      </div>
+    <!-- Modal de edição de usuário -->
+    <div class="modal-overlay" id="modalEditarUsuario" style="display: none;">
+        <div class="modal-box">
+            <div class="modal-header-custom">
+                <h5>Editar Usuário</h5>
+                <button class="btn-fechar-modal" onclick="fecharModalEditarUsuario()">&times;</button>
+            </div>
 
-      <div class="modal-body-custom">
-        <input type="hidden" id="editUsuarioId">
+            <div class="modal-body-custom">
+                <input type="hidden" id="editUsuarioId">
 
-        <div class="mb-3">
-          <label class="form-label">Nome Completo</label>
-          <input type="text" id="editNomeUsuario" class="form-control">
+                <div class="mb-3">
+                    <label class="form-label">Nome Completo</label>
+                    <input type="text" id="editNomeUsuario" class="form-control">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Matrícula</label>
+                    <input type="text" id="editMatriculaUsuario" class="form-control">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Nova Senha (Opcional)</label>
+                    <input type="password" id="editSenhaUsuario" class="form-control">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Perfil</label>
+                    <select id="editPerfilUsuario" class="form-select">
+                        <option value="">Selecione...</option>
+                        <option value="A">Administrador</option>
+                        <option value="O">Operador</option>
+                        <option value="V">Visualizador</option>
+                    </select>
+                </div>
+
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="editAtivoUsuario" onchange="confirmarInativacaoCheckbox(this)">
+                    <label class="form-check-label" for="editAtivoUsuario">
+                        Usuário Ativo
+                    </label>
+                </div>
+
+                <p id="msgEditarUsuario" class="text-danger mt-2 mb-0"></p>
+            </div>
+
+            <div class="modal-footer-custom">
+                <button class="btn btn-secondary btn-sm" onclick="fecharModalEditarUsuario()">Cancelar</button>
+                <button class="btn btn-primary btn-sm" onclick="salvarEdicaoUsuario()">Salvar Alterações</button>
+            </div>
         </div>
-
-        <div class="mb-3">
-          <label class="form-label">Matrícula</label>
-          <input type="text" id="editMatriculaUsuario" class="form-control">
-        </div>
-
-        <div class="mb-3">
-          <label class="form-label">Nova Senha (Opcional)</label>
-          <input type="password" id="editSenhaUsuario" class="form-control">
-        </div>
-
-        <div class="mb-3">
-          <label class="form-label">Perfil</label>
-          <select id="editPerfilUsuario" class="form-select">
-            <option value="">Selecione...</option>
-            <option value="A">Administrador</option>
-            <option value="O">Operador</option>
-            <option value="V">Visualizador</option>
-          </select>
-        </div>
-
-        <div class="form-check">
-          <input class="form-check-input" type="checkbox" id="editAtivoUsuario" onchange="confirmarInativacaoCheckbox(this)">
-          <label class="form-check-label" for="editAtivoUsuario">
-            Usuário Ativo
-          </label>
-        </div>
-
-        <!-- Mensagem de erro exibida dinamicamente pelo JavaScript -->
-        <p id="msgEditarUsuario" class="text-danger mt-2 mb-0"></p>
-      </div>
-
-      <div class="modal-footer-custom">
-        <button class="btn btn-secondary btn-sm" onclick="fecharModalEditarUsuario()">Cancelar</button>
-        <button class="btn btn-primary btn-sm" onclick="salvarEdicaoUsuario()">Salvar Alterações</button>
-      </div>
     </div>
-  </div>
 
-  <!-- Modal de confirmação de inativação ao desmarcar o checkbox de usuário ativo -->
-  <div class="modal-overlay-confirmacao" id="modalConfirmarInativacao" style="display: none;">
-  <div class="modal-confirmacao-container">
-    <div class="modal-icone-alerta">!</div>
-    <h4 class="modal-titulo-confirmacao">Confirmar Inativação</h4>
-    <p class="modal-texto-confirmacao">Deseja realmente inativar este usuário?</p>
+    <!-- Modal de confirmação de inativação -->
+    <div class="modal-overlay-confirmacao" id="modalConfirmarInativacao" style="display: none;">
+        <div class="modal-confirmacao-container">
+            <div class="modal-icone-alerta">!</div>
+            <h4 class="modal-titulo-confirmacao">Confirmar Inativação</h4>
+            <p class="modal-texto-confirmacao">Deseja realmente inativar este usuário?</p>
 
-    <div class="modal-botoes-confirmacao">
-      <button class="btn-cancelar-confirmacao" onclick="fecharModalConfirmacao()">Cancelar</button>
-      <button class="btn-inativar-confirmacao" onclick="confirmarInativacao()">Inativar Usuário</button>
+            <div class="modal-botoes-confirmacao">
+                <button class="btn-cancelar-confirmacao" onclick="fecharModalConfirmacao()">Cancelar</button>
+                <button class="btn-inativar-confirmacao" onclick="confirmarInativacao()">Inativar Usuário</button>
+            </div>
+        </div>
     </div>
-  </div>
-</div>
 
-  <script src="script.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      const nome = sessionStorage.getItem('nomeUsuario') || 'Usuário';
-      const el = document.getElementById('nomeUsuarioTopbar');
-      if (el) el.textContent = nome;
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const nome = sessionStorage.getItem('nomeUsuario') || 'Usuário';
+            const el = document.getElementById('nomeUsuarioTopbar');
+            if (el) el.textContent = nome;
 
+            const btnIncluir = document.getElementById('btnIncluirUsuario');
+            const colunaAcoes = document.getElementById('colunaAcoesUsuarios');
 
-     if (typeof carregarUsuarios === 'function') {
-        carregarResponsaveis();
-      }
-    });
-  </script>
+            if (btnIncluir && !podeIncluir()) {
+                btnIncluir.style.display = 'none';
+            }
+
+            if (colunaAcoes && !podeEditarOuExcluir()) {
+                colunaAcoes.style.display = 'none';
+            }
+
+            if (typeof carregarUsuarios === 'function') {
+                carregarUsuarios();
+            }
+        });
+    </script>
 
 </body>
 </html>
