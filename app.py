@@ -1207,6 +1207,9 @@ def listar_patrimonios():
 # Valida todos os campos obrigatórios e insere um novo patrimônio.
 @app.route('/api/patrimonios', methods=['POST'])
 def cadastrar_patrimonio():
+    usuario_logado, erro_resposta, status_code = exigir_perfis('A', 'O')
+    if erro_resposta:
+        return erro_resposta, status_code
     try:
         dados = request.get_json(silent=True) or {}
 
