@@ -8,8 +8,9 @@ async function fazerLogin(e) {
   msgErro.textContent = '';
 
   try {
-    const resposta = await fetchComMatricula('https://controlepatrimonio.onrender.com/api/login', {
+    const resposta = await fetch('https://controlepatrimonio.onrender.com/api/login', {
       method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ matricula, senha })
     });
 
@@ -68,6 +69,24 @@ async function fetchComMatricula(url, options = {}) {
   return fetch(url, optionsFinal);
 }
 
+// ===================== HELPERS NÍVEL DE USUÁRIO =====================
+function obterPerfilUsuarioLogado() {
+  return sessionStorage.getItem('perfilUsuario') || '';
+}
+
+function podeIncluir() {
+  const perfil = obterPerfilUsuarioLogado();
+  return perfil === 'A' || perfil === 'O';
+}
+
+function podeEditarOuExcluir() {
+  const perfil = obterPerfilUsuarioLogado();
+  return perfil === 'A';
+}
+
+function somenteVisualiza() {
+  return obterPerfilUsuarioLogado() === 'V';
+}
 
 // ===================== TOGGLE SIDEBAR =====================
 // Responsável por abrir e fechar o menu lateral.

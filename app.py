@@ -167,6 +167,20 @@ def obter_usuario_logado():
             "mensagem": f"Erro ao validar usuário logado: {str(e)}"
         }), 500
 
+
+def exigir_perfis(*perfis_permitidos):
+    usuario_logado, erro_resposta, status_code = obter_usuario_logado()
+    if erro_resposta:
+        return None, erro_resposta, status_code
+
+    if usuario_logado["perfil"] not in perfis_permitidos:
+        return None, jsonify({
+            "sucesso": False,
+            "mensagem": "Você não tem permissão para realizar esta ação."
+        }), 403
+
+    return usuario_logado, None, None
+
 # ===================== DASHBOARD ===================== #
 
 @app.route('/api/dashboard', methods=['GET'])
@@ -254,6 +268,9 @@ def obter_dashboard():
 # Inclui um novo usuário no sistema
 @app.route('/api/usuarios', methods=['POST'])
 def incluir_usuario():
+    usuario_logado, erro_resposta, status_code = exigir_perfis('A', 'O')
+    if erro_resposta:
+        return erro_resposta, status_code
     # Recebe os dados enviados pelo front-end
     dados = request.get_json()
 
@@ -309,6 +326,9 @@ def incluir_usuario():
 # ROTA PARA LISTAR TODOS OS USUÁRIOS
 @app.route('/api/usuarios', methods=['GET'])
 def listar_usuarios():
+    usuario_logado, erro_resposta, status_code = exigir_perfis('A', 'O', 'V')
+    if erro_resposta:
+        return erro_resposta, status_code
     try:
         with pool.connection() as conn:
             with conn.cursor() as cursor:
@@ -346,6 +366,10 @@ def listar_usuarios():
 # ROTA PARA EDITAR UM USUÁRIO EXISTENTE
 @app.route('/api/usuarios/<int:id_usuario>', methods=['PUT'])
 def editar_usuario(id_usuario):
+    usuario_logado, erro_resposta, status_code = exigir_perfis('A')
+    if erro_resposta:
+        return erro_resposta, status_code
+    
     dados = request.get_json(silent=True) or {}
 
     nome = dados.get('nome', '').strip()
@@ -418,6 +442,9 @@ def editar_usuario(id_usuario):
 # ROTA PARA EXCLUIR UM USUÁRIO (INATIVAR)
 @app.route('/api/usuarios/<int:id_usuario>', methods=['DELETE'])
 def excluir_usuario(id_usuario):
+    usuario_logado, erro_resposta, status_code = exigir_perfis('A')
+    if erro_resposta:
+        return erro_resposta, status_code
     try:
         with pool.connection() as conn:
             with conn.cursor() as cursor:
@@ -452,6 +479,9 @@ def excluir_usuario(id_usuario):
 # ROTA PARA LISTAR TODOS OS LOCAIS
 @app.route('/api/locais', methods=['GET'])
 def listar_locais():
+    usuario_logado, erro_resposta, status_code = exigir_perfis('A', 'O', 'V')
+    if erro_resposta:
+        return erro_resposta, status_code
     try:
         with pool.connection() as conn:
             with conn.cursor() as cursor:
@@ -486,6 +516,9 @@ def listar_locais():
 # ROTA PARA INCLUIR UM NOVO LOCAL
 @app.route('/api/locais', methods=['POST'])
 def incluir_local():
+    usuario_logado, erro_resposta, status_code = exigir_perfis('A', 'O')
+    if erro_resposta:
+         return erro_resposta, status_code
     dados = request.get_json(silent=True) or {}
 
     nome = (dados.get('nome') or '').strip()
@@ -536,6 +569,10 @@ def incluir_local():
 # ROTA PARA EDITAR UM LOCAL EXISTENTE
 @app.route('/api/locais/<int:id_local>', methods=['PUT'])
 def editar_local(id_local):
+    usuario_logado, erro_resposta, status_code = exigir_perfis('A')
+    if erro_resposta:
+        return erro_resposta, status_code
+    
     dados = request.get_json(silent=True) or {}
 
     nome = (dados.get('nome') or '').strip()
@@ -601,6 +638,10 @@ def editar_local(id_local):
 # ROTA PARA EXCLUIR UM LOCAL
 @app.route('/api/locais/<int:id_local>', methods=['DELETE'])
 def excluir_local(id_local):
+    usuario_logado, erro_resposta, status_code = exigir_perfis('A')
+    if erro_resposta:
+        return erro_resposta, status_code
+    
     try:
         with pool.connection() as conn:
             with conn.cursor() as cursor:
@@ -654,6 +695,9 @@ def excluir_local(id_local):
 # ROTA PARA LISTAR TODAS AS CATEGORIAS
 @app.route('/api/categorias', methods=['GET'])
 def listar_categorias():
+    usuario_logado, erro_resposta, status_code = exigir_perfis('A', 'O', 'V')
+    if erro_resposta:
+        return erro_resposta, status_code
     """
     Lista todas as categorias cadastradas no sistema.
     O retorno já vem no formato consumido pela interface.
@@ -691,6 +735,9 @@ def listar_categorias():
 # ROTA PARA INCLUIR UMA NOVA CATEGORIA
 @app.route('/api/categorias', methods=['POST'])
 def incluir_categoria():
+    usuario_logado, erro_resposta, status_code = exigir_perfis('A', 'O')
+    if erro_resposta:
+        return erro_resposta, status_code
     """
     Cadastra uma nova categoria.
     Valida nome obrigatório e duplicidade por nome.
@@ -741,6 +788,9 @@ def incluir_categoria():
 # ROTA PARA EDITAR UMA CATEGORIA EXISTENTE
 @app.route('/api/categorias/<int:id_categoria>', methods=['PUT'])
 def editar_categoria(id_categoria):
+    usuario_logado, erro_resposta, status_code = exigir_perfis('A')
+    if erro_resposta:
+        return erro_resposta, status_code
     """
     Atualiza o nome de uma categoria existente.
     Também impede duplicidade com outra categoria já cadastrada.
@@ -805,6 +855,9 @@ def editar_categoria(id_categoria):
 # ROTA PARA EXCLUIR UMA CATEGORIA
 @app.route('/api/categorias/<int:id_categoria>', methods=['DELETE'])
 def excluir_categoria(id_categoria):
+    usuario_logado, erro_resposta, status_code = exigir_perfis('A')
+    if erro_resposta:
+        return erro_resposta, status_code
     """
     Exclui fisicamente uma categoria somente quando ela não
     estiver vinculada a nenhum patrimônio.
@@ -866,6 +919,9 @@ def excluir_categoria(id_categoria):
 
 @app.route('/api/responsaveis', methods=['GET'])
 def listar_responsaveis():
+    usuario_logado, erro_resposta, status_code = exigir_perfis('A', 'O', 'V')
+    if erro_resposta:
+        return erro_resposta, status_code
     try:
         with pool.connection() as conn:
             with conn.cursor() as cursor:
@@ -908,6 +964,10 @@ def listar_responsaveis():
 # A validação de matrícula é feita somente na tabela de responsáveis.
 @app.route('/api/responsaveis', methods=['POST'])
 def incluir_responsavel():
+    usuario_logado, erro_resposta, status_code = exigir_perfis('A', 'O')
+    if erro_resposta:
+        return erro_resposta, status_code
+    
     dados = request.get_json(silent=True) or {}
 
     nome = (dados.get('nome') or '').strip()
@@ -961,6 +1021,9 @@ def incluir_responsavel():
 # Não existe edição de status nessa tela.
 @app.route('/api/responsaveis/<int:id_responsavel>', methods=['PUT'])
 def editar_responsavel(id_responsavel):
+    usuario_logado, erro_resposta, status_code = exigir_perfis('A')
+    if erro_resposta:
+        return erro_resposta, status_code
     dados = request.get_json(silent=True) or {}
 
     nome = (dados.get('nome') or '').strip()
@@ -1028,6 +1091,10 @@ def editar_responsavel(id_responsavel):
 # Após excluir, ele deixa de aparecer na listagem.
 @app.route('/api/responsaveis/<int:id_responsavel>', methods=['DELETE'])
 def excluir_responsavel(id_responsavel):
+    usuario_logado, erro_resposta, status_code = exigir_perfis('A')
+    if erro_resposta:
+        return erro_resposta, status_code
+    
     try:
         with pool.connection() as conn:
             with conn.cursor() as cursor:
@@ -1066,6 +1133,9 @@ def excluir_responsavel(id_responsavel):
 # Lista os patrimônios com categoria, local e responsável já resolvidos por JOIN.
 @app.route('/api/patrimonios', methods=['GET'])
 def listar_patrimonios():
+    usuario_logado, erro_resposta, status_code = exigir_perfis('A', 'O', 'V')
+    if erro_resposta:
+        return erro_resposta, status_code
     try:
         with pool.connection() as conn:
             with conn.cursor() as cursor:
@@ -1220,6 +1290,10 @@ def cadastrar_patrimonio():
 # apenas por situação Baixado ou Extraviado, sem exclusão física.
 @app.route('/api/patrimonios/<int:id_patrimonio>', methods=['PUT'])
 def editar_patrimonio(id_patrimonio):
+    usuario_logado, erro_resposta, status_code = exigir_perfis('A')
+    if erro_resposta:
+        return erro_resposta, status_code
+    
     try:
         dados = request.get_json(silent=True) or {}
 
@@ -1315,6 +1389,9 @@ def editar_patrimonio(id_patrimonio):
 # Realiza a exclusão lógica do patrimônio, alterando apenas a situação.
 @app.route('/api/patrimonios/<int:id_patrimonio>', methods=['DELETE'])
 def inativar_patrimonio(id_patrimonio):
+    usuario_logado, erro_resposta, status_code = exigir_perfis('A')
+    if erro_resposta:
+        return erro_resposta, status_code
     try:
         dados = request.get_json(silent=True) or {}
         situacao_atual = str(dados.get('situacao_atual', 'B')).strip().upper()
@@ -1416,6 +1493,9 @@ def listar_patrimonios_em_manutencao():
 # Registros não resolvidos ficam no topo.
 @app.route('/api/manutencoes', methods=['GET'])
 def listar_manutencoes():
+    usuario_logado, erro_resposta, status_code = exigir_perfis('A', 'O', 'V')
+    if erro_resposta:
+        return erro_resposta, status_code
     try:
         with pool.connection() as conn:
             with conn.cursor() as cursor:
@@ -1490,6 +1570,10 @@ def listar_manutencoes():
 # Cadastra um novo histórico de manutenção.
 @app.route('/api/manutencoes', methods=['POST'])
 def incluir_manutencao():
+    usuario_logado, erro_resposta, status_code = exigir_perfis('A', 'O')
+    if erro_resposta:
+         return erro_resposta, status_code
+    
     try:
         dados = request.get_json() or {}
 
@@ -1587,6 +1671,10 @@ def incluir_manutencao():
 # Atualiza um histórico de manutenção existente.
 @app.route('/api/manutencoes/<int:id_manutencao>', methods=['PUT'])
 def editar_manutencao(id_manutencao):
+    usuario_logado, erro_resposta, status_code = exigir_perfis('A')
+    if erro_resposta:
+        return erro_resposta, status_code
+    
     try:
         dados = request.get_json() or {}
 
@@ -1695,6 +1783,9 @@ def editar_manutencao(id_manutencao):
 
 @app.route('/api/manutencoes/<int:id_manutencao>', methods=['DELETE'])
 def excluir_manutencao(id_manutencao):
+    usuario_logado, erro_resposta, status_code = exigir_perfis('A')
+    if erro_resposta:
+        return erro_resposta, status_code
     try:
         with pool.connection() as conn:
             with conn.cursor() as cursor:
@@ -1822,6 +1913,9 @@ def buscar_patrimonios_movimentacao():
 # ROTA PARA LISTAR TODAS AS MOVIMENTAÇÕES
 @app.route('/api/movimentacoes', methods=['GET'])
 def listar_movimentacoes():
+    usuario_logado, erro_resposta, status_code = exigir_perfis('A', 'O', 'V')
+    if erro_resposta:
+        return erro_resposta, status_code
     try:
         with pool.connection() as conn:
             with conn.cursor() as cursor:
@@ -1890,6 +1984,9 @@ def listar_movimentacoes():
 # ROTA PARA CADASTRAR UMA NOVA MOVIMENTAÇÃO
 @app.route('/api/movimentacoes', methods=['POST'])
 def incluir_movimentacao():
+    usuario_logado, erro_resposta, status_code = exigir_perfis('A', 'O')
+    if erro_resposta:
+        return erro_resposta, status_code
     dados = request.get_json(silent=True) or {}
 
     id_patrimonio = dados.get('id_patrimonio')
@@ -2020,6 +2117,10 @@ def incluir_movimentacao():
 # ROTA PARA EDITAR UMA MOVIMENTAÇÃO EXISTENTE
 @app.route('/api/movimentacoes/<int:id_movimentacao>', methods=['PUT'])
 def editar_movimentacao(id_movimentacao):
+    usuario_logado, erro_resposta, status_code = exigir_perfis('A')
+    if erro_resposta:
+        return erro_resposta, status_code
+    
     dados = request.get_json(silent=True) or {}
 
     id_patrimonio = dados.get('id_patrimonio')
@@ -2162,6 +2263,10 @@ def editar_movimentacao(id_movimentacao):
 # ROTA PARA EXCLUIR UMA MOVIMENTAÇÃO
 @app.route('/api/movimentacoes/<int:id_movimentacao>', methods=['DELETE'])
 def excluir_movimentacao(id_movimentacao):
+    usuario_logado, erro_resposta, status_code = exigir_perfis('A')
+    if erro_resposta:
+        return erro_resposta, status_code
+    
     try:
         with pool.connection() as conn:
             with conn.cursor() as cursor:
