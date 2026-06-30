@@ -1,3 +1,4 @@
+// teste
 // ===================== LOGIN =====================
 // Responsável por autenticar o usuário no sistema.
 async function fazerLogin(e) {
