@@ -329,7 +329,7 @@ async function carregarUsuarios() {
   tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">Carregando usuários...</td></tr>';
 
   try {
-    const resposta = await fetch('https://controlepatrimonio.onrender.com/api/usuarios');
+    const resposta = await fetchComMatricula('https://controlepatrimonio.onrender.com/api/usuarios');
 
     if (!resposta.ok) {
       throw new Error('Falha na requisição: ' + resposta.status);
@@ -572,7 +572,7 @@ async function carregarLocais() {
   `;
 
   try {
-    const resposta = await fetch('https://controlepatrimonio.onrender.com/api/locais');
+    const resposta = await fetchComMatricula('https://controlepatrimonio.onrender.com/api/locais');
     const dados = await resposta.json();
 
     if (!resposta.ok || !dados.sucesso) {
@@ -823,7 +823,7 @@ async function carregarCategorias() {
   `;
 
   try {
-    const resposta = await fetch('https://controlepatrimonio.onrender.com/api/categorias');
+    const resposta = await fetchComMatricula('https://controlepatrimonio.onrender.com/api/categorias');
     const dados = await resposta.json();
 
     if (!resposta.ok || !dados.sucesso) {
@@ -1063,7 +1063,7 @@ async function carregarResponsaveis() {
   `;
 
   try {
-    const resposta = await fetch('https://controlepatrimonio.onrender.com/api/responsaveis');
+    const resposta = await fetchComMatricula('https://controlepatrimonio.onrender.com/api/responsaveis');
     const dados = await resposta.json();
 
     if (!resposta.ok || !dados.sucesso) {
@@ -1396,7 +1396,7 @@ async function carregarPatrimonios() {
   `;
 
   try {
-    const resposta = await fetch('https://controlepatrimonio.onrender.com/api/patrimonios');
+    const resposta = await fetchComMatricula('https://controlepatrimonio.onrender.com/api/patrimonios');
     const dados = await resposta.json();
 
     if (!dados.sucesso) {
@@ -1550,7 +1550,7 @@ function filtrarPatrimonios() {
 // Carrega categorias, locais e responsáveis para os modais.
 async function carregarCategoriasPatrimonio() {
   try {
-    const resposta = await fetch('https://controlepatrimonio.onrender.com/api/categorias');
+    const resposta = await fetchComMatricula('https://controlepatrimonio.onrender.com/api/categorias');
     const dados = await resposta.json();
 
     if (!dados.sucesso) return;
@@ -1574,7 +1574,7 @@ async function carregarCategoriasPatrimonio() {
 
 async function carregarLocaisPatrimonio() {
   try {
-    const resposta = await fetch('https://controlepatrimonio.onrender.com/api/locais');
+    const resposta = await fetchComMatricula('https://controlepatrimonio.onrender.com/api/locais');
     const dados = await resposta.json();
 
     if (!dados.sucesso) return;
@@ -1598,7 +1598,7 @@ async function carregarLocaisPatrimonio() {
 
 async function carregarResponsaveisPatrimonio() {
   try {
-    const resposta = await fetch('https://controlepatrimonio.onrender.com/api/responsaveis');
+    const resposta = await fetchComMatricula('https://controlepatrimonio.onrender.com/api/responsaveis');
     const dados = await resposta.json();
 
     if (!dados.sucesso) return;
@@ -1916,7 +1916,7 @@ async function carregarManutencoes() {
   `;
 
   try {
-    const resposta = await fetch('https://controlepatrimonio.onrender.com/api/manutencoes');
+    const resposta = await fetchComMatricula('https://controlepatrimonio.onrender.com/api/manutencoes');
     const dados = await resposta.json();
 
     if (!dados.sucesso) {
@@ -2079,7 +2079,7 @@ function filtrarManutencoes() {
 // Carrega patrimônios em manutenção e usuários cadastrados.
 async function carregarPatrimoniosManutencao() {
   try {
-    const resposta = await fetch('https://controlepatrimonio.onrender.com/api/patrimonios/manutencao');
+    const resposta = await fetchComMatricula('https://controlepatrimonio.onrender.com/api/patrimonios/manutencao');
     const dados = await resposta.json();
 
     if (!dados.sucesso) return;
@@ -2099,7 +2099,7 @@ async function carregarPatrimoniosManutencao() {
 
 async function carregarUsuariosManutencao() {
   try {
-    const resposta = await fetch('https://controlepatrimonio.onrender.com/api/usuarios');
+    const resposta = await fetchComMatricula('https://controlepatrimonio.onrender.com/api/usuarios');
     const dados = await resposta.json();
 
     if (!dados.sucesso) return;
@@ -2450,7 +2450,7 @@ async function carregarMovimentacoes() {
   `;
 
   try {
-    const resposta = await fetch('https://controlepatrimonio.onrender.com/api/movimentacoes');
+    const resposta = await fetchComMatricula('https://controlepatrimonio.onrender.com/api/movimentacoes');
     const dados = await resposta.json();
 
     if (!resposta.ok || !dados.sucesso) {
@@ -2604,7 +2604,7 @@ async function pesquisarPatrimonioMovimentacao(termo, modo) {
   }
 
   try {
-    const resposta = await fetch(`https://controlepatrimonio.onrender.com/api/patrimonios/busca?termo=${encodeURIComponent(valor)}`);
+    const resposta = await fetchComMatricula(`https://controlepatrimonio.onrender.com/api/patrimonios/busca?termo=${encodeURIComponent(valor)}`);
     const dados = await resposta.json();
 
     if (!resposta.ok || !dados.sucesso) {
