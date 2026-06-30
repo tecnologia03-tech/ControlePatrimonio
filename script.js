@@ -88,33 +88,6 @@ function somenteVisualiza() {
   return obterPerfilUsuarioLogado() === 'V';
 }
 
-// ===================== VALIDAÇÃO DE NÍVEL DE USUÁRIO PARA BOTÕES =====================
-function abrirModalNovoUsuario() {
-    if (!podeIncluir()) {
-        alert('Você não tem permissão para incluir usuários.');
-        return;
-    }
-
-    document.getElementById('modalNovoUsuario').style.display = 'flex';
-}
-
-function abrirModalEditarUsuario(idUsuario) {
-    if (!podeEditarOuExcluir()) {
-        alert('Você não tem permissão para editar usuários.');
-        return;
-    }
-
-    document.getElementById('modalEditarUsuario').style.display = 'flex';
-}
-
-function abrirModalExcluirUsuario(idUsuario) {
-    if (!podeEditarOuExcluir()) {
-        alert('Você não tem permissão para inativar usuários.');
-        return;
-    }
-
-    document.getElementById('modalExcluirUsuario').style.display = 'flex';
-}
 
 // ===================== TOGGLE SIDEBAR =====================
 // Responsável por abrir e fechar o menu lateral.
