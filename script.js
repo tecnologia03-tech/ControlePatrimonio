@@ -8,9 +8,8 @@ async function fazerLogin(e) {
   msgErro.textContent = '';
 
   try {
-    const resposta = await fetch('https://controlepatrimonio.onrender.com/api/login', {
+    const resposta = await fetchComMatricula('https://controlepatrimonio.onrender.com/api/login', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ matricula, senha })
     });
 
@@ -391,9 +390,8 @@ async function salvarUsuario() {
   }
 
   try {
-    const resposta = await fetch('https://controlepatrimonio.onrender.com/api/usuarios', {
+    const resposta = await fetchComMatricula('https://controlepatrimonio.onrender.com/api/usuarios', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ nome, matricula, senha, perfil })
     });
 
@@ -450,9 +448,8 @@ async function salvarEdicaoUsuario() {
   }
 
   try {
-    const resposta = await fetch(`https://controlepatrimonio.onrender.com/api/usuarios/${id}`, {
+    const resposta = await fetchComMatricula(`https://controlepatrimonio.onrender.com/api/usuarios/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ nome, matricula, senha, perfil, ativo })
     });
 
@@ -637,9 +634,8 @@ async function salvarLocal() {
   }
 
   try {
-    const resposta = await fetch('https://controlepatrimonio.onrender.com/api/locais', {
+    const resposta = await fetchComMatricula('https://controlepatrimonio.onrender.com/api/locais', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ nome, sala_aula })
     });
 
@@ -695,9 +691,8 @@ async function atualizarLocal() {
   }
 
   try {
-    const resposta = await fetch(`https://controlepatrimonio.onrender.com/api/locais/${id}`, {
+    const resposta = await fetchComMatricula(`https://controlepatrimonio.onrender.com/api/locais/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ nome, sala_aula })
     });
 
@@ -732,7 +727,7 @@ async function confirmarExclusaoLocal() {
   if (!idLocalParaExcluir) return;
 
   try {
-    const resposta = await fetch(`https://controlepatrimonio.onrender.com/api/locais/${idLocalParaExcluir}`, {
+    const resposta = await fetchComMatricula(`https://controlepatrimonio.onrender.com/api/locais/${idLocalParaExcluir}`, {
       method: 'DELETE'
     });
 
@@ -884,9 +879,8 @@ async function salvarCategoria() {
   }
 
   try {
-    const resposta = await fetch('https://controlepatrimonio.onrender.com/api/categorias', {
+    const resposta = await fetchComMatricula('https://controlepatrimonio.onrender.com/api/categorias', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ nome })
     });
 
@@ -941,9 +935,8 @@ async function atualizarCategoria() {
   }
 
   try {
-    const resposta = await fetch(`https://controlepatrimonio.onrender.com/api/categorias/${id}`, {
+    const resposta = await fetchComMatricula(`https://controlepatrimonio.onrender.com/api/categorias/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ nome })
     });
 
@@ -979,7 +972,7 @@ async function confirmarExclusaoCategoria() {
   if (!idCategoriaParaExcluir) return;
 
   try {
-    const resposta = await fetch(`https://controlepatrimonio.onrender.com/api/categorias/${idCategoriaParaExcluir}`, {
+    const resposta = await fetchComMatricula(`https://controlepatrimonio.onrender.com/api/categorias/${idCategoriaParaExcluir}`, {
       method: 'DELETE'
     });
 
@@ -1145,9 +1138,8 @@ async function salvarResponsavel() {
   }
 
   try {
-    const resposta = await fetch('https://controlepatrimonio.onrender.com/api/responsaveis', {
+    const resposta = await fetchComMatricula('https://controlepatrimonio.onrender.com/api/responsaveis', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ nome, matricula, cargo })
     });
 
@@ -1213,9 +1205,8 @@ async function atualizarResponsavel() {
   }
 
   try {
-    const resposta = await fetch(`https://controlepatrimonio.onrender.com/api/responsaveis/${id}`, {
+    const resposta = await fetchComMatricula(`https://controlepatrimonio.onrender.com/api/responsaveis/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ nome, matricula, cargo })
     });
 
@@ -1257,7 +1248,7 @@ async function confirmarExclusaoResponsavel() {
   if (!idResponsavelParaExcluir) return;
 
   try {
-    const resposta = await fetch(`https://controlepatrimonio.onrender.com/api/responsaveis/${idResponsavelParaExcluir}`, {
+    const resposta = await fetchComMatricula(`https://controlepatrimonio.onrender.com/api/responsaveis/${idResponsavelParaExcluir}`, {
       method: 'DELETE'
     });
 
@@ -1640,9 +1631,8 @@ async function salvarPatrimonio() {
   }
 
   try {
-    const resposta = await fetch('https://controlepatrimonio.onrender.com/api/patrimonios', {
+    const resposta = await fetchComMatricula('https://controlepatrimonio.onrender.com/api/patrimonios', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         num_patrimonio,
         num_nfe,
@@ -1736,9 +1726,8 @@ async function atualizarPatrimonio() {
   }
 
   try {
-    const resposta = await fetch(`https://controlepatrimonio.onrender.com/api/patrimonios/${id}`, {
+    const resposta = await fetchComMatricula(`https://controlepatrimonio.onrender.com/api/patrimonios/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         num_patrimonio,
         num_nfe,
@@ -1781,9 +1770,8 @@ async function confirmarInativacaoPatrimonio() {
   const msg = document.getElementById('msgErroEditarPatrimonio');
 
   try {
-    const resposta = await fetch(`https://controlepatrimonio.onrender.com/api/patrimonios/${patrimonioPendenteInativacao.id}`, {
+    const resposta = await fetchComMatricula(`https://controlepatrimonio.onrender.com/api/patrimonios/${patrimonioPendenteInativacao.id}`, {
       method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         situacao_atual: patrimonioPendenteInativacao.situacao_atual
       })
@@ -2144,9 +2132,8 @@ async function salvarManutencao() {
   }
 
   try {
-    const resposta = await fetch('https://controlepatrimonio.onrender.com/api/manutencoes', {
+    const resposta = await fetchComMatricula('https://controlepatrimonio.onrender.com/api/manutencoes', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         id_patrimonio,
         id_usuario,
@@ -2273,9 +2260,8 @@ async function atualizarManutencao() {
   }
 
   try {
-    const resposta = await fetch(`https://controlepatrimonio.onrender.com/api/manutencoes/${id}`, {
+    const resposta = await fetchComMatricula(`https://controlepatrimonio.onrender.com/api/manutencoes/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         id_patrimonio,
         id_usuario,
@@ -2327,7 +2313,7 @@ async function confirmarExclusaoManutencao() {
   if (!idManutencaoParaExcluir) return;
 
   try {
-    const resposta = await fetch(`https://controlepatrimonio.onrender.com/api/manutencoes/${idManutencaoParaExcluir}`, {
+    const resposta = await fetchComMatricula(`https://controlepatrimonio.onrender.com/api/manutencoes/${idManutencaoParaExcluir}`, {
       method: 'DELETE'
     });
 
@@ -2661,11 +2647,8 @@ async function salvarMovimentacao() {
   }
 
   try {
-    const resposta = await fetch('https://controlepatrimonio.onrender.com/api/movimentacoes', {
+    const resposta = await fetchComMatricula('https://controlepatrimonio.onrender.com/api/movimentacoes', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
       body: JSON.stringify({
         id_patrimonio,
         id_usuario,
@@ -2739,11 +2722,8 @@ async function atualizarMovimentacao() {
   }
 
   try {
-    const resposta = await fetch(`https://controlepatrimonio.onrender.com/api/movimentacoes/${id}`, {
+    const resposta = await fetchComMatricula(`https://controlepatrimonio.onrender.com/api/movimentacoes/${id}`, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json'
-      },
       body: JSON.stringify({
         id_patrimonio,
         id_usuario,
@@ -2787,7 +2767,7 @@ async function confirmarExclusaoMovimentacao() {
   if (!idMovimentacaoParaExcluir) return;
 
   try {
-    const resposta = await fetch(`https://controlepatrimonio.onrender.com/api/movimentacoes/${idMovimentacaoParaExcluir}`, {
+    const resposta = await fetchComMatricula(`https://controlepatrimonio.onrender.com/api/movimentacoes/${idMovimentacaoParaExcluir}`, {
       method: 'DELETE'
     });
 

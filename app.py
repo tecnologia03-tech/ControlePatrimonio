@@ -83,7 +83,7 @@ def login():
             with conn.cursor() as cursor:
                 cursor.execute(
                   """
-                    SELECT Nome, Tp_Usuario
+                    SELECT Nome, Tp_Usuario, Login_Matricula
                     FROM Usuario
                     WHERE Login_Matricula = %s
                     AND Senha = %s
@@ -115,6 +115,56 @@ def login():
         return jsonify({
             "sucesso": False,
             "mensagem": str(e)
+        }), 500
+
+# ===================== USUÁRIO AUTENTICADO VIA HEADER ===================== #
+def obter_usuario_logado():
+    matricula = (request.headers.get('X-Usuario-Matricula') or '').strip()
+
+    if not matricula:
+        return None, jsonify({
+            "sucesso": False,
+            "mensagem": "Matrícula do usuário logado não enviada no header."
+        }), 401
+
+    try:
+        with pool.connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    SELECT Id_Usuario, Nome, Login_Matricula, Tp_Usuario, Ativo
+                    FROM Usuario
+                    WHERE Login_Matricula = %s
+                    LIMIT 1;
+                """, (matricula,))
+
+                row = cursor.fetchone()
+
+                if not row:
+                    return None, jsonify({
+                        "sucesso": False,
+                        "mensagem": "Usuário do header não encontrado."
+                    }), 404
+
+                if row[4] != 'S':
+                    return None, jsonify({
+                        "sucesso": False,
+                        "mensagem": "Usuário do header está inativo."
+                    }), 403
+
+                usuario = {
+                    "id": row[0],
+                    "nome": row[1],
+                    "matricula": row[2],
+                    "perfil": row[3],
+                    "ativo": row[4]
+                }
+
+                return usuario, None, None
+
+    except Exception as e:
+        return None, jsonify({
+            "sucesso": False,
+            "mensagem": f"Erro ao validar usuário logado: {str(e)}"
         }), 500
 
 # ===================== DASHBOARD ===================== #
