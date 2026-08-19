@@ -29,7 +29,8 @@ CORS(app)
 pool = ConnectionPool(
     DB_URL,
     min_size=0,
-    max_size=10,
+    max_size=15,
+    timeout=10,
     check=ConnectionPool.check_connection,
 )
 
