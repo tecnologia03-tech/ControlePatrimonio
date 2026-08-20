@@ -2549,9 +2549,9 @@ function filtrarMovimentacoes() {
 async function carregarDadosAuxiliaresMovimentacao() {
   try {
     const [respostaUsuarios, respostaLocais, respostaResponsaveis] = await Promise.all([
-      fetch('https://controlepatrimonio.onrender.com/api/usuarios'),
-      fetch('https://controlepatrimonio.onrender.com/api/locais'),
-      fetch('https://controlepatrimonio.onrender.com/api/responsaveis')
+      fetchComMatricula('https://controlepatrimonio.onrender.com/api/usuarios'),
+      fetchComMatricula('https://controlepatrimonio.onrender.com/api/locais'),
+      fetchComMatricula('https://controlepatrimonio.onrender.com/api/responsaveis')
     ]);
 
     const dadosUsuarios = await respostaUsuarios.json();
