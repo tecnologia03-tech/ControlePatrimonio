@@ -54,7 +54,7 @@ def status_banco():
                 cursor.execute("SELECT 1;")
 
         # Retorna sucesso se a conexão com o banco estiver funcionando
-        return jsonify({"status": "conectado", "banco": "neondb"}), 200
+        return jsonify({"status": "conectado", "banco": "Supabase"}), 200
 
     except Exception as e:
         # Retorna erro caso ocorra qualquer falha de conexão
