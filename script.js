@@ -900,6 +900,10 @@ function filtrarCategorias(termo) {
 /* ===================== MODAL DE INCLUSÃO ===================== */
 
 function abrirModalIncluirCategoria() {
+  if (!podeIncluir()) {
+    alert('Você não tem permissão para incluir categorias.');
+    return
+  }
   document.getElementById('incluirNomeCategoria').value = '';
 
   const msg = document.getElementById('msgErroIncluirCategoria');
@@ -951,6 +955,10 @@ async function salvarCategoria() {
 /* ===================== MODAL DE EDIÇÃO ===================== */
 
 function abrirModalEditarCategoria(id) {
+  if (!podeIncluir()) {
+    alert('Você não tem permissão para incluir categorias.');
+    return
+  }
   const categoria = listaCategorias.find(item => item.id === id);
   if (!categoria) return;
 
@@ -1007,6 +1015,10 @@ async function atualizarCategoria() {
 /* ===================== MODAL DE EXCLUSÃO ===================== */
 
 function abrirModalExclusaoCategoria(id) {
+  if (!podeIncluir()) {
+    alert('Você não tem permissão para incluir categorias.');
+    return
+  }
   idCategoriaParaExcluir = id;
   document.getElementById('modalConfirmarExclusaoCategoria').style.display = 'flex';
 }
@@ -1171,6 +1183,10 @@ function fecharModalNovoResponsavel() {
 // Envia os dados do novo responsável para a API.
 // Em caso de erro, mostra a mensagem no modal sem quebrar a tela.
 async function salvarResponsavel() {
+  if (!podeIncluir()) {
+    alert('Você não tem permissão para incluir categorias.');
+    return
+  }
   const nome = document.getElementById('novoNomeResponsavel').value.trim();
   const matricula = document.getElementById('novaMatriculaResponsavel').value.trim();
   const cargo = document.getElementById('novoCargoResponsavel').value.trim();
