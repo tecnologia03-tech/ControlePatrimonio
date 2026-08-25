@@ -368,6 +368,10 @@ function renderizarUsuarios(lista) {
   }
 
   const mapPerfil = { 'A': 'Administrador', 'O': 'Operador', 'V': 'Visualizador' };
+  const podeEditar = podeEditarOuExcluir();
+
+  // Define quantas colunas a tabela tem (com ou sem ações)
+  const colspanTotal = podeEditar ? 5 : 4;
 
   tbody.innerHTML = lista.map(usuario => {
     const perfil = mapPerfil[usuario.perfil] || usuario.perfil;
@@ -375,15 +379,19 @@ function renderizarUsuarios(lista) {
       ? '<span class="badge-ativo">Ativo</span>'
       : '<span class="badge-inativo">Inativo</span>';
 
+    const colunaAcoes = podeEditar
+      ? `<td>
+           <button class="btn btn-sm btn-outline-primary" onclick="abrirModalEditarUsuario(${usuario.id})">Editar</button>
+         </td>`
+      : '';
+
     return `
       <tr>
         <td>${usuario.nome}</td>
         <td>${usuario.matricula}</td>
         <td>${perfil}</td>
         <td>${status}</td>
-        <td>
-          <button class="btn btn-sm btn-outline-primary" onclick="abrirModalEditarUsuario(${usuario.id})">Editar</button>
-        </td>
+        ${colunaAcoes}
       </tr>
     `;
   }).join('');
