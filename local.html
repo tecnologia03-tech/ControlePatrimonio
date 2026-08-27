@@ -194,17 +194,22 @@
       const el = document.getElementById('nomeUsuarioTopbar');
       if (el) el.textContent = nome;
 
-       // Esconde botão de incluir se não tiver permissão
-       const btnIncluir = document.querySelector('.btn-incluir-usuario');
-       if (btnIncluir && !podeIncluir()) {
-       btnIncluir.style.display = 'none';
-       }
+      // Esconde botão de incluir se não tiver permissão
+      const btnIncluir = document.querySelector('.btn-incluir-usuario');
+      if (btnIncluir && !podeIncluir()) {
+      btnIncluir.style.display = 'none';
+      }
 
-       // Esconde coluna de ações se não tiver permissão
-       const thAcoes = document.querySelector('th[style*="width: 140px"]');
-       if (thAcoes && !podeEditarOuExcluir()) {
-       thAcoes.style.display = 'none';
-       }
+      // Esconde coluna de ações inteira (cabeçalho + células) se não tiver permissão
+      if (!podeEditarOuExcluir()) {
+      // Esconde o cabeçalho
+      const thAcoes = document.querySelector('th[style*="width: 140px"]');
+      if (thAcoes) thAcoes.style.display = 'none';
+
+      // Esconde todas as células da última coluna (que é a de ações)
+      const tdAcoes = document.querySelectorAll('.tabela-usuarios tbody td:last-child');
+      tdAcoes.forEach(td => td.style.display = 'none');
+      }
 
       if (typeof carregarLocais === 'function') {
         carregarLocais();
