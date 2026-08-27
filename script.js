@@ -870,10 +870,13 @@ function renderizarCategorias(categorias) {
   const tbody = document.getElementById('tabelaCategorias');
   if (!tbody) return;
 
+  const podeEditar = podeEditarOuExcluir();
+  const colspanTotal = podeEditar ? 3 : 2;
+
   if (!categorias.length) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="3" class="text-center text-muted py-4">
+        <td colspan="${colspanTotal}" class="text-center text-muted py-4">
           Nenhuma categoria encontrada.
         </td>
       </tr>
@@ -885,12 +888,14 @@ function renderizarCategorias(categorias) {
     <tr>
       <td>${index + 1}</td>
       <td>${categoria.nome}</td>
-      <td>
-        <div class="acoes-tabela">
-          <button class="btn-editar-usuario" onclick="abrirModalEditarCategoria(${categoria.id})">Editar</button>
-          <button class="btn btn-sm btn-outline-danger" onclick="abrirModalExclusaoCategoria(${categoria.id})">Excluir</button>
-        </div>
-      </td>
+      ${podeEditar ? `
+        <td>
+          <div class="acoes-tabela">
+            <button class="btn-editar-usuario" onclick="abrirModalEditarCategoria(${categoria.id})">Editar</button>
+            <button class="btn btn-sm btn-outline-danger" onclick="abrirModalExclusaoCategoria(${categoria.id})">Excluir</button>
+          </div>
+        </td>
+      ` : ''}
     </tr>
   `).join('');
 }
