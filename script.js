@@ -1477,8 +1477,11 @@ function renderizarPatrimonios(lista) {
     return;
   }
 
+  const podeEditar = podeEditarOuExcluir();
+  const colspanTotal = podeEditar ? 9 : 8;
+
   if (!lista || lista.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="9" class="text-center text-muted py-4">Nenhum patrimônio cadastrado.</td></tr>';
+    tbody.innerHTML = `<tr><td colspan="${colspanTotal}" class="text-center text-muted py-4">Nenhum patrimônio cadastrado.</td></tr>`;
     return;
   }
 
@@ -1500,9 +1503,11 @@ function renderizarPatrimonios(lista) {
         <td>${patrimonio.responsavel || '-'}</td>
         <td>${situacao}</td>
         <td>${status}</td>
-        <td>
-          <button class="btn btn-sm btn-outline-primary me-1" onclick="abrirModalEditarPatrimonio(${patrimonio.id})">Editar</button>
-        </td>
+        ${podeEditar ? `
+          <td>
+            <button class="btn btn-sm btn-outline-primary me-1" onclick="abrirModalEditarPatrimonio(${patrimonio.id})">Editar</button>
+          </td>
+        ` : ''}
       </tr>
     `;
   }).join('');
