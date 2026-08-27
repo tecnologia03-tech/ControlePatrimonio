@@ -193,7 +193,23 @@
       const nome = sessionStorage.getItem('nomeUsuario') || 'Usuário';
       const el = document.getElementById('nomeUsuarioTopbar');
       if (el) el.textContent = nome;
-    });
+
+       // Esconde botão de incluir se não tiver permissão
+      const btnIncluir = document.querySelector('.btn-incluir-usuario');
+      if (btnIncluir && !podeIncluir()) {
+      btnIncluir.style.display = 'none';
+      }
+
+      // Esconde coluna de ações se não tiver permissão
+      const thAcoes = document.querySelector('th[style*="width: 140px"]');
+      if (thAcoes && !podeEditarOuExcluir()) {
+      thAcoes.style.display = 'none';
+      }
+
+      if (typeof carregarLocais === 'function') {
+        carregarLocais();
+      }
+      });
   </script>
 
 </body>
