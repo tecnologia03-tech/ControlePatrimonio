@@ -206,6 +206,18 @@
       const el = document.getElementById('nomeUsuarioTopbar');
       if (el) el.textContent = nome;
 
+      // Esconde botão de incluir se não tiver permissão
+      const btnIncluir = document.querySelector('.btn-incluir-usuario');
+      if (btnIncluir && !podeIncluir()) {
+      btnIncluir.style.display = 'none';
+      }
+
+      // Esconde cabeçalho da coluna de ações se não tiver permissão
+      const thAcoes = document.querySelector('th[style*="width: 180px"]');
+      if (thAcoes && !podeEditarOuExcluir()) {
+      thAcoes.style.display = 'none';
+      }
+
       if (typeof carregarUsuarios === 'function') {
         carregarUsuarios();
       }

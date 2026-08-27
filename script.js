@@ -1125,10 +1125,13 @@ function renderizarResponsaveis(lista) {
   const tbody = document.getElementById('tabelaResponsaveis');
   if (!tbody) return;
 
+  const podeEditar = podeEditarOuExcluir();
+  const colspanTotal = podeEditar ? 5 : 4;
+
   if (!lista.length) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="5" class="text-center text-muted py-4">
+        <td colspan="${colspanTotal}" class="text-center text-muted py-4">
           Nenhum responsável cadastrado.
         </td>
       </tr>
@@ -1142,22 +1145,24 @@ function renderizarResponsaveis(lista) {
       <td>${responsavel.matricula}</td>
       <td>${responsavel.cargo}</td>
       <td><span class="badge-status-ativo">Ativo</span></td>
-      <td>
-        <div class="acoes-tabela">
-          <button
-            type="button"
-            class="btn-editar-usuario"
-            onclick="abrirModalEditarResponsavel(${responsavel.id})">
-            Editar
-          </button>
-          <button
-            type="button"
-            class="btn btn-sm btn-outline-danger"
-            onclick="abrirModalExcluirResponsavel(${responsavel.id})">
-            Excluir
-          </button>
-        </div>
-      </td>
+      ${podeEditar ? `
+        <td>
+          <div class="acoes-tabela">
+            <button
+              type="button"
+              class="btn-editar-usuario"
+              onclick="abrirModalEditarResponsavel(${responsavel.id})">
+              Editar
+            </button>
+            <button
+              type="button"
+              class="btn btn-sm btn-outline-danger"
+              onclick="abrirModalExcluirResponsavel(${responsavel.id})">
+              Excluir
+            </button>
+          </div>
+        </td>
+      ` : ''}
     </tr>
   `).join('');
 }
