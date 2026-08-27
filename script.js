@@ -614,10 +614,13 @@ function renderizarLocais(locais) {
   const tbody = document.getElementById('tabelaLocais');
   if (!tbody) return;
 
+  const podeEditar = podeEditarOuExcluir();
+  const colspanTotal = podeEditar ? 4 : 3;
+
   if (!locais.length) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="4" class="text-center text-muted py-4">
+        <td colspan="${colspanTotal}" class="text-center text-muted py-4">
           Nenhum local encontrado.
         </td>
       </tr>
@@ -634,12 +637,14 @@ function renderizarLocais(locais) {
           ? '<span class="badge-status-ativo">Sim</span>'
           : '<span class="badge-inativo">Não</span>'}
       </td>
-      <td>
-        <div class="acoes-tabela">
-          <button class="btn-editar-usuario" onclick="abrirModalEditarLocal(${local.id})">Editar</button>
-          <button class="btn btn-sm btn-outline-danger" onclick="abrirModalExclusaoLocal(${local.id})">Excluir</button>
-        </div>
-      </td>
+      ${podeEditar ? `
+        <td>
+          <div class="acoes-tabela">
+            <button class="btn-editar-usuario" onclick="abrirModalEditarLocal(${local.id})">Editar</button>
+            <button class="btn btn-sm btn-outline-danger" onclick="abrirModalExclusaoLocal(${local.id})">Excluir</button>
+          </div>
+        </td>
+      ` : ''}
     </tr>
   `).join('');
 }
