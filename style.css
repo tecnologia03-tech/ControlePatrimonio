@@ -968,3 +968,107 @@
     width: 320px;
   }
 }
+
+/* ===================== ROLAGEM DA PÁGINA ===================== */
+
+/* Permite rolagem no body quando necessário */
+body {
+  overflow-y: auto;
+  min-height: 100vh;
+}
+
+/* Wrapper sem overflow hidden para permitir rolagem */
+.wrapper {
+  display: flex;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Content com rolagem vertical */
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+/* Main content com rolagem quando necessário */
+.main-content {
+  padding: 28px 24px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* ===================== MODAL COM ROLAGEM ===================== */
+
+/* Overlay do modal com rolagem */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Modal box com altura máxima e rolagem interna */
+.modal-box {
+  width: 100%;
+  max-width: 540px;
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header e footer fixos, body com rolagem */
+.modal-header-custom,
+.modal-footer-custom {
+  flex-shrink: 0;
+}
+
+.modal-body-custom {
+  padding: 20px 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Modal de manutenção com largura maior mas ainda com rolagem */
+#modalIncluirManutencao .modal-box,
+#modalEditarManutencao .modal-box {
+  max-width: 720px;
+  max-height: 85vh;
+}
+
+/* Modal de confirmação */
+.modal-overlay-confirmacao {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.modal-confirmacao-container {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 420px;
+  width: 90%;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+  text-align: center;
+}
