@@ -720,3 +720,235 @@
   color: #fff !important;
   border-color: #dc3545 !important;
 }
+
+/* ===================== RESPONSIVIDADE ===================== */
+
+/* Tablets e telas médias (até 991px) */
+@media (max-width: 991px) {
+  .sidebar {
+    width: 220px;
+  }
+
+  .usuarios-toolbar .input-busca-usuario {
+    width: 220px;
+  }
+}
+
+/* Mobile e telas pequenas (até 768px) */
+@media (max-width: 768px) {
+  /* Sidebar sobreposta em mobile */
+  .sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    z-index: 1000;
+    width: 240px;
+    transform: translateX(-100%);
+  }
+
+  .sidebar.aberto {
+    transform: translateX(0);
+  }
+
+  .sidebar.fechado {
+    width: 240px;
+    transform: translateX(-100%);
+  }
+
+  /* Ajuste do conteúdo principal */
+  .content {
+    margin-left: 0;
+  }
+
+  /* Topbar com padding reduzido */
+  .topbar {
+    padding: 0 12px;
+  }
+
+  .topbar-titulo {
+    font-size: 1rem;
+  }
+
+  /* Main content com padding reduzido */
+  .main-content {
+    padding: 16px 12px;
+  }
+
+  /* Toolbar empilhada em mobile */
+  .usuarios-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .usuarios-toolbar .input-busca-usuario {
+    width: 100%;
+    max-width: none;
+  }
+
+  .usuarios-toolbar .btn-incluir-usuario {
+    width: 100%;
+    text-align: center;
+  }
+
+  /* Cards com padding reduzido */
+  .card-indicador,
+  .box {
+    padding: 16px 14px;
+  }
+
+  /* Tabela com scroll horizontal */
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Ajuste dos cards de indicador */
+  .card-indicador {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .card-icone {
+    margin-bottom: 8px;
+  }
+}
+
+/* Mobile extra pequeno (até 576px) */
+@media (max-width: 576px) {
+  /* Login em tela pequena */
+  #telaLogin {
+    flex-direction: column;
+  }
+
+  .login-esquerda,
+  .login-direita {
+    width: 100%;
+    height: 50vh;
+  }
+
+  .login-card {
+    padding: 24px 16px;
+  }
+
+  /* Sidebar ainda mais compacta */
+  .sidebar {
+    width: 220px;
+  }
+
+  .sidebar-header {
+    padding: 16px 14px;
+  }
+
+  .sidebar-header span {
+    font-size: 0.9rem;
+  }
+
+  .sidebar-menu li a {
+    padding: 10px 14px;
+    font-size: 0.9rem;
+  }
+
+  /* Topbar mais compacta */
+  .topbar {
+    height: 56px;
+    padding: 0 8px;
+    gap: 8px;
+  }
+
+  .btn-menu-toggle {
+    width: 36px;
+    height: 36px;
+    font-size: 1.1rem;
+  }
+
+  .topbar-titulo {
+    font-size: 0.95rem;
+  }
+
+  .topbar-usuario {
+    font-size: 0.85rem;
+  }
+
+  .topbar-usuario .avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 0.9rem;
+  }
+
+  /* Main content ainda mais compacto */
+  .main-content {
+    padding: 12px 8px;
+  }
+
+  /* Cards ainda mais compactos */
+  .card-indicador,
+  .box {
+    padding: 14px 12px;
+  }
+
+  .card-icone {
+    width: 44px;
+    height: 44px;
+    font-size: 1.3rem;
+  }
+
+  .card-info .valor {
+    font-size: 1.3rem;
+  }
+
+  /* Tabela com fonte menor */
+  .tabela-usuarios th,
+  .tabela-usuarios td {
+    font-size: 0.8rem;
+    padding: 8px 10px;
+  }
+
+  /* Ações da tabela mais compactas */
+  .acoes-tabela button {
+    min-width: 70px;
+    height: 32px;
+    font-size: 0.8rem;
+    padding: 4px 8px;
+  }
+
+  /* Modal mais compacto */
+  .modal-box {
+    max-width: 95%;
+  }
+
+  .modal-header-custom,
+  .modal-body-custom,
+  .modal-footer-custom {
+    padding: 16px 14px;
+  }
+
+  /* Modal de confirmação */
+  .modal-confirmacao-container {
+    padding: 20px 16px;
+  }
+
+  .modal-botoes-confirmacao {
+    flex-direction: column;
+  }
+
+  .btn-cancelar-confirmacao,
+  .btn-inativar-confirmacao {
+    width: 100%;
+  }
+}
+
+/* Desktop grande (acima de 1200px) */
+@media (min-width: 1200px) {
+  .sidebar {
+    width: 280px;
+  }
+
+  .main-content {
+    padding: 32px 28px;
+  }
+
+  .usuarios-toolbar .input-busca-usuario {
+    width: 320px;
+  }
+}
