@@ -1,19 +1,21 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Movimentações</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"/>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
-  <link rel="stylesheet" href="style.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
 
-<div class="wrapper">
+  <div class="wrapper">
 
-<!-- SIDEBAR -->
- <aside class="sidebar" id="sidebar">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
       <div class="sidebar-header">
         <img src="Logo.jpeg" alt="Logo Salesianos">
         <span>Controle de Patrimônio</span>
@@ -37,7 +39,7 @@
       </div>
     </aside>
 
-   <div class="content">
+    <div class="content">
 
       <div class="topbar">
         <button class="btn-menu-toggle" onclick="toggleMenu()" aria-label="Abrir menu">
@@ -57,13 +59,8 @@
       <div class="main-content">
 
         <div class="usuarios-toolbar">
-          <input
-            type="text"
-            id="campoBuscaMovimentacao"
-            class="input-busca-usuario"
-            placeholder="Pesquisar por patrimônio, responsável ou local..."
-            oninput="filtrarMovimentacoes()"
-          >
+          <input type="text" id="campoBuscaMovimentacao" class="input-busca-usuario"
+            placeholder="Pesquisar por patrimônio, responsável ou local..." oninput="filtrarMovimentacoes()">
 
           <button class="btn btn-incluir-usuario" onclick="abrirModalIncluirMovimentacao()">
             <i class="bi bi-arrow-left-right"></i> Registrar Movimentação
@@ -123,73 +120,65 @@
         <p id="msgErroIncluirMovimentacao" class="text-danger mb-3" style="display:none;"></p>
 
         <div class="row g-3">
-          <div class="col-12 position-relative">
-            <label for="buscaPatrimonioMovimentacao" class="form-label fw-semibold">Patrimônio</label>
-            <input
-              type="text"
-              id="buscaPatrimonioMovimentacao"
-              class="form-control"
-              placeholder="Digite para pesquisar o patrimônio ativo..."
-              autocomplete="off"
-              oninput="pesquisarPatrimonioMovimentacao(this.value, 'incluir')"
-            >
-            <input type="hidden" id="incluirPatrimonioMovimentacao">
-            <div id="resultadosBuscaPatrimonioIncluir" class="list-group position-absolute w-100 shadow-sm" style="z-index: 20;"></div>
-          </div>
-
-          <div class="col-md-6">
-            <label for="incluirUsuarioMovimentacao" class="form-label fw-semibold">Usuário</label>
-            <select id="incluirUsuarioMovimentacao" class="form-select">
-              <option value="">Selecione...</option>
-            </select>
-          </div>
-
-          <div class="col-md-6">
-            <label for="incluirResponsavelMovimentacao" class="form-label fw-semibold">Responsável</label>
-            <select id="incluirResponsavelMovimentacao" class="form-select">
-              <option value="">Selecione...</option>
-            </select>
-          </div>
-
-          <div class="col-md-6">
-            <label for="incluirLocalOrigemMovimentacao" class="form-label fw-semibold">Local de origem</label>
-            <select id="incluirLocalOrigemMovimentacao" class="form-select">
-              <option value="">Selecione...</option>
-            </select>
-          </div>
-
-          <div class="col-md-6">
-            <label for="incluirLocalDestinoMovimentacao" class="form-label fw-semibold">Local de destino</label>
-            <select id="incluirLocalDestinoMovimentacao" class="form-select">
-              <option value="">Selecione...</option>
-            </select>
-          </div>
-
-          <div class="col-md-6">
-            <label for="incluirDtTransferenciaMovimentacao" class="form-label fw-semibold">Data da transferência</label>
-            <input type="date" id="incluirDtTransferenciaMovimentacao" class="form-control">
-          </div>
-
-          <div class="col-12">
-            <label for="incluirObservacoesMovimentacao" class="form-label fw-semibold">Observações</label>
-            <textarea
-              id="incluirObservacoesMovimentacao"
-              class="form-control"
-              rows="3"
-              maxlength="200"
-              placeholder="Descreva a observação da movimentação..."
-            ></textarea>
+          <div class="col-md-6 position-relative">
+            <label for="buscaResponsavelMovimentacao" class="form-label fw-semibold">Responsável</label>
+            <input type="text" id="buscaResponsavelMovimentacao" class="form-control"
+              placeholder="Digite para pesquisar o responsável..." autocomplete="off"
+              oninput="pesquisarResponsavelMovimentacao(this.value, 'incluir')">
+            <input type="hidden" id="incluirResponsavelMovimentacao">
+            <div id="resultadosBuscaResponsavelIncluir" class="list-group position-absolute w-100 shadow-sm"
+              style="z-index: 20;"></div>
           </div>
         </div>
-      </div>
 
-      <div class="modal-footer-custom">
-        <button class="btn btn-secondary btn-sm" onclick="fecharModalIncluirMovimentacao()">Cancelar</button>
-        <button class="btn btn-primary btn-sm" onclick="salvarMovimentacao()">
-          <i class="bi bi-check-lg"></i> Salvar Movimentação
-        </button>
+        <div class="col-md-6">
+          <label for="incluirUsuarioMovimentacao" class="form-label fw-semibold">Usuário</label>
+          <select id="incluirUsuarioMovimentacao" class="form-select">
+            <option value="">Selecione...</option>
+          </select>
+        </div>
+
+        <div class="col-md-6">
+          <label for="incluirResponsavelMovimentacao" class="form-label fw-semibold">Responsável</label>
+          <select id="incluirResponsavelMovimentacao" class="form-select">
+            <option value="">Selecione...</option>
+          </select>
+        </div>
+
+        <div class="col-md-6">
+          <label for="incluirLocalOrigemMovimentacao" class="form-label fw-semibold">Local de origem</label>
+          <select id="incluirLocalOrigemMovimentacao" class="form-select">
+            <option value="">Selecione...</option>
+          </select>
+        </div>
+
+        <div class="col-md-6">
+          <label for="incluirLocalDestinoMovimentacao" class="form-label fw-semibold">Local de destino</label>
+          <select id="incluirLocalDestinoMovimentacao" class="form-select">
+            <option value="">Selecione...</option>
+          </select>
+        </div>
+
+        <div class="col-md-6">
+          <label for="incluirDtTransferenciaMovimentacao" class="form-label fw-semibold">Data da transferência</label>
+          <input type="date" id="incluirDtTransferenciaMovimentacao" class="form-control">
+        </div>
+
+        <div class="col-12">
+          <label for="incluirObservacoesMovimentacao" class="form-label fw-semibold">Observações</label>
+          <textarea id="incluirObservacoesMovimentacao" class="form-control" rows="3" maxlength="200"
+            placeholder="Descreva a observação da movimentação..."></textarea>
+        </div>
       </div>
     </div>
+
+    <div class="modal-footer-custom">
+      <button class="btn btn-secondary btn-sm" onclick="fecharModalIncluirMovimentacao()">Cancelar</button>
+      <button class="btn btn-primary btn-sm" onclick="salvarMovimentacao()">
+        <i class="bi bi-check-lg"></i> Salvar Movimentação
+      </button>
+    </div>
+  </div>
   </div>
 
   <!-- MODAL EDITAR MOVIMENTAÇÃO -->
@@ -205,18 +194,14 @@
         <p id="msgErroEditarMovimentacao" class="text-danger mb-3" style="display:none;"></p>
 
         <div class="row g-3">
-          <div class="col-12 position-relative">
-            <label for="buscaPatrimonioEditarMovimentacao" class="form-label fw-semibold">Patrimônio</label>
-            <input
-              type="text"
-              id="buscaPatrimonioEditarMovimentacao"
-              class="form-control"
-              placeholder="Digite para pesquisar o patrimônio ativo..."
-              autocomplete="off"
-              oninput="pesquisarPatrimonioMovimentacao(this.value, 'editar')"
-            >
-            <input type="hidden" id="editarPatrimonioMovimentacao">
-            <div id="resultadosBuscaPatrimonioEditar" class="list-group position-absolute w-100 shadow-sm" style="z-index: 20;"></div>
+          <div class="col-md-6 position-relative">
+            <label for="buscaResponsavelEditarMovimentacao" class="form-label fw-semibold">Responsável</label>
+            <input type="text" id="buscaResponsavelEditarMovimentacao" class="form-control"
+              placeholder="Digite para pesquisar o responsável..." autocomplete="off"
+              oninput="pesquisarResponsavelMovimentacao(this.value, 'editar')">
+            <input type="hidden" id="editarResponsavelMovimentacao">
+            <div id="resultadosBuscaResponsavelEditar" class="list-group position-absolute w-100 shadow-sm"
+              style="z-index: 20;"></div>
           </div>
 
           <div class="col-md-6">
@@ -254,13 +239,8 @@
 
           <div class="col-12">
             <label for="editarObservacoesMovimentacao" class="form-label fw-semibold">Observações</label>
-            <textarea
-              id="editarObservacoesMovimentacao"
-              class="form-control"
-              rows="3"
-              maxlength="200"
-              placeholder="Descreva a observação da movimentação..."
-            ></textarea>
+            <textarea id="editarObservacoesMovimentacao" class="form-control" rows="3" maxlength="200"
+              placeholder="Descreva a observação da movimentação..."></textarea>
           </div>
         </div>
       </div>
@@ -302,13 +282,13 @@
       // Esconde botão de incluir se não tiver permissão
       const btnIncluir = document.querySelector('.btn-incluir-usuario');
       if (btnIncluir && !podeIncluir()) {
-      btnIncluir.style.display = 'none';
+        btnIncluir.style.display = 'none';
       }
 
       // Esconde cabeçalho da coluna de ações se não tiver permissão
       const thAcoes = document.querySelector('th[style*="width: 130px"]');
       if (thAcoes && !podeEditarOuExcluir()) {
-      thAcoes.style.display = 'none';
+        thAcoes.style.display = 'none';
       }
 
       if (typeof carregarMovimentacoes === 'function') {
@@ -318,4 +298,5 @@
   </script>
 
 </body>
+
 </html>

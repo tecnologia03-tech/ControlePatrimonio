@@ -2692,6 +2692,70 @@ async function pesquisarPatrimonioMovimentacao(termo, modo) {
   }
 }
 
+// ===================== MOVIMENTAÇÕES - PESQUISAR RESPONSÁVEL =====================
+// Pesquisa responsáveis conforme o usuário digita no campo.
+async function pesquisarResponsavelMovimentacao(termo, modo) {
+  const valor = termo.trim();
+  const idListaResultado = modo === 'editar'
+    ? 'resultadosBuscaResponsavelEditar'
+    : 'resultadosBuscaResponsavelIncluir';
+
+  const listaResultado = document.getElementById(idListaResultado);
+  if (!listaResultado) return;
+
+  if (valor.length < 2) {
+    listaResultado.innerHTML = '';
+    return;
+  }
+
+  try {
+    const resposta = await fetchComMatricula(`https://controlepatrimonio.onrender.com/api/responsaveis/busca?termo=${encodeURIComponent(valor)}`);
+    const dados = await resposta.json();
+
+    if (!resposta.ok || !dados.sucesso) {
+      listaResultado.innerHTML = '';
+      return;
+    }
+
+    const listaResponsaveis = Array.isArray(dados.responsaveis) ? dados.responsaveis : [];
+
+    if (listaResponsaveis.length === 0) {
+      listaResultado.innerHTML = `
+        <button type="button" class="list-group-item list-group-item-action disabled">
+          Nenhum responsável encontrado.
+        </button>
+      `;
+      return;
+    }
+
+    listaResultado.innerHTML = listaResponsaveis.map(item => `
+      <button
+        type="button"
+        class="list-group-item list-group-item-action"
+        onclick="selecionarResponsavelMovimentacao(${item.id}, '${String(item.nome || '').replace(/'/g, "\\'")}', '${modo}')"
+      >
+        ${escaparHtmlMovimentacao(item.nome)}
+      </button>
+    `).join('');
+  } catch (erro) {
+    listaResultado.innerHTML = '';
+  }
+}
+
+// Define o responsável selecionado na pesquisa dinâmica.
+function selecionarResponsavelMovimentacao(id, nome, modo) {
+  if (modo === 'editar') {
+    document.getElementById('editarResponsavelMovimentacao').value = id;
+    document.getElementById('buscaResponsavelEditarMovimentacao').value = nome;
+    document.getElementById('resultadosBuscaResponsavelEditar').innerHTML = '';
+    return;
+  }
+
+  document.getElementById('incluirResponsavelMovimentacao').value = id;
+  document.getElementById('buscaResponsavelMovimentacao').value = nome;
+  document.getElementById('resultadosBuscaResponsavelIncluir').innerHTML = '';
+}
+
 // Define o patrimônio selecionado na pesquisa dinâmica.
 function selecionarPatrimonioMovimentacao(id, nome, modo) {
   if (modo === 'editar') {
@@ -2717,6 +2781,8 @@ async function abrirModalIncluirMovimentacao() {
   document.getElementById('resultadosBuscaPatrimonioIncluir').innerHTML = '';
   document.getElementById('incluirUsuarioMovimentacao').value = '';
   document.getElementById('incluirResponsavelMovimentacao').value = '';
+  document.getElementById('buscaResponsavelMovimentacao').value = '';
+  document.getElementById('resultadosBuscaResponsavelIncluir').innerHTML = '';
   document.getElementById('incluirLocalOrigemMovimentacao').value = '';
   document.getElementById('incluirLocalDestinoMovimentacao').value = '';
   document.getElementById('incluirDtTransferenciaMovimentacao').value = '';
@@ -2791,6 +2857,8 @@ async function abrirModalEditarMovimentacao(id) {
   document.getElementById('resultadosBuscaPatrimonioEditar').innerHTML = '';
   document.getElementById('editarUsuarioMovimentacao').value = movimentacao.id_usuario || '';
   document.getElementById('editarResponsavelMovimentacao').value = movimentacao.id_responsavel_patrimonio || '';
+  document.getElementById('buscaResponsavelEditarMovimentacao').value = movimentacao.responsavel_nome || '';
+  document.getElementById('resultadosBuscaResponsavelEditar').innerHTML = '';
   document.getElementById('editarLocalOrigemMovimentacao').value = movimentacao.id_local_origem || '';
   document.getElementById('editarLocalDestinoMovimentacao').value = movimentacao.id_local_destino || '';
   document.getElementById('editarDtTransferenciaMovimentacao').value = movimentacao.data_transferencia || '';
