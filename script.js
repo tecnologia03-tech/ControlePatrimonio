@@ -2002,10 +2002,13 @@ function renderizarManutencoes(lista) {
     return;
   }
 
+  const podeEditar = podeEditarOuExcluir();
+  const colspanTotal = podeEditar ? 10 : 9;
+
   if (!lista || lista.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="10" class="text-center text-muted py-4">
+        <td colspan="${colspanTotal}" class="text-center text-muted py-4">
           Nenhum histórico de manutenção cadastrado.
         </td>
       </tr>
@@ -2028,14 +2031,16 @@ function renderizarManutencoes(lista) {
     <td>${obterBadgeResolvidoManutencao(manutencao.resolvido)}</td>
     <td>${formatarValorMoedaManutencao(manutencao.vlr_gasto)}</td>
     <td>${manutencao.usuario || '-'}</td>
-    <td>
-      <button class="btn btn-sm btn-outline-primary me-1" onclick="abrirModalEditarManutencao(${manutencao.id})">
-        Editar
-      </button>
-      <button class="btn btn-sm btn-outline-danger" onclick="abrirModalExclusaoManutencao(${manutencao.id})">
-        Excluir
-      </button>
-    </td>
+    ${podeEditar ? `
+      <td>
+        <button class="btn btn-sm btn-outline-primary me-1" onclick="abrirModalEditarManutencao(${manutencao.id})">
+          Editar
+        </button>
+        <button class="btn btn-sm btn-outline-danger" onclick="abrirModalExclusaoManutencao(${manutencao.id})">
+          Excluir
+        </button>
+      </td>
+    ` : ''}
   </tr>
 `).join('');
 }
