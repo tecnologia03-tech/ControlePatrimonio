@@ -2534,10 +2534,13 @@ function renderizarMovimentacoes(lista) {
   const tbody = document.getElementById('tabelaMovimentacoes');
   if (!tbody) return;
 
+  const podeEditar = podeEditarOuExcluir();
+  const colspanTotal = podeEditar ? 9 : 8;
+
   if (!lista || lista.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="9" class="text-center text-muted py-4">
+        <td colspan="${colspanTotal}" class="text-center text-muted py-4">
           Nenhum registro de movimentação encontrado.
         </td>
       </tr>
@@ -2555,16 +2558,18 @@ function renderizarMovimentacoes(lista) {
       <td>${escaparHtmlMovimentacao(item.usuario_nome || '-')}</td>
       <td>${escaparHtmlMovimentacao(formatarDataMovimentacao(item.data_transferencia))}</td>
       <td>${escaparHtmlMovimentacao(item.observacoes || '-')}</td>
-      <td>
-        <div class="d-flex gap-2">
-          <button class="btn btn-sm btn-outline-primary" onclick="abrirModalEditarMovimentacao(${item.id})">
-            Editar
-          </button>
-          <button class="btn btn-sm btn-outline-danger" onclick="abrirModalExclusaoMovimentacao(${item.id})">
-            Excluir
-          </button>
-        </div>
-      </td>
+      ${podeEditar ? `
+        <td>
+          <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-outline-primary" onclick="abrirModalEditarMovimentacao(${item.id})">
+              Editar
+            </button>
+            <button class="btn btn-sm btn-outline-danger" onclick="abrirModalExclusaoMovimentacao(${item.id})">
+              Excluir
+            </button>
+          </div>
+        </td>
+      ` : ''}
     </tr>
   `).join('');
 }
